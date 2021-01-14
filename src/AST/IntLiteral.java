@@ -1,13 +1,13 @@
 package AST;
 
 public class IntLiteral extends ConstExprNode {
-    private int val;
+    private long val;
 
-    public int getVal() {
+    public long getVal() {
         return val;
     }
 
-    public IntLiteral(int val) {
+    public IntLiteral(long val) {
         this.val = val;
     }
 
