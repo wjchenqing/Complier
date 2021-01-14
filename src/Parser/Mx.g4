@@ -5,7 +5,14 @@ package Parser;
 }
 
 program
-    :   (funcDef | classDef | varDef | ';')*
+    :   (programUnit)*
+    ;
+
+programUnit
+    :   funcDef
+    |   classDef
+    |   varDef
+    |   ';'
     ;
 
 funcDef
