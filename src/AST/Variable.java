@@ -23,6 +23,10 @@ public class Variable extends ProgramNode {
         return expr;
     }
 
+    public void setType(TypeNode type) {
+        this.type = type;
+    }
+
     @Override
     public Object accept(ASTVisitor visitor) {
         return visitor.visit(this);

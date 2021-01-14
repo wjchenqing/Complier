@@ -4,8 +4,8 @@ public class ArrayType extends TypeNode {
     private TypeNode baseType;
     private int dim;
 
-    public ArrayType(String identifier, TypeNode type) {
-        super(identifier);
+    public ArrayType(TypeNode type) {
+        super(type.getIdentifier());
         if (type instanceof ArrayType) {
             baseType = ((ArrayType) type).baseType;
             dim = ((ArrayType) type).dim;
