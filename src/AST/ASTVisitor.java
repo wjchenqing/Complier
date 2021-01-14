@@ -33,4 +33,5 @@ public interface ASTVisitor {
     Object visit(StringLiteral node);
     Object visit(NullExpr node);
     Object visit(IdentifierExpr node);
+    Object visit(VariableList node);
 }
