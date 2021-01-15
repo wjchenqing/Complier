@@ -65,7 +65,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         }
         if (ctx.constructorDef().size() >= 2) {
             constructor = null;
-            //ToDo, throw error, since there is only one constructor
+            System.exit(-1);
         } else if (ctx.constructorDef().size() == 1) {
             constructor = (Function) visit(ctx.constructorDef(0));
         } else {
@@ -195,7 +195,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
             thenStatement = (StatementNode) visit(ctx.statement(0));
             elseStatement = (StatementNode) visit(ctx.statement(1));
         } else {
-            //TODO, throw error, since no this case.
+            System.exit(-1);
             thenStatement = null;
             elseStatement = null;
         }
@@ -368,7 +368,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitWrongNew(MxParser.WrongNewContext ctx) {
-        //TODO throw error;
+        System.exit(-1);
         return null;
     }
 
