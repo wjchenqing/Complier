@@ -34,4 +34,20 @@ public class ArrayType2 extends Type2 {
     public boolean equals(Type2 type2) {
         return ((type2 instanceof ArrayType2) && (baseType == ((ArrayType2) type2).baseType) && (dim == ((ArrayType2) type2).dim));
     }
+
+    public boolean hasMethod (String name) {
+        for (FunctionEntity functionEntity: builtInMethods) {
+            if (functionEntity.getName().equals(name))
+                return true;
+        }
+        return false;
+    }
+
+    public FunctionEntity getMethod (String name) {
+        for (FunctionEntity functionEntity: builtInMethods) {
+            if (functionEntity.getName().equals(name))
+                return functionEntity;
+        }
+        return null;
+    }
 }

@@ -1,9 +1,11 @@
 package Frontend.Scope;
 
 import AST.PrimitiveType;
+import AST.TypeNode;
 import Frontend.Entity.Entity;
 import Frontend.Entity.FunctionEntity;
 import Frontend.Entity.VariableEntity;
+import Frontend.Type.Type2;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -71,5 +73,15 @@ public class ProgramScope extends Scope {
     @Override
     public Entity getEntity(String name) {
         return entityMap.get(name);
+    }
+
+    @Override
+    public TypeNode getReturnType() {
+        return null;
+    }
+
+    @Override
+    public Type2 getClassType() {
+        return null;
     }
 }

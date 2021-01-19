@@ -1,5 +1,6 @@
 package Frontend.Type;
 
+import AST.ArrayType;
 import AST.PrimitiveType;
 import AST.TypeNode;
 
@@ -28,4 +29,21 @@ public class TypeTable {
         }
     }
 
+    public Type2 getType2(TypeNode typeNode) {
+        if (typeNode instanceof ArrayType) {
+            TypeNode baseType = ((ArrayType) typeNode).getBaseType();
+            int dim = ((ArrayType) typeNode).getDim();
+            if (typeTable.containsKey(typeNode)) {
+                return new ArrayType2(typeTable.get(baseType), dim);
+            } else {
+                return null;
+            }
+        } else {
+            return typeTable.getOrDefault(typeNode, null);
+        }
+    }
+
+    public boolean contains(TypeNode typeNode) {
+        return typeTable.containsKey(typeNode);
+    }
 }

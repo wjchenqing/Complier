@@ -31,6 +31,22 @@ public class StringType2 extends Type2 {
         methods.add(new FunctionEntity("ord", new PrimitiveType("int"), param4, null));
     }
 
+    public boolean hasMethod (String name) {
+        for (FunctionEntity functionEntity: methods) {
+            if (functionEntity.getName().equals(name))
+                return true;
+        }
+        return false;
+    }
+
+    public FunctionEntity getMethod (String name) {
+        for (FunctionEntity functionEntity: methods) {
+            if (functionEntity.getName().equals(name))
+                return functionEntity;
+        }
+        return null;
+    }
+
     @Override
     public boolean equals(Type2 type2) {
         return true;

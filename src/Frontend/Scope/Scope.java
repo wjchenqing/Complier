@@ -1,6 +1,10 @@
 package Frontend.Scope;
 
+import AST.TypeNode;
 import Frontend.Entity.Entity;
+import Frontend.Entity.FunctionEntity;
+import Frontend.Entity.VariableEntity;
+import Frontend.Type.Type2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,8 +42,7 @@ abstract public class Scope {
     }
 
     public void declareEntity(Entity entity) {
-        Entity e = entityMap.get(entity.getName());
-        if (e != null) {
+        if (entityMap.containsKey(entity.getName())) {
             System.exit(-1);
             // Entities with the same name is not allowed in one scope.
             // Question: variable with the same name of a function, should I exit?
@@ -66,10 +69,22 @@ abstract public class Scope {
 
     public Entity getEntity(String name) {
         Entity entity = entityMap.get(name);
-        if (entity != null) {
+        if (entityMap.containsKey(name) &&
+                (entity instanceof VariableEntity
+                        || ((FunctionEntity) entity).getReturnType() != null)) {
             return entity;
-        } else {
+        } else if (parentScope != null) {
             return parentScope.getEntity(name);
+        } else {
+            return null;
         }
+    }
+
+    public TypeNode getReturnType() {
+        return parentScope.getReturnType();
+    }
+
+    public Type2 getClassType() {
+        return parentScope.getClassType();
     }
 }
