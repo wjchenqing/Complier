@@ -21,8 +21,8 @@ public class Main {
         MxParser parser;
         ParseTree parseRoot;
         try {
-            inputStream = new FileInputStream("code.txt");
-//            inputStream = System.in;
+//            inputStream = new FileInputStream("code.txt");
+            inputStream = System.in;
             input = CharStreams.fromStream(inputStream);
         } catch (Exception e) {
             System.exit(-1);
