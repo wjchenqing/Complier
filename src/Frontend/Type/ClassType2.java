@@ -6,9 +6,9 @@ import Frontend.Entity.VariableEntity;
 import java.util.ArrayList;
 
 public class ClassType2 extends Type2 {
-    private ArrayList<VariableEntity> members;
+    private ArrayList<VariableEntity> members = new ArrayList<>();
     private FunctionEntity constructor;
-    private ArrayList<FunctionEntity> methods;
+    private ArrayList<FunctionEntity> methods = new ArrayList<>();
 
     public ClassType2(String name, ArrayList<VariableEntity> members, FunctionEntity constructor, ArrayList<FunctionEntity> methods) {
         typeName = name;
@@ -46,6 +46,8 @@ public class ClassType2 extends Type2 {
     }
 
     public boolean hasMember(String identifier) {
+        if (members == null)
+            return false;
         for (VariableEntity member: members) {
             if (member.getName().equals(identifier))
                 return true;
@@ -54,6 +56,8 @@ public class ClassType2 extends Type2 {
     }
 
     public boolean hasMethod(String identifier) {
+        if (methods == null)
+            return false;
         for (FunctionEntity method: methods) {
             if (method.getName().equals(identifier))
                 return true;

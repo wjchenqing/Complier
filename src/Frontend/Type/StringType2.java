@@ -19,7 +19,7 @@ public class StringType2 extends Type2 {
         ArrayList<VariableEntity> param2 = new ArrayList<>();
         param2.add(new VariableEntity("left", new PrimitiveType("int"), null));
         param2.add(new VariableEntity("right", new PrimitiveType("int"), null));
-        methods.add(new FunctionEntity("length", new PrimitiveType("int"), param2, null));
+        methods.add(new FunctionEntity("substring", new PrimitiveType("string"), param2, null));
 
         // int parseInt();
         ArrayList<VariableEntity> param3 = new ArrayList<>();
@@ -49,6 +49,6 @@ public class StringType2 extends Type2 {
 
     @Override
     public boolean equals(Type2 type2) {
-        return true;
+        return type2 instanceof StringType2;
     }
 }

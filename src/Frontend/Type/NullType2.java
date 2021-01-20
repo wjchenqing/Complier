@@ -7,6 +7,6 @@ public class NullType2 extends Type2 {
 
     @Override
     public boolean equals(Type2 type2) {
-        return true;
+        return type2 instanceof NullType2;
     }
 }

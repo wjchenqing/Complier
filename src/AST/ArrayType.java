@@ -8,7 +8,7 @@ public class ArrayType extends TypeNode {
         super(type.getIdentifier());
         if (type instanceof ArrayType) {
             baseType = ((ArrayType) type).baseType;
-            dim = ((ArrayType) type).dim;
+            dim = ((ArrayType) type).dim + 1;
         } else {
             baseType = type;
             dim = 1;

@@ -1,5 +1,6 @@
 import AST.Program;
 import Frontend.ASTBuilder;
+import Frontend.SemanticChecker;
 import Parser.ErrorListener;
 import Parser.MxLexer;
 import Parser.MxParser;
@@ -38,5 +39,8 @@ public class Main {
 
         ASTBuilder astBuilder = new ASTBuilder();
         Program programRoot = (Program) astBuilder.visit(parseRoot);
+
+        SemanticChecker semanticChecker = new SemanticChecker();
+        programRoot.accept(semanticChecker);
     }
 }

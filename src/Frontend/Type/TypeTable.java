@@ -33,13 +33,9 @@ public class TypeTable {
         if (typeNode instanceof ArrayType) {
             TypeNode baseType = ((ArrayType) typeNode).getBaseType();
             int dim = ((ArrayType) typeNode).getDim();
-            if (typeTable.containsKey(typeNode)) {
-                return new ArrayType2(typeTable.get(baseType), dim);
-            } else {
-                return null;
-            }
+            return new ArrayType2(typeTable.get(baseType), dim);
         } else {
-            return typeTable.getOrDefault(typeNode, null);
+            return typeTable.get(typeNode);
         }
     }
 

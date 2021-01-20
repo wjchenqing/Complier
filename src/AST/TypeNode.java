@@ -10,4 +10,17 @@ abstract public class TypeNode extends ASTNode {
     public String getIdentifier() {
         return identifier;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof TypeNode) {
+            return identifier.equals(((TypeNode) obj).getIdentifier());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return identifier.hashCode();
+    }
 }

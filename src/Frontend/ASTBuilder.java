@@ -3,6 +3,7 @@ package Frontend;
 import AST.*;
 import Parser.MxBaseVisitor;
 import Parser.MxParser;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
 
@@ -294,42 +295,42 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitBinaryExpr(MxParser.BinaryExprContext ctx) {
         ExprNode opd1 = (ExprNode) visit(ctx.opd1);
         ExprNode opd2 = (ExprNode) visit(ctx.opd2);
-        return switch (ctx.op.getText()) {
-            case  "*" -> new BinaryExpr(BinaryExpr.Operator.multiply, opd1, opd2);
-            case  "/" -> new BinaryExpr(BinaryExpr.Operator.division, opd1, opd2);
-            case  "%" -> new BinaryExpr(BinaryExpr.Operator.mod, opd1, opd2);
-            case  "+" -> new BinaryExpr(BinaryExpr.Operator.plus, opd1, opd2);
-            case  "-" -> new BinaryExpr(BinaryExpr.Operator.sub, opd1, opd2);
-            case "<<" -> new BinaryExpr(BinaryExpr.Operator.shiftLeft, opd1, opd2);
-            case ">>" -> new BinaryExpr(BinaryExpr.Operator.shiftRight, opd1, opd2);
-            case  "<" -> new BinaryExpr(BinaryExpr.Operator.less, opd1, opd2);
-            case  ">" -> new BinaryExpr(BinaryExpr.Operator.greater, opd1, opd2);
-            case "<=" -> new BinaryExpr(BinaryExpr.Operator.lessEqual, opd1, opd2);
-            case ">=" -> new BinaryExpr(BinaryExpr.Operator.greaterEqual, opd1, opd2);
-            case "==" -> new BinaryExpr(BinaryExpr.Operator.equal, opd1, opd2);
-            case "!=" -> new BinaryExpr(BinaryExpr.Operator.notEqual, opd1, opd2);
-            case  "&" -> new BinaryExpr(BinaryExpr.Operator.bitWiseAnd, opd1, opd2);
-            case  "|" -> new BinaryExpr(BinaryExpr.Operator.bitWiseOr, opd1, opd2);
-            case  "^" -> new BinaryExpr(BinaryExpr.Operator.bitWiseXor, opd1, opd2);
-            case "&&" -> new BinaryExpr(BinaryExpr.Operator.and, opd1, opd2);
-            case "||" -> new BinaryExpr(BinaryExpr.Operator.or, opd1, opd2);
-            case  "=" -> new BinaryExpr(BinaryExpr.Operator.assign, opd1, opd2);
-            default   -> null;
-        };
+        switch (ctx.op.getText()) {
+            case  "*": return new BinaryExpr(BinaryExpr.Operator.multiply, opd1, opd2);
+            case  "/": return new BinaryExpr(BinaryExpr.Operator.division, opd1, opd2);
+            case  "%": return new BinaryExpr(BinaryExpr.Operator.mod, opd1, opd2);
+            case  "+": return new BinaryExpr(BinaryExpr.Operator.plus, opd1, opd2);
+            case  "-": return new BinaryExpr(BinaryExpr.Operator.sub, opd1, opd2);
+            case "<<": return new BinaryExpr(BinaryExpr.Operator.shiftLeft, opd1, opd2);
+            case ">>": return new BinaryExpr(BinaryExpr.Operator.shiftRight, opd1, opd2);
+            case  "<": return new BinaryExpr(BinaryExpr.Operator.less, opd1, opd2);
+            case  ">": return new BinaryExpr(BinaryExpr.Operator.greater, opd1, opd2);
+            case "<=": return new BinaryExpr(BinaryExpr.Operator.lessEqual, opd1, opd2);
+            case ">=": return new BinaryExpr(BinaryExpr.Operator.greaterEqual, opd1, opd2);
+            case "==": return new BinaryExpr(BinaryExpr.Operator.equal, opd1, opd2);
+            case "!=": return new BinaryExpr(BinaryExpr.Operator.notEqual, opd1, opd2);
+            case  "&": return new BinaryExpr(BinaryExpr.Operator.bitWiseAnd, opd1, opd2);
+            case  "|": return new BinaryExpr(BinaryExpr.Operator.bitWiseOr, opd1, opd2);
+            case  "^": return new BinaryExpr(BinaryExpr.Operator.bitWiseXor, opd1, opd2);
+            case "&&": return new BinaryExpr(BinaryExpr.Operator.and, opd1, opd2);
+            case "||": return new BinaryExpr(BinaryExpr.Operator.or, opd1, opd2);
+            case  "=": return new BinaryExpr(BinaryExpr.Operator.assign, opd1, opd2);
+            default  : return null;
+        }
     }
 
     @Override
     public ASTNode visitPrefixExpr(MxParser.PrefixExprContext ctx) {
         ExprNode expr = (ExprNode) visit(ctx.expr());
-        return switch (ctx.op.getText()) {
-            case "++" -> new PreFixExpr(PreFixExpr.Operator.preFixIncrease, expr);
-            case "--" -> new PreFixExpr(PreFixExpr.Operator.preFixDecrease, expr);
-            case  "+" -> new PreFixExpr(PreFixExpr.Operator.preFixPlus, expr);
-            case  "-" -> new PreFixExpr(PreFixExpr.Operator.preFixSub, expr);
-            case  "!" -> new PreFixExpr(PreFixExpr.Operator.negation, expr);
-            case  "~" -> new PreFixExpr(PreFixExpr.Operator.bitwiseComplement, expr);
-            default   -> null;
-        };
+        switch (ctx.op.getText()) {
+            case "++": return new PreFixExpr(PreFixExpr.Operator.preFixIncrease, expr);
+            case "--": return new PreFixExpr(PreFixExpr.Operator.preFixDecrease, expr);
+            case  "+": return new PreFixExpr(PreFixExpr.Operator.preFixPlus, expr);
+            case  "-": return new PreFixExpr(PreFixExpr.Operator.preFixSub, expr);
+            case  "!": return new PreFixExpr(PreFixExpr.Operator.negation, expr);
+            case  "~": return new PreFixExpr(PreFixExpr.Operator.bitwiseComplement, expr);
+            default  : return null;
+        }
     }
 
     @Override
@@ -341,7 +342,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
                 exprNodes.add((ExprNode) visit(exprContext));
             }
         } else {
-            exprNodes = null;
+            exprNodes = new ArrayList<>();
         }
         return new FuncCallExpr((ExprNode) visit(ctx.expr()), exprNodes);
     }
@@ -375,10 +376,14 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitArrayNew(MxParser.ArrayNewContext ctx) {
         ArrayList<ExprNode> exprNodes = new ArrayList<>();
+        int dim = 0;
+        for (ParseTree child : ctx.children)
+            if (child.getText().equals("["))
+                dim++;
         for (MxParser.ExprContext exprContext: ctx.expr()) {
             exprNodes.add((ExprNode) visit(exprContext));
         }
-        return new NewExpr((TypeNode) visit(ctx.nonArrayType()), exprNodes, ctx.expr().size());
+        return new NewExpr((TypeNode) visit(ctx.nonArrayType()), exprNodes, dim);
     }
 
     @Override

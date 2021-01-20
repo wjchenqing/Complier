@@ -129,9 +129,6 @@ IntLiteral: '0' | [1-9][0-9]*;
 StringLiteral: '"' (ESC|.)*? '"';
 ESC: '\\"' | '\\n' | '\\\\';
 
-
-IDENTIFIER: [a-zA-Z][a-zA-Z_0-9]*;
-
 INT:    'int';
 BOOL:   'bool';
 STRING: 'string';
@@ -150,6 +147,8 @@ NEW:    'new';
 CLASS:  'class';
 THIS:   'this';
 
+IDENTIFIER: [a-zA-Z][a-zA-Z_0-9]*;
+
 Whitespace
     :   [ \t\n\r]+  -> skip
     ;
@@ -162,4 +161,8 @@ Newline
 
 LineComment
     :   '//' ~[\r\n]*   -> skip
+    ;
+
+BlockComment
+    :   '/*' .*? '*/'   -> skip
     ;
