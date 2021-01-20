@@ -8,6 +8,7 @@ import Frontend.Scope.*;
 import Frontend.Type.*;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Stack;
 
 public class SemanticChecker implements ASTVisitor {
@@ -34,7 +35,29 @@ public class SemanticChecker implements ASTVisitor {
         for (ProgramNode programNode: programNodes) {
             if (programNode instanceof ClassDef) {
                 ClassType classType = new ClassType(((ClassDef) programNode).getIdentifier());
-                ClassType2 classType2 = new ClassType2(((ClassDef) programNode).getIdentifier(), new ArrayList<>(), null, new ArrayList<>());
+                ArrayList<VariableEntity> members = new ArrayList<>();
+                FunctionEntity cons = null;
+                ArrayList<FunctionEntity> methods = new ArrayList<>();
+                ArrayList<Variable> variables = ((ClassDef) programNode).getVariables();
+                Function constructor = ((ClassDef) programNode).getConstructor();
+                ArrayList<Function> functions = ((ClassDef) programNode).getFunctions();
+                for (Variable variable : variables)
+                    members.add(new VariableEntity(variable.getIdentifier(), variable.getType(), variable.getExpr()));
+                if (constructor != null) {
+                    ArrayList<VariableEntity> params = new ArrayList<>();
+                    for (Variable variable : constructor.getParams()) {
+                        params.add(new VariableEntity(variable.getIdentifier(), variable.getType(), variable.getExpr()));
+                    }
+                    cons = new FunctionEntity(constructor.getIdentifier(), constructor.getType(), params, constructor.getStatement());
+                }
+                for (Function function : functions) {
+                    ArrayList<VariableEntity> params = new ArrayList<>();
+                    for (Variable variable : function.getParams()) {
+                        params.add(new VariableEntity(variable.getIdentifier(), variable.getType(), variable.getExpr()));
+                    }
+                    methods.add(new FunctionEntity(function.getIdentifier(), function.getType(), params, function.getStatement()));
+                }
+                ClassType2 classType2 = new ClassType2(((ClassDef) programNode).getIdentifier(), members, cons, methods);
                 typeTable.put(classType, classType2);
             }
         }
@@ -55,13 +78,7 @@ public class SemanticChecker implements ASTVisitor {
                 programNode.accept(this);
                 programScope.declareEntity(new VariableEntity(((Variable) programNode).getIdentifier(),
                         ((Variable) programNode).getType(), ((Variable) programNode).getExpr()));
-            } else if (programNode instanceof ClassDef) {
-                programNode.accept(this);
-            }
-        }
-
-        for (ProgramNode programNode: programNodes) {
-            if (programNode instanceof Function) {
+            } else if (programNode instanceof ClassDef || programNode instanceof Function) {
                 programNode.accept(this);
             }
         }
@@ -102,13 +119,19 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public Object visit(Function node) {
-        FunctionEntity functionEntity = (FunctionEntity) currentScope().getEntity(node.getIdentifier());
+        Map<String, Entity> entityMap = currentScope().getEntityMap();
+        String string = node.getIdentifier();
+        FunctionEntity functionEntity = (FunctionEntity) entityMap.get(string);
 
         FunctionScope functionScope = new FunctionScope(currentScope(), node.getType());
         scopeStack.push(functionScope);
         node.setScope(programScope);
 
-        node.getType().accept(this);
+        if (node.getType() != null) {
+            node.getType().accept(this);
+        } else if (functionEntity == null) {
+            System.exit(-1);
+        }
 
         ArrayList<Variable> variables = node.getParams();
         ArrayList<VariableEntity> variableEntities = functionEntity.getParams();
@@ -135,7 +158,7 @@ public class SemanticChecker implements ASTVisitor {
             variable.accept(this);
             VariableEntity member = new VariableEntity(variable.getIdentifier(),variable.getType(),variable.getExpr());
             classScope.declareEntity(member);
-            classType2.getMembers().add(member);
+//            classType2.getMembers().add(member);
         }
 
         ArrayList<Function> functions = node.getFunctions();
@@ -149,7 +172,7 @@ public class SemanticChecker implements ASTVisitor {
                 }
                 FunctionEntity method = new FunctionEntity(function.getIdentifier(), function.getType(), param, function.getStatement());
                 classScope.declareEntity(method);
-                classType2.getMethods().add(method);
+//                classType2.getMethods().add(method);
             }
         }
 
@@ -304,7 +327,7 @@ public class SemanticChecker implements ASTVisitor {
         ExprNode exprNode = node.getExpr();
         if (exprNode != null) {
             exprNode.accept(this);
-            if (lType.equals(new VoidType2())) {
+            if (lType == null || lType.equals(new VoidType2())) {
                 System.exit(-1);
             }
             Type2 rType = exprNode.getType2();
@@ -312,7 +335,7 @@ public class SemanticChecker implements ASTVisitor {
                 System.exit(-1);
             }
         } else {
-            if (!lType.equals(new VoidType2())) {
+            if (lType != null && !lType.equals(new VoidType2())) {
                 System.exit(-1);
             }
         }

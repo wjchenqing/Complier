@@ -166,9 +166,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         ArrayList<StatementNode> statementNodes = new ArrayList<>();
         for (MxParser.StatementContext statementContext: ctx.statement()) {
             ASTNode statement = visit(statementContext);
-            if (statement instanceof BlockStmt) {
-                statementNodes.addAll(((BlockStmt) statement).getStatements());
-            } else {
+            if (statement != null) {
                 statementNodes.add((StatementNode) statement);
             }
         }
