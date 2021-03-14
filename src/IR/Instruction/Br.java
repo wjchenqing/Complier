@@ -32,6 +32,17 @@ public class Br extends IRInst {
     }
 
     @Override
+    public void setPredecessorAndSuccessor() {
+        currentBB.addSuccessor(thenBlock);
+        thenBlock.addPredecessor(currentBB);
+
+        if (cond != null) {
+            currentBB.addSuccessor(elseBlock);
+            elseBlock.addPredecessor(currentBB);
+        }
+    }
+
+    @Override
     public String toString() {
         if (cond != null) {
             return "br i1 " + cond.toString() + ", label " + thenBlock.toString() + ", label " + elseBlock.toString();

@@ -46,5 +46,6 @@ public class Main {
 
         IRBuilder irBuilder = new IRBuilder(semanticChecker.getProgramScope(), semanticChecker.getTypeTable());
         programRoot.accept(irBuilder);
+
     }
 }

@@ -41,6 +41,7 @@ public class StructureType extends IRType {
             }
             i.incrementAndGet();
         }
+        stringBuilder.append(" }");
         return stringBuilder.toString();
     }
 

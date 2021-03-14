@@ -7,12 +7,14 @@ import IR.Instruction.Store;
 import IR.Operand.Parameter;
 import IR.Operand.Register;
 import IR.Type.FunctionType;
+import IR.Type.IRType;
 import IR.Type.PointerType;
 import IR.Type.VoidType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class Function {
@@ -25,10 +27,13 @@ public class Function {
     private Register returnValue = null;
     private final Map<String, Object> OperandMap = new HashMap<>();
 
+    private boolean notExternal;
+
     public Function(String name, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial) {
         this.name = name;
         this.functionType = functionType;
         this.parameters = parameters;
+        this.notExternal = notExternalThusShouldInitial;
 
         if (notExternalThusShouldInitial) {
             BasicBlock basicBlock = new BasicBlock(name + ".headBB", this);
@@ -50,6 +55,10 @@ public class Function {
                 OperandMap.put(returnValueRegister.getName(), returnValueRegister);
             }
         }
+    }
+
+    public boolean isNotExternal() {
+        return notExternal;
     }
 
     public void setFunctionType(FunctionType functionType) {
@@ -130,8 +139,32 @@ public class Function {
         this.returnValue = returnValue;
     }
 
+    public ArrayList<BasicBlock> getBlockList() {
+        ArrayList<BasicBlock> basicBlocks = new ArrayList<>();
+        for (BasicBlock cur = headBB; cur != null; cur = cur.getNextBB()) {
+            basicBlocks.add(cur);
+        }
+        return basicBlocks;
+    }
+
     @Override
     public String toString() {
-        return "@" + name;
+        StringBuilder string = new StringBuilder();
+        string.append(functionType.getReturnType().toString()).append(" @").append(name).append("(");
+        int bound = functionType.getParamTypeList().size();
+        AtomicInteger i = new AtomicInteger(1);
+        for (IRType paramType: functionType.getParamTypeList()) {
+            string.append(paramType.toString());
+            if (i.get() != bound) {
+                string.append(", ");
+            }
+            i.incrementAndGet();
+        }
+        string.append(")");
+        return string.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

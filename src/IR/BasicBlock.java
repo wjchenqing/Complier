@@ -5,6 +5,8 @@ import IR.Instruction.IRInst;
 import IR.Instruction.Ret;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class BasicBlock {
     private String name = null;
@@ -14,12 +16,31 @@ public class BasicBlock {
     private BasicBlock prevBB = null;
     private BasicBlock nextBB = null;
 
+    private final Set<BasicBlock> predecessor = new LinkedHashSet<>();
+    private final Set<BasicBlock> successor = new LinkedHashSet<>();
+
     private IRInst headInst = null;
     private IRInst tailInst = null;
 
     public BasicBlock(String name, Function currentFunction) {
         this.name = name;
         this.currentFunction = currentFunction;
+    }
+
+    public void addPredecessor(BasicBlock basicBlock) {
+        predecessor.add(basicBlock);
+    }
+
+    public Set<BasicBlock> getPredecessor() {
+        return predecessor;
+    }
+
+    public Set<BasicBlock> getSuccessor() {
+        return successor;
+    }
+
+    public void addSuccessor(BasicBlock basicBlock) {
+        successor.add(basicBlock);
     }
 
     public boolean isEmpty() {
@@ -35,6 +56,7 @@ public class BasicBlock {
             irInst.setNextInst(headInst);
             headInst = irInst;
         }
+        irInst.setPredecessorAndSuccessor();
     }
 
     public void addInstAtTail(IRInst irInst) {
@@ -48,6 +70,7 @@ public class BasicBlock {
         } else {
             System.exit(-1);
         }
+        irInst.setPredecessorAndSuccessor();
     }
 
     public ArrayList<IRInst> getInstList() {
@@ -105,4 +128,14 @@ public class BasicBlock {
     public IRInst getTailInst() {
         return tailInst;
     }
+
+    @Override
+    public String toString() {
+        return "%" + name;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
+    }
+
 }

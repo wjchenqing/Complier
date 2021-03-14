@@ -35,6 +35,8 @@ abstract public class IRInst {
         return nextInst;
     }
 
+    public void setPredecessorAndSuccessor() {}
+
     @Override
     abstract public String toString();
 }
