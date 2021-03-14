@@ -48,4 +48,27 @@ public class StructureType extends IRType {
     public boolean equals(Object obj) {
         return (obj instanceof StructureType) && (structureName.equals(((StructureType) obj).structureName));
     }
+
+    @Override
+    public int getByte() {
+        int ans = 0;
+        int max = 0;
+        for (IRType type: typeList) {
+            int typeByte = type.getByte();
+            if (ans == 0) {
+                ans = typeByte;
+            } else if (ans % typeByte == 0) {
+                ans += typeByte;
+            } else {
+                ans = ans + (typeByte - ans % typeByte) + typeByte;
+            }
+            max = Math.max(max, typeByte);
+        }
+        if (ans % max == 0) {
+            ans += max;
+        } else {
+            ans = ans + (max - ans % max) + max;
+        }
+        return 0;
+    }
 }

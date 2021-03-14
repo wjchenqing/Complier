@@ -28,4 +28,9 @@ public class ArrayType extends IRType {
                 && (elements == ((ArrayType) obj).elements)
                 && elementType.equals(((ArrayType) obj).elementType);
     }
+
+    @Override
+    public int getByte() {
+        return elements * elementType.getByte();
+    }
 }

@@ -7,7 +7,12 @@ public class StringConstant extends IROper {
 
     public StringConstant(IRType type, String value) {
         super(type);
-        this.value = value;
+        String tmp = value;
+        tmp = tmp.replace("\\\\", "\\");
+        tmp = tmp.replace("\\n", "\n");
+        tmp = tmp.replace("\\\"", "\"");
+        tmp = tmp + "\0";
+        this.value = tmp;
     }
 
     public String getValue() {
@@ -23,5 +28,10 @@ public class StringConstant extends IROper {
         tmp = tmp.replace("\t", "\\09");
         tmp = tmp.replace("\"", "\\22");
         return "c\"" + tmp + "\"";
+    }
+
+    @Override
+    public boolean isConstant() {
+        return true;
     }
 }

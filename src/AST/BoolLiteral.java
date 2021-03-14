@@ -7,7 +7,7 @@ public class BoolLiteral extends ConstExprNode {
         this.val = val;
     }
 
-    public boolean isVal() {
+    public boolean getVal() {
         return val;
     }
 

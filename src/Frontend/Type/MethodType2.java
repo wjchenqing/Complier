@@ -1,5 +1,7 @@
 package Frontend.Type;
 
+import IR.Operand.IROper;
+
 public class MethodType2 extends Type2 {
     private Type2 type2;
 
@@ -10,5 +12,10 @@ public class MethodType2 extends Type2 {
 
     public Type2 getType2() {
         return type2;
+    }
+
+    @Override
+    public IROper defaultOperand() {
+        return null;
     }
 }

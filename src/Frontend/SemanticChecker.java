@@ -12,12 +12,16 @@ import java.util.Map;
 import java.util.Stack;
 
 public class SemanticChecker implements ASTVisitor {
-    private ProgramScope programScope = new ProgramScope();
-    private Stack<Scope> scopeStack = new Stack<>();
-    private TypeTable typeTable = new TypeTable();
+    private final ProgramScope programScope = new ProgramScope();
+    private final Stack<Scope> scopeStack = new Stack<>();
+    private final TypeTable typeTable = new TypeTable();
 
-    public Scope getProgramScope() {
+    public ProgramScope getProgramScope() {
         return programScope;
+    }
+
+    public TypeTable getTypeTable() {
+        return typeTable;
     }
 
     private Scope currentScope() {

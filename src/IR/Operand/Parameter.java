@@ -22,4 +22,9 @@ public class Parameter extends IROper {
     public String toString() {
         return "%" + paramName;
     }
+
+    @Override
+    public boolean isConstant() {
+        return false;
+    }
 }

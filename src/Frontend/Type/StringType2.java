@@ -6,7 +6,7 @@ import Frontend.Entity.VariableEntity;
 
 import java.util.ArrayList;
 
-public class StringType2 extends Type2 {
+public class StringType2 extends WithoutDefaultValue {
     private ArrayList<FunctionEntity> methods = new ArrayList<>();
 
     public StringType2() {

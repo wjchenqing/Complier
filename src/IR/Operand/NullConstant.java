@@ -12,4 +12,9 @@ public class NullConstant extends IROper {
     public String toString() {
         return "null";
     }
+
+    @Override
+    public boolean isConstant() {
+        return true;
+    }
 }

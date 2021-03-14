@@ -1,5 +1,8 @@
 package IR.Type;
 
+import IR.Operand.IROper;
+import IR.Operand.NullConstant;
+
 public class PointerType extends IRType {
     private final IRType type;
 
@@ -19,5 +22,15 @@ public class PointerType extends IRType {
     @Override
     public boolean equals(Object obj) {
         return (obj instanceof PointerType) && (type == ((PointerType) obj).type);
+    }
+
+    @Override
+    public IROper defaultOperand() {
+        return new NullConstant();
+    }
+
+    @Override
+    public int getByte() {
+        return 1;
     }
 }

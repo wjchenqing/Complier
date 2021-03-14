@@ -10,4 +10,9 @@ public class VoidType extends IRType {
     public boolean equals(Object obj) {
         return (obj instanceof VoidType);
     }
+
+    @Override
+    public int getByte() {
+        return 0;
+    }
 }

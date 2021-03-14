@@ -5,8 +5,8 @@ import IR.Type.IntegerType;
 public class IntegerConstant extends IROper {
     private long value;
 
-    public IntegerConstant(int numberOfBits, long value) {
-        super(new IntegerType(numberOfBits));
+    public IntegerConstant(long value) {
+        super(new IntegerType(32));
         this.value = value;
     }
 
@@ -21,5 +21,10 @@ public class IntegerConstant extends IROper {
     @Override
     public String toString() {
         return String.valueOf(value);
+    }
+
+    @Override
+    public boolean isConstant() {
+        return true;
     }
 }

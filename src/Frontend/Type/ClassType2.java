@@ -5,7 +5,7 @@ import Frontend.Entity.VariableEntity;
 
 import java.util.ArrayList;
 
-public class ClassType2 extends Type2 {
+public class ClassType2 extends WithoutDefaultValue {
     private ArrayList<VariableEntity> members = new ArrayList<>();
     private FunctionEntity constructor;
     private ArrayList<FunctionEntity> methods = new ArrayList<>();

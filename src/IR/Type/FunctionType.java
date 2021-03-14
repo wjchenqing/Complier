@@ -51,4 +51,10 @@ public class FunctionType extends IRType {
                     -> ((FunctionType) obj).paramTypeList.get(i).equals(paramTypeList.get(i)));
         }
     }
+
+    @Override
+    public int getByte() {
+        System.exit(-1);
+        return 0;
+    }
 }

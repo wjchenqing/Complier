@@ -1,5 +1,7 @@
 package Frontend.Type;
 
+import IR.Operand.IROper;
+
 abstract public class Type2 {
     protected String typeName;
 
@@ -19,4 +21,6 @@ abstract public class Type2 {
     public String getTypeName() {
         return typeName;
     }
+
+    abstract public IROper defaultOperand();
 }

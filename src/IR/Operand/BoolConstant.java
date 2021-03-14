@@ -22,4 +22,9 @@ public class BoolConstant extends IROper {
     public String toString() {
         return String.valueOf(value);
     }
+
+    @Override
+    public boolean isConstant() {
+        return true;
+    }
 }

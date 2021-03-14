@@ -80,6 +80,36 @@ abstract public class Scope {
         }
     }
 
+    public boolean IsMethod(String name) {
+        if (entityMap.containsKey(name) && entityMap.get(name) instanceof FunctionEntity) {
+            return (this instanceof ClassScope);
+        } else if (parentScope != null) {
+            return parentScope.IsMethod(name);
+        } else {
+            return false;
+        }
+    }
+
+    public boolean IsGlobalVariable(String name) {
+        if (entityMap.containsKey(name) && entityMap.get(name) instanceof VariableEntity) {
+            return (this instanceof ProgramScope);
+        } else if (parentScope != null) {
+            return parentScope.IsMethod(name);
+        } else {
+            return false;
+        }
+    }
+
+    public FunctionEntity getAnyFunctionEntity(String name) {
+        if (entityMap.containsKey(name) && entityMap.get(name) instanceof FunctionEntity) {
+            return (FunctionEntity) entityMap.get(name);
+        } else if (parentScope != null) {
+            return parentScope.getAnyFunctionEntity(name);
+        } else {
+            return null;
+        }
+    }
+
     public TypeNode getReturnType() {
         return parentScope.getReturnType();
     }

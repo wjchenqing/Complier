@@ -8,7 +8,7 @@ import Frontend.Entity.VariableEntity;
 
 import java.util.ArrayList;
 
-public class ArrayType2 extends Type2 {
+public class ArrayType2 extends WithoutDefaultValue {
     private Type2 baseType;
     private int dim;
     private ArrayList<FunctionEntity> builtInMethods;

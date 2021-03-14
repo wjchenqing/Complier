@@ -2,7 +2,7 @@ package IR.Operand;
 
 import IR.Type.IRType;
 
-abstract public class IROper {
+abstract public class IROper implements Cloneable {
     protected IRType type;
 
     public IROper(IRType type) {
@@ -15,4 +15,8 @@ abstract public class IROper {
 
     @Override
     abstract public String toString();
+
+    abstract public boolean isConstant();
+
+
 }

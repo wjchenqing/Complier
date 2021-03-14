@@ -1,6 +1,6 @@
 package Frontend.Type;
 
-public class NullType2 extends Type2 {
+public class NullType2 extends WithoutDefaultValue {
     public NullType2() {
         typeName = "null";
     }

@@ -1,6 +1,7 @@
 import AST.Program;
 import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
+import IR.IRBuilder;
 import Parser.ErrorListener;
 import Parser.MxLexer;
 import Parser.MxParser;
@@ -42,5 +43,8 @@ public class Main {
 
         SemanticChecker semanticChecker = new SemanticChecker();
         programRoot.accept(semanticChecker);
+
+        IRBuilder irBuilder = new IRBuilder(semanticChecker.getProgramScope(), semanticChecker.getTypeTable());
+        programRoot.accept(irBuilder);
     }
 }

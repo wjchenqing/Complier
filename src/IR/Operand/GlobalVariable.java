@@ -7,7 +7,7 @@ public class GlobalVariable extends IROper {
     private IROper value;
 
     public GlobalVariable(String name, IROper value) {
-        super(new PointerType(value.getType()));
+        super(value != null ? new PointerType(value.getType()) : null);
         this.name = name;
         this.value = value;
     }
@@ -21,7 +21,19 @@ public class GlobalVariable extends IROper {
     }
 
     public void setValue(IROper value) {
+        if (value != null) {
+            if (type == null) {
+                type = value.getType();
+            } else {
+                assert type == value.getType();
+            }
+        }
         this.value = value;
+    }
+
+    @Override
+    public boolean isConstant() {
+        return false;
     }
 
     @Override
