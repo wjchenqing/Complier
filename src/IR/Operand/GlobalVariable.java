@@ -1,15 +1,21 @@
 package IR.Operand;
 
+import IR.Type.IRType;
 import IR.Type.PointerType;
 
 public class GlobalVariable extends IROper {
-    private final String name;
+    private String name;
     private IROper value;
 
-    public GlobalVariable(String name, IROper value) {
-        super(value != null ? new PointerType(value.getType()) : null);
+    public GlobalVariable(IRType type, String name, IROper value) {
+        super(type);
         this.name = name;
         this.value = value;
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getName() {
@@ -21,13 +27,13 @@ public class GlobalVariable extends IROper {
     }
 
     public void setValue(IROper value) {
-        if (value != null) {
-            if (type == null) {
-                type = value.getType();
-            } else {
-                assert type == value.getType();
-            }
-        }
+//        if (value != null) {
+//            if (type == null) {
+//                type = value.getType();
+//            } else {
+//                assert type == value.getType();
+//            }
+//        }
         this.value = value;
     }
 

@@ -3,20 +3,19 @@ package IR.Instruction;
 import IR.BasicBlock;
 import IR.Operand.IROper;
 import IR.Operand.Register;
-import IR.Type.IRType;
-import javafx.util.Pair;
+import Util.Pair;
 
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Phi extends IRInst {
     private Register result;
-    private Set<Pair<BasicBlock, IROper>> possibleProcessorSet;
+    private Set<Pair<BasicBlock, IROper>> possiblePredecessorSet;
 
-    public Phi(BasicBlock currentBB, Register result, Set<Pair<BasicBlock, IROper>> possibleProcessorSet) {
+    public Phi(BasicBlock currentBB, Register result, Set<Pair<BasicBlock, IROper>> possiblePredecessorSet) {
         super(currentBB);
         this.result = result;
-        this.possibleProcessorSet = possibleProcessorSet;
+        this.possiblePredecessorSet = possiblePredecessorSet;
     }
 
     public Register getResult() {
@@ -27,10 +26,10 @@ public class Phi extends IRInst {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(result.toString()).append(" = phi ").append(result.getType().toString()).append(" ");
-        int bound = possibleProcessorSet.size();
+        int bound = possiblePredecessorSet.size();
         AtomicInteger i = new AtomicInteger(1);
-        for (Pair<BasicBlock, IROper> processor: possibleProcessorSet) {
-            stringBuilder.append("[ ").append(processor.getValue().toString()).append(", ").append(processor.getKey().toString()).append(" ]");
+        for (Pair<BasicBlock, IROper> predecessor: possiblePredecessorSet) {
+            stringBuilder.append("[ ").append(predecessor.getSecond().toString()).append(", ").append(predecessor.getFirst().toString()).append(" ]");
             if (i.get() != bound) {
                 stringBuilder.append(", ");
             }

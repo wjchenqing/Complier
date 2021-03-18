@@ -21,7 +21,7 @@ public class PointerType extends IRType {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj instanceof PointerType) && (type == ((PointerType) obj).type);
+        return (obj instanceof PointerType) && (type.equals(((PointerType) obj).getType()));
     }
 
     @Override
@@ -31,6 +31,6 @@ public class PointerType extends IRType {
 
     @Override
     public int getByte() {
-        return 1;
+        return 8;
     }
 }

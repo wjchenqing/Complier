@@ -30,6 +30,10 @@ public class StructureType extends IRType {
 
     @Override
     public String toString() {
+        return "%" + structureName;
+    }
+
+    public String printString() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("%").append(structureName).append(" = type { ");
         int bound = typeList.size();
@@ -47,7 +51,7 @@ public class StructureType extends IRType {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj instanceof StructureType) && (structureName.equals(((StructureType) obj).structureName));
+        return (obj instanceof StructureType) && (structureName.equals(((StructureType) obj).getStructureName()));
     }
 
     @Override
@@ -61,15 +65,15 @@ public class StructureType extends IRType {
             } else if (ans % typeByte == 0) {
                 ans += typeByte;
             } else {
-                ans = ans + (typeByte - ans % typeByte) + typeByte;
+                ans = ans + (typeByte - ans % typeByte);
             }
             max = Math.max(max, typeByte);
         }
         if (ans % max == 0) {
             ans += max;
         } else {
-            ans = ans + (max - ans % max) + max;
+            ans = ans + (max - ans % max);
         }
-        return 0;
+        return ans;
     }
 }

@@ -54,7 +54,7 @@ public class FunctionType extends IRType {
 
     @Override
     public int getByte() {
-        System.exit(-1);
+        assert false;
         return 0;
     }
 }

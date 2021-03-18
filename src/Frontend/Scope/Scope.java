@@ -43,7 +43,7 @@ abstract public class Scope {
 
     public void declareEntity(Entity entity) {
         if (entityMap.containsKey(entity.getName())) {
-            System.exit(-1);
+            assert false;
             // Entities with the same name is not allowed in one scope.
             // Question: variable with the same name of a function, should I exit?
         } else {
@@ -80,6 +80,19 @@ abstract public class Scope {
         }
     }
 
+    public Entity getEntityForIR(String name) {
+        Entity entity = entityMap.get(name);
+        if ((entityMap.containsKey(name) &&
+                (entity instanceof VariableEntity
+                        || ((FunctionEntity) entity).getReturnType() != null)) && (entity.getAddr() != null)) {
+            return entity;
+        } else if (parentScope != null) {
+            return parentScope.getEntityForIR(name);
+        } else {
+            return null;
+        }
+    }
+
     public boolean IsMethod(String name) {
         if (entityMap.containsKey(name) && entityMap.get(name) instanceof FunctionEntity) {
             return (this instanceof ClassScope);
@@ -94,7 +107,7 @@ abstract public class Scope {
         if (entityMap.containsKey(name) && entityMap.get(name) instanceof VariableEntity) {
             return (this instanceof ProgramScope);
         } else if (parentScope != null) {
-            return parentScope.IsMethod(name);
+            return parentScope.IsGlobalVariable(name);
         } else {
             return false;
         }

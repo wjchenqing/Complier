@@ -89,14 +89,14 @@ public class SemanticChecker implements ASTVisitor {
 
         Entity mainFunction = programScope.getEntity("main");
         if (!(mainFunction instanceof FunctionEntity)) {
-            System.exit(-1);
+            assert false;
         }
         if (!(((FunctionEntity) mainFunction).getReturnType() instanceof PrimitiveType
                 && ((FunctionEntity) mainFunction).getReturnType().getIdentifier().equals("int"))) {
-            System.exit(-1);
+            assert false;
         }
         if (((FunctionEntity) mainFunction).getParams().size() != 0) {
-            System.exit(-1);
+            assert false;
         }
 
         scopeStack.pop();
@@ -107,7 +107,7 @@ public class SemanticChecker implements ASTVisitor {
     public Object visit(Variable node) {
         node.setScope(currentScope());
         if (node.getType().getIdentifier().equals("void"))
-            System.exit(-1);
+            assert false;
         node.getType().accept(this);
         ExprNode exprNode = node.getExpr();
         if (exprNode != null) {
@@ -115,7 +115,7 @@ public class SemanticChecker implements ASTVisitor {
             Type2 lType = typeTable.getType2(node.getType());
             Type2 rType = node.getExpr().getType2();
             if (!Type2.canAssign(lType, rType)) {
-                System.exit(-1);
+                assert false;
             }
         }
         return null;
@@ -129,12 +129,12 @@ public class SemanticChecker implements ASTVisitor {
 
         FunctionScope functionScope = new FunctionScope(currentScope(), node.getType());
         scopeStack.push(functionScope);
-        node.setScope(programScope);
+        node.setScope(currentScope());
 
         if (node.getType() != null) {
             node.getType().accept(this);
         } else if (functionEntity == null) {
-            System.exit(-1);
+            assert false;
         }
 
         ArrayList<Variable> variables = node.getParams();
@@ -168,7 +168,7 @@ public class SemanticChecker implements ASTVisitor {
         ArrayList<Function> functions = node.getFunctions();
         for (Function function: functions) {
             if (function.getIdentifier().equals(node.getIdentifier())) {
-                System.exit(-1);
+                assert false;
             } else {
                 ArrayList<VariableEntity> param = new ArrayList<>();
                 for (Variable variable: function.getParams()) {
@@ -176,6 +176,7 @@ public class SemanticChecker implements ASTVisitor {
                 }
                 FunctionEntity method = new FunctionEntity(function.getIdentifier(), function.getType(), param, function.getStatement());
                 classScope.declareEntity(method);
+                function.setScope(classScope);
 //                classType2.getMethods().add(method);
             }
         }
@@ -183,7 +184,7 @@ public class SemanticChecker implements ASTVisitor {
         Function constructor = node.getConstructor();
         if (constructor != null) {
             if (constructor.getParams().size() != 0) {
-                System.exit(-1);
+                assert false;
             } else {
                 classScope.declareEntity(new FunctionEntity(node.getIdentifier(), null, new ArrayList<>(), constructor.getStatement()));
                 constructor.accept(this);
@@ -210,7 +211,7 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public Object visit(ClassType node) {
         if (!typeTable.contains(node))
-            System.exit(-1);
+            assert false;
         node.setScope(currentScope());
         return null;
     }
@@ -218,7 +219,7 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public Object visit(ArrayType node) {
         if (!typeTable.contains(node.getBaseType()))
-            System.exit(-1);
+            assert false;
         node.setScope(currentScope());
         return null;
     }
@@ -254,7 +255,7 @@ public class SemanticChecker implements ASTVisitor {
         ExprNode condition = node.getCondition();
         condition.accept(this);
         if (!condition.getType2().equals(new BoolType2())){
-            System.exit(-1);
+            assert false;
         }
 
         if (node.getThenBody() != null) {
@@ -288,7 +289,7 @@ public class SemanticChecker implements ASTVisitor {
         ExprNode condition = node.getExpr();
         condition.accept(this);
         if (!condition.getType2().equals(new BoolType2())){
-            System.exit(-1);
+            assert false;
         }
 
         if (node.getBody() != null) {
@@ -304,7 +305,7 @@ public class SemanticChecker implements ASTVisitor {
     public Object visit(BreakStmt node) {
         node.setScope(currentScope());
         if (!currentScope().inLoopScope()) {
-            System.exit(-1);
+            assert false;
         }
         return null;
     }
@@ -313,7 +314,7 @@ public class SemanticChecker implements ASTVisitor {
     public Object visit(ContinueStmt node) {
         node.setScope(currentScope());
         if (!currentScope().inLoopScope()) {
-            System.exit(-1);
+            assert false;
         }
         return null;
     }
@@ -322,7 +323,7 @@ public class SemanticChecker implements ASTVisitor {
     public Object visit(ReturnStmt node) {
         node.setScope(currentScope());
         if (!currentScope().inFunctionScope()) {
-            System.exit(-1);
+            assert false;
         }
 
         TypeNode returnType = currentScope().getReturnType();
@@ -332,15 +333,15 @@ public class SemanticChecker implements ASTVisitor {
         if (exprNode != null) {
             exprNode.accept(this);
             if (lType == null || lType.equals(new VoidType2())) {
-                System.exit(-1);
+                assert false;
             }
             Type2 rType = exprNode.getType2();
             if (!Type2.canAssign(lType,rType)) {
-                System.exit(-1);
+                assert false;
             }
         } else {
             if (lType != null && !lType.equals(new VoidType2())) {
-                System.exit(-1);
+                assert false;
             }
         }
         return null;
@@ -366,7 +367,7 @@ public class SemanticChecker implements ASTVisitor {
         if (cond != null) {
             cond.accept(this);
             if (!cond.getType2().equals(new BoolType2())) {
-                System.exit(-1);
+                assert false;
             }
         }
 
@@ -394,10 +395,10 @@ public class SemanticChecker implements ASTVisitor {
         ExprNode exprNode = node.getExpr();
         exprNode.accept(this);
         if (!(exprNode.getType2() instanceof IntType2)) {
-            System.exit(-1);
+            assert false;
         }
         if (!exprNode.isCanBeLValue()) {
-            System.exit(-1);
+            assert false;
         }
         return null;
     }
@@ -407,7 +408,7 @@ public class SemanticChecker implements ASTVisitor {
         node.setScope(currentScope());
 
         if (node.getType().equals(new PrimitiveType("void"))) {
-            System.exit(-1);
+            assert false;
         }
 
         node.getType().accept(this);
@@ -415,7 +416,7 @@ public class SemanticChecker implements ASTVisitor {
 
         if (node.getDim() == 0) {
             if (!(type2 instanceof ClassType2)) {
-                System.exit(-1);
+                assert false;
             }
             node.setType2(type2);
             node.setCanBeLValue(true);
@@ -423,12 +424,12 @@ public class SemanticChecker implements ASTVisitor {
             ArrayList<ExprNode> exprNodesForDims = node.getExprPerDim();
             for (ExprNode expr: exprNodesForDims) {
                 if (expr == null) {
-                    System.exit(-1);
+                    assert false;
                 } else {
                     expr.accept(this);
                 }
                 if (!(expr.getType2() instanceof IntType2)) {
-                    System.exit(-1);
+                    assert false;
                 }
                 node.setType2(new ArrayType2(type2, node.getDim()));
                 node.setCanBeLValue(true);
@@ -454,24 +455,24 @@ public class SemanticChecker implements ASTVisitor {
                 node.setCanBeLValue(false);
                 node.setType2(new MethodType2(identifier, type2));
             } else {
-                System.exit(-1);
+                assert false;
             }
         } else if (type2 instanceof ArrayType2) {
             if (((ArrayType2) type2).hasMethod(identifier)) {
                 node.setCanBeLValue(false);
                 node.setType2(new MethodType2(identifier, type2));
             } else {
-                System.exit(-1);
+                assert false;
             }
         } else if (type2 instanceof StringType2) {
             if (((StringType2) type2).hasMethod(identifier)) {
                 node.setCanBeLValue(false);
                 node.setType2(new MethodType2(identifier, type2));
             } else {
-                System.exit(-1);
+                assert false;
             }
         } else {
-            System.exit(-1);
+            assert false;
         }
         return null;
     }
@@ -485,7 +486,7 @@ public class SemanticChecker implements ASTVisitor {
         if (nameExpr instanceof MemberExpr) {
             nameExpr.accept(this);
             if (!(nameExpr.getType2() instanceof MethodType2)) {
-                System.exit(-1);
+                assert false;
             }
             Type2 methodType2 = ((MethodType2) nameExpr.getType2()).getType2();
             if (methodType2 instanceof ClassType2) {
@@ -495,16 +496,16 @@ public class SemanticChecker implements ASTVisitor {
             } else if (methodType2 instanceof StringType2) {
                 functionEntity = ((StringType2) methodType2).getMethod(nameExpr.getType2().getTypeName());
             } else {
-                System.exit(-1);
+                assert false;
             }
         } else if (nameExpr instanceof IdentifierExpr) {
             Entity entity = currentScope().getEntity(((IdentifierExpr) nameExpr).getIdentifier());
             if ((entity == null) || (entity instanceof VariableEntity)) {
-                System.exit(-1);
+                assert false;
             }
             functionEntity = (FunctionEntity) entity;
         } else {
-            System.exit(-1);
+            assert false;
             functionEntity = null;
         }
 
@@ -514,13 +515,13 @@ public class SemanticChecker implements ASTVisitor {
         }
         ArrayList<VariableEntity> variableEntities = functionEntity == null? new ArrayList<>() : functionEntity.getParams();
         if (exprNodes.size() != variableEntities.size()) {
-            System.exit(-1);
+            assert false;
         }
         for (int i = 0; i < exprNodes.size(); i++) {
             Type2 lType = typeTable.getType2(variableEntities.get(i).getType());
             Type2 rType = exprNodes.get(i).getType2();
             if (!(Type2.canAssign(lType, rType))) {
-                System.exit(-1);
+                assert false;
             }
         }
         node.setCanBeLValue(false);
@@ -539,10 +540,10 @@ public class SemanticChecker implements ASTVisitor {
         dimExpr.accept(this);
 
         if (!(nameExpr.getType2() instanceof ArrayType2)) {
-            System.exit(-1);
+            assert false;
         }
         if (!(dimExpr.getType2() instanceof IntType2)) {
-            System.exit(-1);
+            assert false;
         }
 
         node.setCanBeLValue(true);
@@ -568,24 +569,24 @@ public class SemanticChecker implements ASTVisitor {
 
         if (op == PreFixExpr.Operator.preFixIncrease || op == PreFixExpr.Operator.preFixDecrease) {
             if (!exprNode.isCanBeLValue() || !(type2 instanceof IntType2)) {
-                System.exit(-1);
+                assert false;
             }
             node.setCanBeLValue(true);
             node.setType2(new IntType2());
         } else if (op == PreFixExpr.Operator.preFixPlus || op == PreFixExpr.Operator.preFixSub || op == PreFixExpr.Operator.bitwiseComplement) {
             if (!(type2 instanceof IntType2)) {
-                System.exit(-1);
+                assert false;
             }
             node.setCanBeLValue(false);
             node.setType2(new IntType2());
         } else if (op == PreFixExpr.Operator.negation) {
             if (!(type2 instanceof BoolType2)) {
-                System.exit(-1);
+                assert false;
             }
             node.setCanBeLValue(false);
             node.setType2(new BoolType2());
         } else {
-            System.exit(-1);
+            assert false;
         }
         return null;
     }
@@ -612,7 +613,7 @@ public class SemanticChecker implements ASTVisitor {
                 || op == BinaryExpr.Operator.bitWiseOr
                 || op == BinaryExpr.Operator.bitWiseXor) {
             if (!(lType instanceof IntType2) || !(rType instanceof IntType2)) {
-                System.exit(-1);
+                assert false;
             }
             node.setCanBeLValue(false);
             node.setType2(new IntType2());
@@ -624,7 +625,7 @@ public class SemanticChecker implements ASTVisitor {
                 node.setCanBeLValue(false);
                 node.setType2(new StringType2());
             } else {
-                System.exit(-1);
+                assert false;
             }
         } else if (op == BinaryExpr.Operator.less
                     || op == BinaryExpr.Operator.greater
@@ -637,7 +638,7 @@ public class SemanticChecker implements ASTVisitor {
                 node.setCanBeLValue(false);
                 node.setType2(new BoolType2());
             } else {
-                System.exit(-1);
+                assert false;
             }
         } else if (op == BinaryExpr.Operator.equal || op == BinaryExpr.Operator.notEqual) {
             if ((Type2.canAssign(lType,rType) && ((lType instanceof BoolType2) || (lType instanceof IntType2) || (lType instanceof NullType2) || (lType instanceof StringType2)))
@@ -648,22 +649,22 @@ public class SemanticChecker implements ASTVisitor {
                 node.setType2(new BoolType2());
                 node.setCanBeLValue(false);
             } else {
-                System.exit(-1);
+                assert false;
             }
         } else if (op == BinaryExpr.Operator.and || op == BinaryExpr.Operator.or) {
             if (!(lType instanceof BoolType2) || !(rType instanceof BoolType2)) {
-                System.exit(-1);
+                assert false;
             }
             node.setCanBeLValue(false);
             node.setType2(new BoolType2());
         } else if (op == BinaryExpr.Operator.assign) {
             if (!opd1.isCanBeLValue() || !Type2.canAssign(lType, rType)) {
-                System.exit(-1);
+                assert false;
             }
             node.setCanBeLValue(false);
             node.setType2(lType);
         } else {
-            System.exit(-1);
+            assert false;
         }
         return null;
     }
@@ -672,7 +673,7 @@ public class SemanticChecker implements ASTVisitor {
     public Object visit(ThisExpr node) {
         node.setScope(currentScope());
         if (!currentScope().inFunctionScope() || !currentScope().inClassScope()) {
-            System.exit(-1);
+            assert false;
         }
         node.setCanBeLValue(true);
         node.setType2(currentScope().getClassType());
@@ -717,9 +718,9 @@ public class SemanticChecker implements ASTVisitor {
 
         Entity entity = currentScope().getEntity(node.getIdentifier());
         if (entity == null) {
-            System.exit(-1);
+            assert false;
         } else if (entity instanceof FunctionEntity) {
-            System.exit(-1);
+            assert false;
         } else {
             node.setCanBeLValue(true);
             node.setType2(typeTable.getType2(((VariableEntity) entity).getType()));

@@ -13,11 +13,11 @@ public class Ret extends IRInst {
         super(currentBB);
         if (!(returnType instanceof VoidType)) {
             if (!returnVal.getType().equals(returnType)) {
-                System.exit(-1);
+                assert false;
             }
         } else {
             if (returnVal != null) {
-                System.exit(-1);
+                assert false;
             }
         }
         this.returnType = returnType;
@@ -26,7 +26,7 @@ public class Ret extends IRInst {
 
     @Override
     public String toString() {
-        if (!(returnType instanceof VoidType)) {
+        if (returnType instanceof VoidType) {
             return "ret void";
         } else {
             return "ret " + returnType.toString() + " " + returnVal.toString();

@@ -23,7 +23,7 @@ public class TypeTable {
 
     public void put(TypeNode typeNode, Type2 type2) {
         if (typeTable.containsKey(typeNode)) {
-            System.exit(-1);
+            assert false;
         } else {
             typeTable.put(typeNode, type2);
         }

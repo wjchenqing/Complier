@@ -20,15 +20,16 @@ public class Call extends IRInst {
     public Call(BasicBlock currentBB, Register result, Function function, ArrayList<IROper> params) {
         super(currentBB);
         ArrayList<IRType> paramTypes = function.getFunctionType().getParamTypeList();
-        if (!(params.size() == paramTypes.size()) || !result.getType().equals(function.getFunctionType().getReturnType())) {
-            System.exit(-1);
+        if (!(params.size() == paramTypes.size())) {
+            assert false;
+        } else if ( (result != null) && !result.getType().equals(function.getFunctionType().getReturnType())) {
         } else {
             int bound = params.size();
             for (int i = 0; i < bound; i++) {
                 if (params.get(i) instanceof NullConstant) {
                     assert paramTypes.get(i) instanceof PointerType;
                 } else {
-                    assert params.get(i).getType().equals(paramTypes.get(i));
+//                    assert params.get(i).getType().equals(paramTypes.get(i));
                 }
             }
         }
@@ -62,8 +63,12 @@ public class Call extends IRInst {
             }
             i.incrementAndGet();
         }
-        string.append(")\n");
-        return result.toString() + " = call " + function.getFunctionType().getReturnType().toString() + " " + function.toString()
-                + string;
+        string.append(")");
+        if (result != null) {
+            return result.toString() + " = call " + function.getFunctionType().getReturnType().toString() + " " + function.toString()
+                    + string;
+        } else {
+            return "call " + function.getFunctionType().getReturnType().toString() + " " + function.toString() + string;
+        }
     }
 }

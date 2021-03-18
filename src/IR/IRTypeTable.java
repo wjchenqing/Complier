@@ -24,14 +24,19 @@ public class IRTypeTable {
             } else if (astType instanceof ClassType2) {
                 typeTable.put(astType, new StructureType(astType.getTypeName()));
             } else {
-                System.exit(-1);
+                assert false;
             }
         }
 
         for (Type2 astType: typeTable.keySet()) {
             if (astType instanceof ClassType2) {
                 for (VariableEntity member: ((ClassType2) astType).getMembers()) {
-                    ((StructureType) typeTable.get(astType)).putIRType(typeTable.get(astTypeTable.getType2(member.getType())));
+                    Type2 type2 = astTypeTable.getType2(member.getType());
+                    IRType type = this.get(type2);
+                    if (type instanceof StructureType) {
+                        type = new PointerType(type);
+                    }
+                    ((StructureType) typeTable.get(astType)).putIRType(type);
                 }
 
             }
@@ -43,6 +48,16 @@ public class IRTypeTable {
     }
 
     public IRType get(Type2 type2) {
-        return typeTable.get(type2);
+        IRType type = typeTable.get(type2);
+        if (type2 instanceof ArrayType2) {
+            type = typeTable.get(((ArrayType2) type2).getBaseType());
+            if (type instanceof StructureType) {
+                type = new PointerType(type);
+            }
+            for (int i = 0; i < ((ArrayType2) type2).getDim(); i++) {
+                type = new PointerType(type);
+            }
+        }
+        return type;
     }
 }

@@ -11,7 +11,7 @@ import Frontend.Type.*;
 import IR.Instruction.*;
 import IR.Operand.*;
 import IR.Type.*;
-import javafx.util.Pair;
+import Util.Pair;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -79,7 +79,8 @@ public class IRBuilder implements ASTVisitor {
             }
         }
 
-        currentFunction = new IR.Function("____MxProgramInitial____", null, null, true);
+        currentFunction = new IR.Function("_MxProgramInitial", new VoidType(),
+                new FunctionType(new VoidType(), new ArrayList<>()), new ArrayList<>(), true);
         currentBB = currentFunction.getHeadBB();
         module.addFunction(currentFunction);
         for (ProgramNode programNode: node.getProgramNodes()) {
@@ -110,11 +111,14 @@ public class IRBuilder implements ASTVisitor {
         String identifier = node.getIdentifier();
         Type2 type2 = astTypeTable.getType2(node.getType());
         IRType type = module.getIrTypeTable().get(type2);
+        if (type instanceof StructureType) {
+            type = new PointerType(type);
+        }
         Scope scope = node.getScope();
         VariableEntity variableEntity = (VariableEntity) scope.getEntity(identifier);
         if (scope instanceof ProgramScope) {
             IROper value = type2.defaultOperand();
-            GlobalVariable globalVariable = new GlobalVariable(identifier, null);
+            GlobalVariable globalVariable = new GlobalVariable(type, identifier, null);
             if (node.getExpr() != null) {
                 Object result = node.getExpr().accept(this);
                 assert result instanceof ExprResultPair;
@@ -128,11 +132,11 @@ public class IRBuilder implements ASTVisitor {
             module.addGlobalVariable(globalVariable);
             variableEntity.setAddr(globalVariable);
         } else {
-            Register addr = new Register(type, identifier);
+            Register addr = new Register(new PointerType(type), identifier);
             BasicBlock headBB = currentFunction.getHeadBB();
             headBB.addInstAtHead(new Store(headBB, type2.defaultOperand(), addr));
             headBB.addInstAtHead(new Alloca(headBB, addr, type));
-            currentFunction.addOperand(identifier, addr);
+            currentFunction.CheckAndSetName(identifier, addr);
             variableEntity.setAddr(addr);
             if (node.getExpr() != null) {
                 Object result = node.getExpr().accept(this);
@@ -158,7 +162,7 @@ public class IRBuilder implements ASTVisitor {
         currentBB.addInstAtTail(new Br(currentBB, null, currentFunction.getReturnBB(), null));
 
         if (identifier.equals("main")) {
-            IR.Function function = module.getFunction("____MxProgramInitial____");
+            IR.Function function = module.getFunction("_MxProgramInitial");
             currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), null, function, new ArrayList<>()));
         }
 
@@ -211,9 +215,9 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(IfStmt node) {
-        BasicBlock thenBB = new BasicBlock("____if_then_block____", currentFunction);
-        BasicBlock elseBB = new BasicBlock("____if_else_block____", currentFunction);
-        BasicBlock ifExitBB = new BasicBlock("____if_exit_block____", currentFunction);
+        BasicBlock thenBB = new BasicBlock("if_then_block", currentFunction);
+        BasicBlock elseBB = new BasicBlock("if_else_block", currentFunction);
+        BasicBlock ifExitBB = new BasicBlock("if_exit_block", currentFunction);
 
         Object condResult = node.getCondition().accept(this);
         assert condResult instanceof ExprResultPair;
@@ -226,21 +230,25 @@ public class IRBuilder implements ASTVisitor {
         }
 
         currentBB = thenBB;
-        node.getThenBody().accept(this);
+        if (node.getThenBody() != null) {
+            node.getThenBody().accept(this);
+        }
         currentBB.addInstAtTail(new Br(currentBB, null, ifExitBB, null));
+        currentFunction.CheckAndSetName(thenBB.getName(), thenBB);
         currentFunction.addBasicBlock(thenBB);
-        currentFunction.addOperand(thenBB.getName(), thenBB);
 
         if (node.getElseBody() != null) {
             currentBB = elseBB;
             node.getElseBody().accept(this);
             currentBB.addInstAtTail(new Br(currentBB, null, ifExitBB, null));
+            currentFunction.CheckAndSetName(elseBB.getName(), elseBB);
             currentFunction.addBasicBlock(elseBB);
-            currentFunction.addOperand(elseBB.getName(), elseBB);
         }
 
+        currentBB = ifExitBB;
+
+        currentFunction.CheckAndSetName(ifExitBB.getName(), ifExitBB);
         currentFunction.addBasicBlock(ifExitBB);
-        currentFunction.addOperand(ifExitBB.getName(), ifExitBB);
 
         return null;
     }
@@ -260,20 +268,22 @@ public class IRBuilder implements ASTVisitor {
         Object condResult = node.getExpr().accept(this);
         assert condResult instanceof ExprResultPair;
         currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) condResult).result, loopBody, exitBlock));
-        currentFunction.addOperand(currentBB.getName(), currentBB);
-        currentFunction.addBasicBlock(currentBB);
+        currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
+        currentFunction.addBasicBlock(conditionBlock);
 
         currentBB = loopBody;
-        node.getBody().accept(this);
+        if (node.getBody() != null) {
+            node.getBody().accept(this);
+        }
         currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
-        currentFunction.addOperand(currentBB.getName(), currentBB);
+        currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
         currentFunction.addBasicBlock(loopBody);
 
         loopContinueBlocks.pop();
         loopExitBlocks.pop();
 
         currentBB = exitBlock;
-        currentFunction.addOperand(currentBB.getName(), currentBB);
+        currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
         currentFunction.addBasicBlock(exitBlock);
         return null;
     }
@@ -323,17 +333,19 @@ public class IRBuilder implements ASTVisitor {
             Object conditionResult = node.getCond().accept(this);
             assert conditionResult instanceof ExprResultPair;
             currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
+            currentFunction.addBasicBlock(conditionBlock);
 
             loopContinueBlocks.push(stepBlock);
             loopExitBlocks.push(exitBlock);
 
             currentBB = loopBody;
-            node.getStatement().accept(this);
+            if (node.getStatement() != null) {
+                node.getStatement().accept(this);
+            }
             currentBB.addInstAtTail(new Br(currentBB, null, stepBlock, null));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
@@ -341,8 +353,8 @@ public class IRBuilder implements ASTVisitor {
             currentBB = stepBlock;
             node.getStep().accept(this);
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(stepBlock.getName(), stepBlock);
+            currentFunction.addBasicBlock(stepBlock);
         } else if (node.getCond() != null) {
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
 
@@ -350,17 +362,19 @@ public class IRBuilder implements ASTVisitor {
             Object conditionResult = node.getCond().accept(this);
             assert conditionResult instanceof ExprResultPair;
             currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
+            currentFunction.addBasicBlock(conditionBlock);
 
             loopContinueBlocks.push(conditionBlock);
             loopExitBlocks.push(exitBlock);
 
             currentBB = loopBody;
-            node.getStatement().accept(this);
+            if (node.getStatement() != null) {
+                node.getStatement().accept(this);
+            }
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
@@ -372,10 +386,12 @@ public class IRBuilder implements ASTVisitor {
             loopExitBlocks.push(exitBlock);
 
             currentBB = loopBody;
-            node.getStatement().accept(this);
+            if (node.getStatement() != null) {
+                node.getStatement().accept(this);
+            }
             currentBB.addInstAtTail(new Br(currentBB, null, stepBlock, null));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
@@ -383,8 +399,8 @@ public class IRBuilder implements ASTVisitor {
             currentBB = stepBlock;
             node.getStep().accept(this);
             currentBB.addInstAtTail(new Br(currentBB, null, loopBody, null));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(stepBlock.getName(), stepBlock);
+            currentFunction.addBasicBlock(stepBlock);
         } else {
             currentBB.addInstAtTail(new Br(currentBB, null, loopBody, null));
 
@@ -392,17 +408,19 @@ public class IRBuilder implements ASTVisitor {
             loopExitBlocks.push(exitBlock);
 
             currentBB = loopBody;
-            node.getStatement().accept(this);
+            if (node.getStatement() != null) {
+                node.getStatement().accept(this);
+            }
             currentBB.addInstAtTail(new Br(currentBB, null, loopBody, null));
-            currentFunction.addOperand(currentBB.getName(), currentBB);
-            currentFunction.addBasicBlock(currentBB);
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
         }
 
         currentBB = exitBlock;
-        currentFunction.addOperand(exitBlock.getName(), exitBlock);
+        currentFunction.CheckAndSetName(exitBlock.getName(), exitBlock);
         currentFunction.addBasicBlock(exitBlock);
 
         return null;
@@ -416,18 +434,18 @@ public class IRBuilder implements ASTVisitor {
         Register result;
         if (node.getOp().equals(PostFixExpr.Operator.postFixIncrease)) {
             result = new Register(new IntegerType(32),
-                    ((Register) ((ExprResultPair) exprResult).getResult()).getName() + "__post_fix_increase__");
+                    ((Register) ((ExprResultPair) exprResult).getResult()).getName() + "post_fix_increase__");
             currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.add,
                     new IntegerType(32), ((ExprResultPair) exprResult).result, new IntegerConstant(1)));
         } else {
             assert node.getOp().equals(PostFixExpr.Operator.postFixDecrease);
             result = new Register(new IntegerType(32),
-                    ((Register) ((ExprResultPair) exprResult).getResult()).getName() + "__post_fix_decrease__");
+                    ((Register) ((ExprResultPair) exprResult).getResult()).getName() + "post_fix_decrease__");
             currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.sub,
                     new IntegerType(32), ((ExprResultPair) exprResult).result, new IntegerConstant(1)));
         }
         currentBB.addInstAtTail(new Store(currentBB, result, ((ExprResultPair) exprResult).addr));
-        currentFunction.addOperand(result.getName(), result);
+        currentFunction.CheckAndSetName(result.getName(), result);
         return new ExprResultPair(((ExprResultPair) exprResult).result, null);
     }
 
@@ -435,24 +453,25 @@ public class IRBuilder implements ASTVisitor {
         assert irType instanceof PointerType;
 
         ArrayList<IROper> paramForMalloc = new ArrayList<>();
-        IntegerConstant typeSize = new IntegerConstant(irType.getByte());
+        IntegerConstant typeSize = new IntegerConstant(((PointerType) irType).getType().getByte());
         Register arraySize = new Register(new IntegerType(32), "arraySize");
         currentBB.addInstAtTail(new BinaryOperation(currentBB, arraySize, BinaryOperation.BinaryOp.mul,
                 new IntegerType(32), typeSize, sizePerDim.getFirst()));
-        currentFunction.addOperand(arraySize.getName(), arraySize);
+        currentFunction.CheckAndSetName(arraySize.getName(), arraySize);
         Register arraySizeWithTag = new Register(new IntegerType(32), "arraySizeWithTag");
         currentBB.addInstAtTail(new BinaryOperation(currentBB, arraySizeWithTag, BinaryOperation.BinaryOp.add,
                 new IntegerType(32), arraySize, new IntegerConstant(4)));
         paramForMalloc.add(arraySizeWithTag);
+        currentFunction.CheckAndSetName(arraySizeWithTag.getName(), arraySizeWithTag);
 
         Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
         IR.Function mallocFunction = module.getFunction("malloc");
         currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
-        currentFunction.addOperand(mallocResult.getName(), mallocResult);
+        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
 
         Register mallocI32Ptr = new Register(new PointerType(new IntegerType(32)), "mallocI32Ptr");
         currentBB.addInstAtTail(new BitCastTo(currentBB, mallocI32Ptr, mallocResult, new PointerType(new IntegerType(32))));
-        currentFunction.addOperand(mallocI32Ptr.getName(), mallocI32Ptr);
+        currentFunction.CheckAndSetName(mallocI32Ptr.getName(), mallocI32Ptr);
 
         currentBB.addInstAtTail(new Store(currentBB, sizePerDim.getFirst(), mallocI32Ptr));
 
@@ -460,11 +479,11 @@ public class IRBuilder implements ASTVisitor {
         ArrayList<IROper> index = new ArrayList<>();
         index.add(new IntegerConstant(1));
         currentBB.addInstAtTail(new GetElementPtr(currentBB, headI32Ptr, mallocI32Ptr, index));
-        currentFunction.addOperand(headI32Ptr.getName(), headI32Ptr);
+        currentFunction.CheckAndSetName(headI32Ptr.getName(), headI32Ptr);
 
         Register headPtr = new Register(irType, "headPtr");
         currentBB.addInstAtTail(new BitCastTo(currentBB, headPtr, headI32Ptr, headPtr.getType()));
-        currentFunction.addOperand(headPtr.getName(), headPtr);
+        currentFunction.CheckAndSetName(headPtr.getName(), headPtr);
 
         Deque<IROper> sizePerDimForNext = new ArrayDeque<>(sizePerDim);
         sizePerDimForNext.removeFirst();
@@ -474,7 +493,7 @@ public class IRBuilder implements ASTVisitor {
         }
 
         IntegerConstant iterator = new IntegerConstant(0);
-        Register iteratorAddr = new Register(new IntegerType(32), "iteratorAddr");
+        Register iteratorAddr = new Register(new PointerType(new IntegerType(32)), "iteratorAddr");
         currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new IntegerConstant(0), iteratorAddr));
         currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), iteratorAddr, new IntegerType(32)));
         currentBB.addInstAtTail(new Store(currentBB, iterator, iteratorAddr));
@@ -482,19 +501,19 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock condBB = new BasicBlock("condBB", currentFunction);
         BasicBlock bodyBB = new BasicBlock("bodyBB", currentFunction);
         BasicBlock exitBB = new BasicBlock("exitBB", currentFunction);
-        currentFunction.addOperand(condBB.getName(), condBB);
-        currentFunction.addOperand(bodyBB.getName(), bodyBB);
-        currentFunction.addOperand(exitBB.getName(), exitBB);
+        currentFunction.CheckAndSetName(condBB.getName(), condBB);
+        currentFunction.CheckAndSetName(bodyBB.getName(), bodyBB);
+        currentFunction.CheckAndSetName(exitBB.getName(), exitBB);
 
         currentBB.addInstAtTail(new Br(currentBB, null, condBB, null));
         currentBB = condBB;
         currentFunction.addBasicBlock(condBB);
         Register curIterator = new Register(new IntegerType(32), "curIterator");
         currentBB.addInstAtTail(new Load(currentBB, curIterator, new IntegerType(32), iteratorAddr));
-        currentFunction.addOperand(curIterator.getName(), curIterator);
+        currentFunction.CheckAndSetName(curIterator.getName(), curIterator);
         Register cond = new Register(new IntegerType(1), "cond");
-        currentBB.addInstAtTail(new Icmp(currentBB, cond, Icmp.Condition.slt, new IntegerType(1), curIterator, sizePerDim.getFirst()));
-        currentFunction.addOperand(cond.getName(), cond);
+        currentBB.addInstAtTail(new Icmp(currentBB, cond, Icmp.Condition.slt, new IntegerType(32), curIterator, sizePerDim.getFirst()));
+        currentFunction.CheckAndSetName(cond.getName(), cond);
         currentBB.addInstAtTail(new Br(currentBB, cond, bodyBB, exitBB));
 
         currentBB = bodyBB;
@@ -505,12 +524,12 @@ public class IRBuilder implements ASTVisitor {
         curParam.add(curIterator);
         currentBB.addInstAtTail(new GetElementPtr(currentBB, curPtr, headPtr, curParam));
         currentBB.addInstAtTail(new Store(currentBB, headPtrOfNextDim, curPtr));
-        currentFunction.addOperand(curPtr.getName(), curPtr);
+        currentFunction.CheckAndSetName(curPtr.getName(), curPtr);
 
         Register nextIterator = new Register(new IntegerType(32), "nextIterator");
         currentBB.addInstAtTail(new BinaryOperation(currentBB, nextIterator, BinaryOperation.BinaryOp.add,
                 new IntegerType(32), curIterator, new IntegerConstant(1)));
-        currentFunction.addOperand(nextIterator.getName(), nextIterator);
+        currentFunction.CheckAndSetName(nextIterator.getName(), nextIterator);
         currentBB.addInstAtTail(new Store(currentBB, nextIterator, iteratorAddr));
 
         currentBB.addInstAtTail(new Br(currentBB, null, condBB, null));
@@ -525,6 +544,9 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(NewExpr node) {
         if (node.getDim() != 0) {
             IRType baseType = module.getIrTypeTable().get(astTypeTable.getType2(node.getType()));
+            if (baseType instanceof StructureType) {
+                baseType = new PointerType(baseType);
+            }
             for (int i = 0; i < node.getDim(); ++i) {
                 baseType = new PointerType(baseType);
             }
@@ -542,19 +564,20 @@ public class IRBuilder implements ASTVisitor {
             Type2 type2 = astTypeTable.getType2(node.getType());
             assert type2 instanceof ClassType2;
             IRType structureType = module.getIrTypeTable().get(type2);
-            assert structureType instanceof StructureType;
-
             int structureSize = structureType.getByte();
+            assert structureType instanceof StructureType;
+            structureType = new PointerType(structureType);
+
             ArrayList<IROper> paramForMalloc = new ArrayList<>();
             paramForMalloc.add(new IntegerConstant(structureSize));
             Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
             IR.Function mallocFunction = module.getFunction("malloc");
             currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
-            currentFunction.addOperand(mallocResult.getName(), mallocResult);
+            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
 
             Register addr = new Register(structureType, "classAddr");
             currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
-            currentFunction.addOperand(addr.getName(), addr);
+            currentFunction.CheckAndSetName(addr.getName(), addr);
 
             if (((ClassType2) type2).getConstructor() != null) {
                 IR.Function constructor = module.getFunction(type2.getTypeName() + "." + ((ClassType2) type2).getConstructor().getName());
@@ -588,6 +611,9 @@ public class IRBuilder implements ASTVisitor {
         }
         assert type != null;
         IRType memberType = module.getIrTypeTable().get(astTypeTable.getType2(type));
+        if (memberType instanceof StructureType) {
+            memberType = new PointerType(memberType);
+        }
         ArrayList<IROper> indexList = new ArrayList<>();
         indexList.add(new IntegerConstant(0));
         indexList.add(new IntegerConstant(index.longValue()));
@@ -595,8 +621,8 @@ public class IRBuilder implements ASTVisitor {
         currentBB.addInstAtTail(new GetElementPtr(currentBB, result, resultPointer, indexList));
         Register loadResult = new Register(memberType, baseClassType.getTypeName() + "." + identifier);
         currentBB.addInstAtTail(new Load(currentBB, loadResult, memberType, result));
-        currentFunction.addOperand(result.getName(), result);
-        currentFunction.addOperand(loadResult.getName(), loadResult);
+        currentFunction.CheckAndSetName(result.getName(), result);
+        currentFunction.CheckAndSetName(loadResult.getName(), loadResult);
         return new ExprResultPair(loadResult, result);
     }
 
@@ -623,7 +649,7 @@ public class IRBuilder implements ASTVisitor {
                 }
                 currentBB.addInstAtTail(new Call(currentBB, callResult, function, params));
                 if (callResult != null) {
-                    currentFunction.addOperand(callResult.getName(), callResult);
+                    currentFunction.CheckAndSetName(callResult.getName(), callResult);
                 }
                 return new ExprResultPair(callResult, null);
             } else if (baseType instanceof StringType2) {
@@ -640,13 +666,13 @@ public class IRBuilder implements ASTVisitor {
                 }
                 currentBB.addInstAtTail(new Call(currentBB, callResult, function, params));
                 if (callResult != null) {
-                    currentFunction.addOperand(callResult.getName(), callResult);
+                    currentFunction.CheckAndSetName(callResult.getName(), callResult);
                 }
                 return new ExprResultPair(callResult, null);
             } else if (baseType instanceof ArrayType2) {
                 Register pointer = new Register(new PointerType(new IntegerType(32)), "for_getting_size");
                 currentBB.addInstAtTail(new BitCastTo(currentBB, pointer, ((ExprResultPair) baseTypeResult).result, new PointerType(new IntegerType(32))));
-                currentFunction.addOperand(pointer.getName(), pointer);
+                currentFunction.CheckAndSetName(pointer.getName(), pointer);
 
                 ArrayList<IROper> index = new ArrayList<>();
                 index.add(new IntegerConstant(-1));
@@ -654,8 +680,8 @@ public class IRBuilder implements ASTVisitor {
                 currentBB.addInstAtTail(new GetElementPtr(currentBB, sizeResultPointer, pointer, index));
                 Register sizeResult = new Register(new IntegerType(32), "size_result");
                 currentBB.addInstAtTail(new Load(currentBB, sizeResult, new IntegerType(32), sizeResultPointer));
-                currentFunction.addOperand(sizeResultPointer.getName(), sizeResultPointer);
-                currentFunction.addOperand(sizeResult.getName(), sizeResult);
+                currentFunction.CheckAndSetName(sizeResultPointer.getName(), sizeResultPointer);
+                currentFunction.CheckAndSetName(sizeResult.getName(), sizeResult);
 
                 return new ExprResultPair(sizeResult, null);
             }
@@ -675,7 +701,7 @@ public class IRBuilder implements ASTVisitor {
                 }
                 currentBB.addInstAtTail(new Call(currentBB, callResult, function, params));
                 if (callResult != null) {
-                    currentFunction.addOperand(callResult.getName(), callResult);
+                    currentFunction.CheckAndSetName(callResult.getName(), callResult);
                 }
                 return new ExprResultPair(callResult, null);
             } else {
@@ -688,6 +714,7 @@ public class IRBuilder implements ASTVisitor {
                 IRType type = ((PointerType) thisAddr.getType()).getType();
                 Register thisResult = new Register(type, "this");
                 currentBB.addInstAtTail(new Load(currentBB, thisResult, type, thisAddr));
+                currentFunction.CheckAndSetName(thisResult.getName(), thisResult);
 
                 IRType returnType = function.getFunctionType().getReturnType();
                 Register callResult = returnType instanceof VoidType ? null : new Register(returnType, "call_class_method");
@@ -700,7 +727,7 @@ public class IRBuilder implements ASTVisitor {
                 }
                 currentBB.addInstAtTail(new Call(currentBB, callResult, function, params));
                 if (callResult != null) {
-                    currentFunction.addOperand(callResult.getName(), callResult);
+                    currentFunction.CheckAndSetName(callResult.getName(), callResult);
                 }
                 return new ExprResultPair(callResult, null);
             }
@@ -720,11 +747,11 @@ public class IRBuilder implements ASTVisitor {
         Register resultAddr = new Register(((ExprResultPair) nameExprResult).getResult().getType(), "__element_pointer__");
         ArrayList<IROper> idxes = new ArrayList<>();
         idxes.add(((ExprResultPair) dimExprResult).result);
-        currentBB.addInstAtTail(new GetElementPtr(currentBB, resultAddr, ((ExprResultPair) nameExprResult).addr, idxes));
-        currentFunction.addOperand(resultAddr.getName(), resultAddr);
+        currentBB.addInstAtTail(new GetElementPtr(currentBB, resultAddr, ((ExprResultPair) nameExprResult).result, idxes));
+        currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
         Register arrayReg = new Register(((PointerType)(((ExprResultPair) nameExprResult).getResult().getType())).getType(), "__array_register__");
         currentBB.addInstAtTail(new Load(currentBB, arrayReg, arrayReg.getType(), resultAddr));
-        currentFunction.addOperand(arrayReg.getName(), arrayReg);
+        currentFunction.CheckAndSetName(arrayReg.getName(), arrayReg);
         return new ExprResultPair(arrayReg, resultAddr);
     }
 
@@ -743,7 +770,7 @@ public class IRBuilder implements ASTVisitor {
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.add,
                         new IntegerType(32), exprResultReg, new IntegerConstant(1)));
                 currentBB.addInstAtTail(new Store(currentBB, result, exprResultAddr));
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, exprResultAddr);
             case preFixDecrease:
                 exprResultReg = (Register) ((ExprResultPair) exprResult).result;
@@ -751,7 +778,7 @@ public class IRBuilder implements ASTVisitor {
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.sub,
                         new IntegerType(32), exprResultReg, new IntegerConstant(1)));
                 currentBB.addInstAtTail(new Store(currentBB, result, exprResultAddr));
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, exprResultAddr);
             case preFixPlus:
                 return new ExprResultPair(((ExprResultPair) exprResult).getResult(), null);
@@ -764,7 +791,7 @@ public class IRBuilder implements ASTVisitor {
                     result = new Register(new IntegerType(32), exprResultReg.getName() + "__pre_fix_sub__");
                     currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.sub,
                             new IntegerType(32), new IntegerConstant(0), exprResultReg));
-                    currentFunction.addOperand(result.getName(),result);
+                    currentFunction.CheckAndSetName(result.getName(),result);
                     return new ExprResultPair(result, exprResultAddr);
                 }
             case negation:
@@ -772,14 +799,14 @@ public class IRBuilder implements ASTVisitor {
                 result = new Register(new IntegerType(1), exprResultReg.getName() + "__negation__");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.xor,
                         new IntegerType(1), exprResultReg, new BoolConstant(true)));
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, exprResultAddr);
             case bitwiseComplement:
                 exprResultReg = (Register) ((ExprResultPair) exprResult).result;
                 result = new Register(new IntegerType(1), exprResultReg.getName() + "__bitwiseComplement__");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.xor,
                         new IntegerType(-1), exprResultReg, new BoolConstant(true)));
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, exprResultAddr);
         }
         return null;
@@ -790,7 +817,7 @@ public class IRBuilder implements ASTVisitor {
         Object opd1Result;
         Object opd2Result;
         Register opd1ResultReg;
-        Register opd2ResultReg;
+//        Register opd2ResultReg;
         IROper opd1ResultAddr;
         IROper opd2ResultAddr;
         Register result;
@@ -799,7 +826,7 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock opd2BB;
         BasicBlock exitBB;
 
-        Set<Pair<BasicBlock, IROper>> possibleProcessorSet;
+        Set<Pair<BasicBlock, IROper>> possiblePredecessorSet;
 
         IR.Function function;
         ArrayList<IROper> params;
@@ -811,15 +838,15 @@ public class IRBuilder implements ASTVisitor {
             case multiply:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "multiply");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.mul,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -829,15 +856,15 @@ public class IRBuilder implements ASTVisitor {
             case division:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "division");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.sdiv,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -847,15 +874,15 @@ public class IRBuilder implements ASTVisitor {
             case mod:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "mod");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.srem,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -865,40 +892,40 @@ public class IRBuilder implements ASTVisitor {
             case plus:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 if ((node.getOpd1().getType2() instanceof IntType2) && (node.getOpd2().getType2() instanceof IntType2)) {
                     result = new Register(new IntegerType(32), "add");
                     currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.add,
-                            new IntegerType(32), opd1ResultReg, opd2ResultReg));
+                            new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
 
                 } else {
-                    function = module.getFunction("__string_add");
+                    function = module.getFunction("_string_concatenate");
                     result = new Register(new PointerType(new IntegerType(8)), "str_add");
                     params = new ArrayList<>();
-                    params.add(opd1ResultReg);
-                    params.add(opd2ResultReg);
+                    params.add(((ExprResultPair) opd1Result).result);
+                    params.add(((ExprResultPair) opd2Result).result);
                     currentBB.addInstAtTail(new Call(currentBB, result, function, params));
                 }
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, null);
 
 
             case sub:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "sub");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.sub,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -908,15 +935,15 @@ public class IRBuilder implements ASTVisitor {
             case shiftLeft:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "shiftLeft");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.shl,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -926,15 +953,15 @@ public class IRBuilder implements ASTVisitor {
             case shiftRight:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "shiftRight");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.ashr,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -944,25 +971,25 @@ public class IRBuilder implements ASTVisitor {
             case less:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 if ((node.getOpd1().getType2() instanceof IntType2) && (node.getOpd2().getType2() instanceof IntType2)) {
                     result = new Register(new IntegerType(1), "less");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.slt, new IntegerType(32),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
 
                 } else {
-                    function = module.getFunction("__string_less");
+                    function = module.getFunction("_string_less");
                     result = new Register(new IntegerType(1), "str_less");
                     params = new ArrayList<>();
-                    params.add(opd1ResultReg);
-                    params.add(opd2ResultReg);
+                    params.add(((ExprResultPair) opd1Result).result);
+                    params.add(((ExprResultPair) opd2Result).result);
                     currentBB.addInstAtTail(new Call(currentBB, result, function, params));
                 }
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, null);
 
 
@@ -971,25 +998,25 @@ public class IRBuilder implements ASTVisitor {
             case greater:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 if ((node.getOpd1().getType2() instanceof IntType2) && (node.getOpd2().getType2() instanceof IntType2)) {
                     result = new Register(new IntegerType(1), "greater");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.sgt, new IntegerType(32),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
 
                 } else {
-                    function = module.getFunction("__string_greater");
+                    function = module.getFunction("_string_greater");
                     result = new Register(new IntegerType(1), "str_greater");
                     params = new ArrayList<>();
-                    params.add(opd1ResultReg);
-                    params.add(opd2ResultReg);
+                    params.add(((ExprResultPair) opd1Result).result);
+                    params.add(((ExprResultPair) opd2Result).result);
                     currentBB.addInstAtTail(new Call(currentBB, result, function, params));
                 }
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, null);
 
 
@@ -998,25 +1025,25 @@ public class IRBuilder implements ASTVisitor {
             case lessEqual:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 if ((node.getOpd1().getType2() instanceof IntType2) && (node.getOpd2().getType2() instanceof IntType2)) {
                     result = new Register(new IntegerType(1), "lessEqual");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.sle, new IntegerType(32),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
 
                 } else {
-                    function = module.getFunction("__string_lessEqual");
+                    function = module.getFunction("_string_lessEqual");
                     result = new Register(new IntegerType(1), "str_lessEqual");
                     params = new ArrayList<>();
-                    params.add(opd1ResultReg);
-                    params.add(opd2ResultReg);
+                    params.add(((ExprResultPair) opd1Result).result);
+                    params.add(((ExprResultPair) opd2Result).result);
                     currentBB.addInstAtTail(new Call(currentBB, result, function, params));
                 }
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, null);
 
 
@@ -1025,25 +1052,25 @@ public class IRBuilder implements ASTVisitor {
             case greaterEqual:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 if ((node.getOpd1().getType2() instanceof IntType2) && (node.getOpd2().getType2() instanceof IntType2)) {
                     result = new Register(new IntegerType(1), "greaterEqual");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.sge, new IntegerType(32),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
 
                 } else {
-                    function = module.getFunction("__string_greaterEqual");
+                    function = module.getFunction("_string_greaterEqual");
                     result = new Register(new IntegerType(1), "str_greaterEqual");
                     params = new ArrayList<>();
-                    params.add(opd1ResultReg);
-                    params.add(opd2ResultReg);
+                    params.add(((ExprResultPair) opd1Result).result);
+                    params.add(((ExprResultPair) opd2Result).result);
                     currentBB.addInstAtTail(new Call(currentBB, result, function, params));
                 }
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, null);
 
 
@@ -1052,48 +1079,48 @@ public class IRBuilder implements ASTVisitor {
             case equal:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
 
                 if ((op1Type2 instanceof IntType2) && (op2Type2 instanceof IntType2)) {
                     result = new Register(new IntegerType(1), "equal");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, new IntegerType(32),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof BoolType2) && (op2Type2 instanceof BoolType2)) {
                     result = new Register(new IntegerType(1), "equal");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, new IntegerType(1),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof ArrayType2) && (op2Type2 instanceof NullType2)) {
                     result = new Register(new IntegerType(1), "equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, opd1ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, ((ExprResultPair) opd1Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof NullType2) && (op2Type2 instanceof ArrayType2)) {
                     result = new Register(new IntegerType(1), "equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, opd2ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, ((ExprResultPair) opd2Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof ClassType2) && (op2Type2 instanceof NullType2)) {
                     result = new Register(new IntegerType(1), "equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, opd1ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, ((ExprResultPair) opd1Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof NullType2) && (op2Type2 instanceof ClassType2)) {
                     result = new Register(new IntegerType(1), "equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, opd2ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.eq, ((ExprResultPair) opd2Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 }  else if ((op1Type2 instanceof NullType2) && (op2Type2 instanceof NullType2)) {
                     result = new Register(new IntegerType(1), "equal");
                     currentBB.addInstAtTail(new Store(currentBB, new BoolConstant(true), result));
                 } else {
-                    function = module.getFunction("__string_equal");
+                    function = module.getFunction("_string_equal");
                     result = new Register(new IntegerType(1), "str_equal");
                     params = new ArrayList<>();
-                    params.add(opd1ResultReg);
-                    params.add(opd2ResultReg);
+                    params.add(((ExprResultPair) opd1Result).result);
+                    params.add(((ExprResultPair) opd2Result).result);
                     currentBB.addInstAtTail(new Call(currentBB, result, function, params));
                 }
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, null);
 
 
@@ -1102,47 +1129,47 @@ public class IRBuilder implements ASTVisitor {
             case notEqual:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 if ((op1Type2 instanceof IntType2) && (op2Type2 instanceof IntType2)) {
                     result = new Register(new IntegerType(1), "not_equal");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, new IntegerType(32),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof BoolType2) && (op2Type2 instanceof BoolType2)) {
                     result = new Register(new IntegerType(1), "not_equal");
                     currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, new IntegerType(1),
-                            opd1ResultReg, opd2ResultReg));
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof ArrayType2) && (op2Type2 instanceof NullType2)) {
                     result = new Register(new IntegerType(1), "not_equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, opd1ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, ((ExprResultPair) opd1Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof NullType2) && (op2Type2 instanceof ArrayType2)) {
                     result = new Register(new IntegerType(1), "not_equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, opd2ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, ((ExprResultPair) opd2Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof ClassType2) && (op2Type2 instanceof NullType2)) {
                     result = new Register(new IntegerType(1), "not_equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, opd1ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, ((ExprResultPair) opd1Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 } else if ((op1Type2 instanceof NullType2) && (op2Type2 instanceof ClassType2)) {
                     result = new Register(new IntegerType(1), "not_equal");
-                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, opd2ResultReg.getType(),
-                            opd1ResultReg, opd2ResultReg));
+                    currentBB.addInstAtTail(new Icmp(currentBB, result, Icmp.Condition.ne, ((ExprResultPair) opd2Result).result.getType(),
+                            ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
                 }  else if ((op1Type2 instanceof NullType2) && (op2Type2 instanceof NullType2)) {
                     result = new Register(new IntegerType(1), "not_equal");
                     currentBB.addInstAtTail(new Store(currentBB, new BoolConstant(false), result));
                 } else {
-                    function = module.getFunction("__string_equal");
+                    function = module.getFunction("_string_notEqual");
                     result = new Register(new IntegerType(1), "str_not_equal");
                     params = new ArrayList<>();
-                    params.add(opd1ResultReg);
-                    params.add(opd2ResultReg);
+                    params.add(((ExprResultPair) opd1Result).result);
+                    params.add(((ExprResultPair) opd2Result).result);
                     currentBB.addInstAtTail(new Call(currentBB, result, function, params));
                 }
-                currentFunction.addOperand(result.getName(), result);
+                currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, null);
 
 
@@ -1151,15 +1178,15 @@ public class IRBuilder implements ASTVisitor {
             case bitWiseAnd:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "bitWiseAnd");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.and,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -1169,15 +1196,15 @@ public class IRBuilder implements ASTVisitor {
             case bitWiseOr:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "bitWiseOr");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.or,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -1187,15 +1214,15 @@ public class IRBuilder implements ASTVisitor {
             case bitWiseXor:
                 opd1Result = node.getOpd1().accept(this);
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
                 result = new Register(new IntegerType(32), "bitWiseXor");
                 currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.xor,
-                        new IntegerType(32), opd1ResultReg, opd2ResultReg));
-                currentFunction.addOperand(result.getName(), result);
+                        new IntegerType(32), ((ExprResultPair) opd1Result).result, ((ExprResultPair) opd2Result).result));
+                currentFunction.CheckAndSetName(result.getName(), result);
 
                 return new ExprResultPair(result, null);
 
@@ -1203,32 +1230,32 @@ public class IRBuilder implements ASTVisitor {
 
 
             case and:
-                opd1BB = currentBB;
-                opd2BB = new BasicBlock("__opd2BB__", currentFunction);
-                exitBB = new BasicBlock("__exitBB__", currentFunction);
+                opd2BB = new BasicBlock("opd2BB", currentFunction);
+                exitBB = new BasicBlock("exitBB", currentFunction);
 
                 opd1Result = node.getOpd1().accept(this);
+                opd1BB = currentBB;
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
-                opd1BB.addInstAtTail(new Br(opd1BB, opd1ResultReg, opd2BB, exitBB));
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, opd2BB, exitBB));
 
                 currentBB = opd2BB;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
                 currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
                 currentFunction.addBasicBlock(opd2BB);
-                currentFunction.addOperand(currentBB.getName(), currentBB);
+                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 currentBB = exitBB;
                 result = new Register(new IntegerType(1), "and");
-                possibleProcessorSet = new LinkedHashSet<>();
-                possibleProcessorSet.add(new Pair<>(opd1BB, new BoolConstant(false)));
-                possibleProcessorSet.add(new Pair<>(opd2BB, opd2ResultReg));
-                currentBB.addInstAtTail(new Phi(currentBB, result, possibleProcessorSet));
+                possiblePredecessorSet = new LinkedHashSet<>();
+                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd1BB, new BoolConstant(false)));
+                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd2BB, ((ExprResultPair) opd2Result).result));
+                currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
                 currentFunction.addBasicBlock(currentBB);
-                currentFunction.addOperand(result.getName(), result);
-                currentFunction.addOperand(currentBB.getName(), currentBB);
+                currentFunction.CheckAndSetName(result.getName(), result);
+                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 return new ExprResultPair(result, null);
 
@@ -1236,32 +1263,32 @@ public class IRBuilder implements ASTVisitor {
 
 
             case or:
-                opd1BB = currentBB;
-                opd2BB = new BasicBlock("__opd2BB__", currentFunction);
-                exitBB = new BasicBlock("__exitBB__", currentFunction);
+                opd2BB = new BasicBlock("opd2BB", currentFunction);
+                exitBB = new BasicBlock("exitBB", currentFunction);
 
                 opd1Result = node.getOpd1().accept(this);
+                opd1BB = currentBB;
                 assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
-                opd1BB.addInstAtTail(new Br(opd1BB, opd1ResultReg, exitBB, opd2BB));
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, exitBB, opd2BB));
 
                 currentBB = opd2BB;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
                 currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
                 currentFunction.addBasicBlock(opd2BB);
-                currentFunction.addOperand(currentBB.getName(), currentBB);
+                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 currentBB = exitBB;
                 result = new Register(new IntegerType(1), "or");
-                possibleProcessorSet = new LinkedHashSet<>();
-                possibleProcessorSet.add(new Pair<>(opd1BB, new BoolConstant(true)));
-                possibleProcessorSet.add(new Pair<>(opd2BB, opd2ResultReg));
-                currentBB.addInstAtTail(new Phi(currentBB, result, possibleProcessorSet));
+                possiblePredecessorSet = new LinkedHashSet<>();
+                possiblePredecessorSet.add(new Pair<>(opd1BB, new BoolConstant(true)));
+                possiblePredecessorSet.add(new Pair<>(opd2BB, ((ExprResultPair) opd2Result).result));
+                currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
                 currentFunction.addBasicBlock(currentBB);
-                currentFunction.addOperand(result.getName(), result);
-                currentFunction.addOperand(currentBB.getName(), currentBB);
+                currentFunction.CheckAndSetName(result.getName(), result);
+                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 return new ExprResultPair(result, null);
 
@@ -1274,10 +1301,13 @@ public class IRBuilder implements ASTVisitor {
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
                 opd1ResultAddr = ((ExprResultPair) opd1Result).addr;
-                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                if (!(((ExprResultPair) opd2Result).result instanceof Register)) {
+//                    assert false;
+//                }
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
 
-                currentBB.addInstAtTail(new Store(currentBB, opd2ResultReg, opd1ResultAddr));
-                return new ExprResultPair(opd2ResultReg, null);
+                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd2Result).result, opd1ResultAddr));
+                return new ExprResultPair(((ExprResultPair) opd2Result).result, null);
         }
         return null;
     }
@@ -1290,7 +1320,7 @@ public class IRBuilder implements ASTVisitor {
         IRType type = ((PointerType) thisAddr.getType()).getType();
         Register thisResult = new Register(type, "this");
         currentBB.addInstAtTail(new Load(currentBB, thisResult, type, thisAddr));
-        currentFunction.addOperand(thisResult.getName(), thisResult);
+        currentFunction.CheckAndSetName(thisResult.getName(), thisResult);
         return new ExprResultPair(thisResult, null);
     }
 
@@ -1306,15 +1336,18 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(StringLiteral node) { //Maybe Done
-        StringConstant ini = new StringConstant(new StringType(node.getVal().length()), node.getVal());
-        GlobalVariable stringConst = new GlobalVariable("str." + String.valueOf(module.getStringConstMapSize()), ini);
+        StringConstant ini = new StringConstant(node.getVal());
+        GlobalVariable stringConst = new GlobalVariable(ini.getType(),
+                "str." + String.valueOf(module.getStringConstMapSize()), ini);
         module.addStringConst(stringConst);
-        Register result = new Register(new PointerType(new IntegerType(8)), stringConst.getName());
-
-        GetElementPtr getElementPtr = new GetElementPtr(currentBB, result, stringConst, new ArrayList<>());
+        Register result = new Register(new PointerType(new IntegerType(8)), "stringParam");
+        ArrayList<IROper> param = new ArrayList<>();
+        param.add(new IntegerConstant(0));
+        param.add(new IntegerConstant(0));
+        GetElementPtr getElementPtr = new GetElementPtr(currentBB, result, stringConst, param);
 
         currentBB.addInstAtTail(getElementPtr);
-        currentFunction.addOperand(result.getName(), result);
+        currentFunction.CheckAndSetName(result.getName(), result);
         return new ExprResultPair(result, null);
     }
 
@@ -1325,28 +1358,33 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(IdentifierExpr node) {
-        Entity entity = node.getScope().getEntity(node.getIdentifier());
-        IROper addr = entity.getAddr();
-        if (addr != null) {
+        Entity entity = node.getScope().getEntityForIR(node.getIdentifier());
+        if (entity != null) {
+            IROper addr = entity.getAddr();
             IRType type;
             if (node.getScope().IsGlobalVariable(node.getIdentifier())){
                 type = addr.getType();
             } else {
-                assert addr.getType() instanceof PointerType;
+                if (!(addr.getType() instanceof PointerType)) {
+                    assert false;
+                }
                 type = ((PointerType) addr.getType()).getType();
             }
             Register result = new Register(type, node.getIdentifier());
             currentBB.addInstAtTail(new Load(currentBB, result, type, addr));
-            currentFunction.addOperand(node.getIdentifier(), result);
+            currentFunction.CheckAndSetName(node.getIdentifier(), result);
             return new ExprResultPair(result, addr);
         } else {
-            assert (node.getScope().inClassScope()) && (node.getScope().inFunctionScope());
+            if (!(node.getScope().inClassScope()) && (node.getScope().inFunctionScope())) {
+                assert false;
+            }
             Type2 baseType = node.getScope().getClassType();
             Register thisAddr = (Register) currentFunction.getOperand(baseType.getTypeName() + ".this");
             assert thisAddr.getType() instanceof PointerType;
             IRType type = ((PointerType) thisAddr.getType()).getType();
             Register thisResult = new Register(type, "this");
             currentBB.addInstAtTail(new Load(currentBB, thisResult, type, thisAddr));
+            currentFunction.CheckAndSetName(thisResult.getName(), thisResult);
 
             String identifier = node.getIdentifier();
 
@@ -1362,6 +1400,9 @@ public class IRBuilder implements ASTVisitor {
             }
             assert typeNode != null;
             IRType memberType = module.getIrTypeTable().get(astTypeTable.getType2(typeNode));
+            if (memberType instanceof StructureType) {
+                memberType = new PointerType(memberType);
+            }
             ArrayList<IROper> indexList = new ArrayList<>();
             indexList.add(new IntegerConstant(0));
             indexList.add(new IntegerConstant(index.longValue()));
@@ -1369,8 +1410,8 @@ public class IRBuilder implements ASTVisitor {
             currentBB.addInstAtTail(new GetElementPtr(currentBB, result, thisResult, indexList));
             Register loadResult = new Register(memberType, baseType.getTypeName() + "." + identifier);
             currentBB.addInstAtTail(new Load(currentBB, loadResult, memberType, result));
-            currentFunction.addOperand(result.getName(), result);
-            currentFunction.addOperand(loadResult.getName(), loadResult);
+            currentFunction.CheckAndSetName(result.getName(), result);
+            currentFunction.CheckAndSetName(loadResult.getName(), loadResult);
             return new ExprResultPair(loadResult, result);
         }
     }

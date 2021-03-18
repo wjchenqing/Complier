@@ -2,6 +2,7 @@ import AST.Program;
 import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
 import IR.IRBuilder;
+import IR.IRPrinter;
 import Parser.ErrorListener;
 import Parser.MxLexer;
 import Parser.MxParser;
@@ -11,10 +12,12 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         InputStream inputStream;
         CharStream input = null;
         MxLexer lexer;
@@ -26,7 +29,7 @@ public class Main {
             inputStream = System.in;
             input = CharStreams.fromStream(inputStream);
         } catch (Exception e) {
-            System.exit(-1);
+            assert false;
         }
 
         lexer = new MxLexer(input);
@@ -47,5 +50,9 @@ public class Main {
         IRBuilder irBuilder = new IRBuilder(semanticChecker.getProgramScope(), semanticChecker.getTypeTable());
         programRoot.accept(irBuilder);
 
+        IRPrinter irPrinter = new IRPrinter();
+        irBuilder.getModule().accept(irPrinter);
+        irPrinter.getPrintWriter().close();
+        irPrinter.getOutputStream().close();
     }
 }

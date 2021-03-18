@@ -15,7 +15,7 @@ public class IntegerType extends IRType {
         {
             this.numberOfBits = numberOfBits;
         } else {
-            System.exit(-1);
+            assert false;
         }
     }
 
@@ -30,7 +30,7 @@ public class IntegerType extends IRType {
 
     @Override
     public boolean equals(Object obj) {
-        return (obj instanceof IntegerType) && numberOfBits == ((IntegerType) obj).numberOfBits;
+        return (obj instanceof IntegerType) && (numberOfBits == ((IntegerType) obj).getNumberOfBits());
     }
 
     @Override
@@ -51,7 +51,7 @@ public class IntegerType extends IRType {
         } else if (numberOfBits == 32) {
             return 4;
         } else {
-            System.exit(-1);
+            assert false;
             return 0;
         }
     }

@@ -12,7 +12,7 @@ public class Alloca extends IRInst {
     public Alloca(BasicBlock currentBB, Register result, IRType type) {
         super(currentBB);
         if (!result.getType().equals(new PointerType(type))) {
-            System.exit(-1);
+            assert false;
         }
         this.result = result;
         this.type = type;

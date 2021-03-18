@@ -58,6 +58,6 @@ public class Icmp extends IRInst {
 
     @Override
     public String toString() {
-        return result.toString() + " = icmp " + cond.name() + " " + type.toString() + " " + op1.toString() + " " + op2.toString();
+        return result.toString() + " = icmp " + cond.name() + " " + type.toString() + " " + op1.toString() + ", " + op2.toString();
     }
 }

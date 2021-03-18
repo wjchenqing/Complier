@@ -66,7 +66,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         }
         if (ctx.constructorDef().size() >= 2) {
             constructor = null;
-            System.exit(-1);
+            assert false;
         } else if (ctx.constructorDef().size() == 1) {
             constructor = (Function) visit(ctx.constructorDef(0));
         } else {
@@ -194,7 +194,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
             thenStatement = (StatementNode) visit(ctx.statement(0));
             elseStatement = (StatementNode) visit(ctx.statement(1));
         } else {
-            System.exit(-1);
+            assert false;
             thenStatement = null;
             elseStatement = null;
         }
@@ -367,7 +367,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitWrongNew(MxParser.WrongNewContext ctx) {
-        System.exit(-1);
+        assert false;
         return null;
     }
 
@@ -396,7 +396,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         } else if (ctx.IntLiteral() != null) {
             return new IntLiteral(Long.parseLong(ctx.getText()));
         } else if (ctx.StringLiteral() != null) {
-            return new StringLiteral(ctx.getText());
+            return new StringLiteral(ctx.getText().substring(1, ctx.getText().length() - 1));
         } else {
             return new NullExpr();
         }

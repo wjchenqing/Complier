@@ -13,8 +13,8 @@ public class BitCastTo extends IRInst {
 
     public BitCastTo(BasicBlock currentBB, Register result, IROper value, IRType targetType) {
         super(currentBB);
-        if (value.getType().equals(targetType) || value.getType() instanceof PointerType || targetType instanceof PointerType) {
-            System.exit(-1);
+        if (!(value.getType() instanceof PointerType) || !(targetType instanceof PointerType)) {
+            assert false;
         }
         this.result = result;
         this.value = value;

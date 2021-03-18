@@ -12,11 +12,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class IRPrinter implements IRVisitor {
 
-    private final OutputStream outputStream = new FileOutputStream("test/test.ll");
+//    private final OutputStream outputStream = new FileOutputStream("cqqqq.ll");
+    private final OutputStream outputStream = new FileOutputStream("judger/test.ll");
     private final PrintWriter printWriter = new PrintWriter(outputStream);
     private final String tab = "    ";
 
     public IRPrinter() throws FileNotFoundException {
+    }
+
+    public OutputStream getOutputStream() {
+        return outputStream;
+    }
+
+    public PrintWriter getPrintWriter() {
+        return printWriter;
     }
 
     private void print(String str) {
@@ -29,27 +38,37 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(Module module) {
+        println("target triple = \"x86_64-pc-linux-gnu\"");
+        println("");
         if (module.getStructureTypeMap().size() != 0) {
             for (StructureType structureType: module.getStructureTypeMap().values()) {
-                println(structureType.toString());
+                println(structureType.printString());
                 println("");
             }
         }
 
         if (module.getGlobalVariableMap().size() != 0) {
             for (GlobalVariable globalVariable: module.getGlobalVariableMap().values()) {
-                println(globalVariable.toString() + " = global " + globalVariable.getValue().getType().toString()
+                println(globalVariable.toString() + " = global " + globalVariable.getType().toString()
                         + " " + globalVariable.getValue().toString());
             }
+            println("");
         }
 
-        println("");
+        if (module.getStringConstMapSize() != 0) {
+            for (GlobalVariable stringConst: module.getStringConstMap().values()) {
+                println(stringConst.toString() + " = private unnamed_addr constant " + stringConst.getValue().getType().toString()
+                        + " " + stringConst.getValue().toString());
+            }
+            println("");
+        }
+
 
         for (Function function: module.getFunctionMap().values()) {
             if (function.isNotExternal()) {
                 function.accept(this);
             } else {
-                println("declare " + function.toString());
+                println("declare " + function.printer());
             }
             println("");
         }
@@ -57,16 +76,12 @@ public class IRPrinter implements IRVisitor {
 
     @Override
     public void visit(Function function) {
-        println("define " + function.toString() + "{");
-        int bound = function.getBlockList().size();
-        AtomicInteger i = new AtomicInteger(1);
+        println("define " + function.printer() + "{");
         for (BasicBlock basicBlock: function.getBlockList()) {
             basicBlock.accept(this);
-            if (i.get() != bound) {
-                println("");
-            }
-            i.incrementAndGet();
+            println("");
         }
+        function.getReturnBB().accept(this);
         println("}");
     }
 
@@ -78,7 +93,9 @@ public class IRPrinter implements IRVisitor {
             print(" ");
             counter.getAndIncrement();
         }
-        print("; preds = ");
+        if (basicBlock.getPredecessor().size() != 0) {
+            print("; preds = ");
+        }
 
         AtomicInteger count = new AtomicInteger(1);
         for (BasicBlock pred: basicBlock.getPredecessor()) {

@@ -20,7 +20,7 @@ public class BinaryOperation extends IRInst {
     public BinaryOperation(BasicBlock currentBB, Register result, BinaryOp op, IRType type, IROper op1, IROper op2) {
         super(currentBB);
         if (!op1.getType().equals(type) || !op2.getType().equals(type)) {
-            System.exit(-1);
+            assert false;
         }
         this.result = result;
         this.op = op;

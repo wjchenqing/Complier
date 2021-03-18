@@ -1,18 +1,21 @@
 package IR.Operand;
 
+import IR.Type.ArrayType;
 import IR.Type.IRType;
+import IR.Type.IntegerType;
 
 public class StringConstant extends IROper {
     private final String value;
 
-    public StringConstant(IRType type, String value) {
-        super(type);
+    public StringConstant(String value) {
+        super(null);
         String tmp = value;
         tmp = tmp.replace("\\\\", "\\");
         tmp = tmp.replace("\\n", "\n");
         tmp = tmp.replace("\\\"", "\"");
         tmp = tmp + "\0";
         this.value = tmp;
+        type = new ArrayType(tmp.length(), new IntegerType(8));
     }
 
     public String getValue() {

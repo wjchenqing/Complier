@@ -19,6 +19,11 @@ public class Parameter extends IROper {
     }
 
     @Override
+    public void setName(String name) {
+        paramName = name;
+    }
+
+    @Override
     public String toString() {
         return "%" + paramName;
     }

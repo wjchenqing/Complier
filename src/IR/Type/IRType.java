@@ -11,7 +11,7 @@ abstract public class IRType {
     abstract public boolean equals(Object obj);
 
     public IROper defaultOperand() {
-        System.exit(-1);
+        assert false;
         return new NullConstant();
     }
 

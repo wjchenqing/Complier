@@ -12,7 +12,7 @@ public class Br extends IRInst {
     public Br(BasicBlock currentBB, IROper cond, BasicBlock thenBlock, BasicBlock elseBlock) {
         super(currentBB);
         if (cond != null && !cond.getType().equals(new IntegerType(1))) {
-            System.exit(-1);
+            assert false;
         }
         this.cond = cond;
         this.thenBlock = thenBlock;

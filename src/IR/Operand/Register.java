@@ -14,6 +14,8 @@ public class Register extends IROper {
         return name;
     }
 
+
+    @Override
     public void setName(String name) {
         this.name = name;
     }

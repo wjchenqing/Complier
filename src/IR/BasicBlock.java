@@ -3,6 +3,7 @@ package IR;
 import IR.Instruction.Br;
 import IR.Instruction.IRInst;
 import IR.Instruction.Ret;
+import IR.Operand.IROper;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -67,8 +68,10 @@ public class BasicBlock {
             irInst.setPrevInst(tailInst);
             tailInst.setNextInst(irInst);
             tailInst = irInst;
+        } else if (tailInst instanceof Br) {
+            return;
         } else {
-            System.exit(-1);
+            assert false;
         }
         irInst.setPredecessorAndSuccessor();
     }
