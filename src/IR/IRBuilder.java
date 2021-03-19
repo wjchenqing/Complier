@@ -1420,8 +1420,8 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public Object visit(IdentifierExpr node) {
-        Entity entity = node.getScope().getEntityForIR(node.getIdentifier());
-        if (entity != null) {
+        if (!node.getScope().IsMember(node.getIdentifier())) {
+            Entity entity = node.getScope().getEntityForIR(node.getIdentifier());
             IROper addr = entity.getAddr();
             IRType type;
             if (node.getScope().IsGlobalVariable(node.getIdentifier())){

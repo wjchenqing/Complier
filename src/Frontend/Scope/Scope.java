@@ -103,6 +103,17 @@ abstract public class Scope {
         }
     }
 
+    public boolean IsMember(String name) {
+        Entity entity = entityMap.get(name);
+        if ((entityMap.containsKey(name) && entity instanceof VariableEntity) && (entity.getAddr() == null)) {
+            return (this instanceof ClassScope);
+        } else if (parentScope != null) {
+            return parentScope.IsMember(name);
+        } else {
+            return false;
+        }
+    }
+
     public boolean IsGlobalVariable(String name) {
         if (entityMap.containsKey(name) && entityMap.get(name) instanceof VariableEntity) {
             return (this instanceof ProgramScope);
