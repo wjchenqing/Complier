@@ -1,6 +1,7 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.Register;
 import IR.Type.IRType;
 import IR.Type.PointerType;
@@ -18,6 +19,7 @@ public class Alloca extends IRInst {
         this.type = type;
     }
 
+    @Override
     public Register getResult() {
         return result;
     }
@@ -30,4 +32,9 @@ public class Alloca extends IRInst {
     public String toString() {
         return result.toString() + " = alloca " + type.toString();
     }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
+    }
+
 }

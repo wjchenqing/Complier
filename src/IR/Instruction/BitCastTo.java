@@ -1,6 +1,7 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.IROper;
 import IR.Operand.Register;
 import IR.Type.IRType;
@@ -21,6 +22,7 @@ public class BitCastTo extends IRInst {
         this.targetType = targetType;
     }
 
+    @Override
     public Register getResult() {
         return result;
     }
@@ -37,5 +39,9 @@ public class BitCastTo extends IRInst {
     public String toString() {
         return result.toString() + " = bitcast "
                 + value.getType().toString() + " " + value.toString() + " to " + targetType.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

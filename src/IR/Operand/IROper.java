@@ -15,6 +15,8 @@ abstract public class IROper implements Cloneable {
 
     public void setName(String name) {}
 
+    abstract public String getName();
+
     @Override
     abstract public String toString();
 

@@ -1,6 +1,7 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.GlobalVariable;
 import IR.Operand.IROper;
 import IR.Operand.Register;
@@ -31,6 +32,7 @@ public class GetElementPtr extends IRInst {
         this.idxes = idxes;
     }
 
+    @Override
     public Register getResult() {
         return result;
     }
@@ -61,5 +63,9 @@ public class GetElementPtr extends IRInst {
             stringBuilder.append(", ").append(idx.getType().toString()).append(" ").append(idx.toString());
         }
         return stringBuilder.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

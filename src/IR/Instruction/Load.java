@@ -1,6 +1,7 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.GlobalVariable;
 import IR.Operand.IROper;
 import IR.Operand.Register;
@@ -34,6 +35,7 @@ public class Load extends IRInst {
         this.pointer = pointer;
     }
 
+    @Override
     public Register getResult() {
         return result;
     }
@@ -50,5 +52,9 @@ public class Load extends IRInst {
     public String toString() {
         IRType type1 = (pointer instanceof GlobalVariable) ? new PointerType(pointer.getType()) : pointer.getType();
         return result.toString() + " = load " + type.toString() + ", " + type1.toString() + " " + pointer.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

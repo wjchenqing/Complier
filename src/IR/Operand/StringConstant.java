@@ -18,6 +18,11 @@ public class StringConstant extends IROper {
         type = new ArrayType(tmp.length(), new IntegerType(8));
     }
 
+    @Override
+    public String getName() {
+        return null;
+    }
+
     public String getValue() {
         return value;
     }

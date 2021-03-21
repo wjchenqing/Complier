@@ -10,6 +10,11 @@ public class BoolConstant extends IROper {
         this.value = value;
     }
 
+    @Override
+    public String getName() {
+        return null;
+    }
+
     public boolean getValue() {
         return value;
     }

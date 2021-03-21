@@ -341,7 +341,7 @@ public class Module {
             Parameter parameter = new Parameter(tmp, "this");
             paramTypeList.add(parameter.getType());
             parameters.add(parameter);
-            newFunction.CheckAndSetName(parameter.getParamName(), parameter);
+            newFunction.CheckAndSetName(parameter.getName(), parameter);
             Register addr = new Register(new PointerType(parameter.getType()), className + ".this");
             currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
             currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
@@ -361,7 +361,7 @@ public class Module {
             Parameter parameter = new Parameter(tmp, variableEntity.getName());
             paramTypeList.add(parameter.getType());
             parameters.add(parameter);
-            newFunction.CheckAndSetName(parameter.getParamName(), parameter);
+            newFunction.CheckAndSetName(parameter.getName(), parameter);
             Register addr = new Register(new PointerType(parameter.getType()), identifier + "." +variableEntity.getName());
             currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
             currentBB.addInstAtTail(new Store(currentBB, parameter, addr));

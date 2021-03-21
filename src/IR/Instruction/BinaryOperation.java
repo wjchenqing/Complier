@@ -1,6 +1,7 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.IROper;
 import IR.Operand.Register;
 import IR.Type.IRType;
@@ -29,6 +30,7 @@ public class BinaryOperation extends IRInst {
         this.op2 = op2;
     }
 
+    @Override
     public Register getResult() {
         return result;
     }
@@ -52,5 +54,9 @@ public class BinaryOperation extends IRInst {
     @Override
     public String toString() {
         return result.toString() + " = " + op.name() + " " + type.toString() + " " + op1.toString() + ", " + op2.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

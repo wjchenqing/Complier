@@ -1,9 +1,8 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
-import IR.Operand.IROper;
-import IR.Operand.NullConstant;
-import IR.Operand.Register;
+import IR.IRVisitor;
+import IR.Operand.*;
 import IR.Type.IRType;
 import IR.Type.IntegerType;
 import IR.Type.PointerType;
@@ -36,6 +35,21 @@ public class Icmp extends IRInst {
         this.op2 = op2;
     }
 
+    public void setForRISCV () {
+        if (op2 instanceof BoolConstant) {
+            return;
+        }
+        assert op2 instanceof IntegerConstant;
+        if (cond == Condition.sle) {
+            cond = Condition.slt;
+            op2 = new IntegerConstant(((IntegerConstant) op2).getValue() + 1);
+        } else if (cond == Condition.sge) {
+            cond = Condition.sgt;
+            op2 = new IntegerConstant(((IntegerConstant) op2).getValue() - 1);
+        }
+    }
+
+    @Override
     public Register getResult() {
         return result;
     }
@@ -59,5 +73,9 @@ public class Icmp extends IRInst {
     @Override
     public String toString() {
         return result.toString() + " = icmp " + cond.name() + " " + type.toString() + " " + op1.toString() + ", " + op2.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -1,7 +1,9 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.IROper;
+import IR.Operand.Register;
 import IR.Type.IntegerType;
 
 public class Br extends IRInst {
@@ -49,5 +51,14 @@ public class Br extends IRInst {
         } else {
             return "br label " + thenBlock.toString();
         }
+    }
+
+    @Override
+    public Register getResult() {
+        return null;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -2,6 +2,7 @@ package IR.Instruction;
 
 import IR.BasicBlock;
 import IR.Function;
+import IR.IRVisitor;
 import IR.Operand.IROper;
 import IR.Operand.NullConstant;
 import IR.Operand.Register;
@@ -38,6 +39,7 @@ public class Call extends IRInst {
         this.params = params;
     }
 
+    @Override
     public Register getResult() {
         return result;
     }
@@ -70,5 +72,9 @@ public class Call extends IRInst {
         } else {
             return "call " + function.getFunctionType().getReturnType().toString() + " " + function.toString() + string;
         }
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -76,4 +76,17 @@ public class StructureType extends IRType {
         }
         return ans;
     }
+
+    public int getOffset(int index) {
+        int ans = 0;
+        for (int i = 0; i < index - 1; i++) {
+            int typeByte = typeList.get(i).getByte();
+            if (ans % typeByte == 0) {
+                ans += typeByte;
+            } else {
+                ans = ans + (typeByte - ans % typeByte);
+            }
+        }
+        return ans;
+    }
 }

@@ -10,7 +10,7 @@ public class Parameter extends IROper {
         this.paramName = paramName;
     }
 
-    public String getParamName() {
+    public String getName() {
         return paramName;
     }
 

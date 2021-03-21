@@ -1,9 +1,11 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.GlobalVariable;
 import IR.Operand.IROper;
 import IR.Operand.NullConstant;
+import IR.Operand.Register;
 import IR.Type.IRType;
 import IR.Type.PointerType;
 import IR.Type.VoidType;
@@ -43,5 +45,14 @@ public class Store extends IRInst {
         IRType type = (value instanceof NullConstant) ? (((PointerType) type1)).getType(): value.getType();
         return "store " + type.toString() + " " + value.toString() + ", "
                 + type1.toString() + " " + pointer.toString();
+    }
+
+    @Override
+    public Register getResult() {
+        return null;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -1,7 +1,9 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.IROper;
+import IR.Operand.Register;
 import IR.Type.IRType;
 import IR.Type.VoidType;
 
@@ -31,5 +33,14 @@ public class Ret extends IRInst {
         } else {
             return "ret " + returnType.toString() + " " + returnVal.toString();
         }
+    }
+
+    @Override
+    public Register getResult() {
+        return null;
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

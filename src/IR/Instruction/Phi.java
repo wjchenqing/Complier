@@ -1,6 +1,7 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
 import IR.Operand.IROper;
 import IR.Operand.Register;
 import Util.Pair;
@@ -18,6 +19,7 @@ public class Phi extends IRInst {
         this.possiblePredecessorSet = possiblePredecessorSet;
     }
 
+    @Override
     public Register getResult() {
         return result;
     }
@@ -36,5 +38,9 @@ public class Phi extends IRInst {
             i.incrementAndGet();
         }
         return stringBuilder.toString();
+    }
+
+    public void accept(IRVisitor visitor) {
+        visitor.visit(this);
     }
 }

@@ -10,6 +10,11 @@ public class IntegerConstant extends IROper {
         this.value = value;
     }
 
+    @Override
+    public String getName() {
+        return null;
+    }
+
     public long getValue() {
         return value;
     }

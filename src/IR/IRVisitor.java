@@ -18,5 +18,5 @@ public interface IRVisitor {
     void visit(Load load);
     void visit(Phi phi);
     void visit(Store store);
-
+    void visit(Ret ret);
 }

@@ -180,7 +180,7 @@ public class Function {
         int bound = functionType.getParamTypeList().size();
         AtomicInteger i = new AtomicInteger(1);
         for (IRType paramType: functionType.getParamTypeList()) {
-            string.append(paramType.toString()).append(" %").append(parameters.get(i.get()-1).getParamName());
+            string.append(paramType.toString()).append(" %").append(parameters.get(i.get()-1).getName());
             if (i.get() != bound) {
                 string.append(", ");
             }

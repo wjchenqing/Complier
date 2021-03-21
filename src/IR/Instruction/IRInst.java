@@ -1,6 +1,8 @@
 package IR.Instruction;
 
 import IR.BasicBlock;
+import IR.IRVisitor;
+import IR.Operand.Register;
 
 abstract public class IRInst {
     protected BasicBlock currentBB = null;
@@ -39,4 +41,8 @@ abstract public class IRInst {
 
     @Override
     abstract public String toString();
+
+    abstract public Register getResult();
+
+    abstract public void accept(IRVisitor visitor);
 }

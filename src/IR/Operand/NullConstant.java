@@ -14,6 +14,11 @@ public class NullConstant extends IROper {
     }
 
     @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
     public boolean isConstant() {
         return true;
     }
