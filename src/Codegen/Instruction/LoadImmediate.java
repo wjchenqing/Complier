@@ -3,6 +3,7 @@ package Codegen.Instruction;
 import Codegen.BasicBlock;
 import Codegen.Operand.Immediate;
 import Codegen.Operand.Register;
+import Codegen.Operand.RegisterVirtual;
 
 public class LoadImmediate extends Instruction{
     private final Register rd;
@@ -20,5 +21,10 @@ public class LoadImmediate extends Instruction{
 
     public Immediate getImmediate() {
         return immediate;
+    }
+
+    @Override
+    public void addToUEVarVarKill() {
+        basicBlock.addVarKill((RegisterVirtual) rd);
     }
 }

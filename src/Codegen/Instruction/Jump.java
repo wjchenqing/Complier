@@ -13,4 +13,9 @@ public class Jump extends Instruction {
     public BasicBlock getDestination() {
         return destination;
     }
+
+    @Override
+    public void addToUEVarVarKill() {
+
+    }
 }

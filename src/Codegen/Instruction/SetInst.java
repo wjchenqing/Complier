@@ -2,6 +2,7 @@ package Codegen.Instruction;
 
 import Codegen.BasicBlock;
 import Codegen.Operand.Register;
+import Codegen.Operand.RegisterVirtual;
 
 public class SetInst extends Instruction {
     static public enum Name {
@@ -28,5 +29,13 @@ public class SetInst extends Instruction {
 
     public Register getRs() {
         return rs;
+    }
+
+    @Override
+    public void addToUEVarVarKill() {
+        if (!basicBlock.hasVarKill((RegisterVirtual) rs)) {
+            basicBlock.addUEVar((RegisterVirtual) rs);
+        }
+        basicBlock.addVarKill((RegisterVirtual) rd);
     }
 }

@@ -13,4 +13,9 @@ public class LUI extends Instruction{
         this.rd = rd;
         this.immediate = immediate;
     }
+
+    @Override
+    public void addToUEVarVarKill() {
+        basicBlock.addVarKill(rd);
+    }
 }

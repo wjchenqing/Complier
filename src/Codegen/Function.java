@@ -4,9 +4,7 @@ import Codegen.Operand.RegisterVirtual;
 import IR.Instruction.IRInst;
 import IR.Operand.Parameter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Function {
     private final String name;
@@ -20,6 +18,8 @@ public class Function {
 
     private final Map<String, RegisterVirtual> OperandMap = new HashMap<>();
 
+    private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
+    private final Set<BasicBlock> visited = new LinkedHashSet<>();
 
     public Function(String name, Module module, IR.Function irFunction) {
         this.name = name;
@@ -148,5 +148,19 @@ public class Function {
 
     public RegisterVirtual getRV(String name) {
         return OperandMap.get(name);
+    }
+
+    public ArrayList<BasicBlock> getDfsList() {
+        return dfsList;
+    }
+
+    private void dfs(BasicBlock basicBlock) {
+        dfsList.add(basicBlock);
+        visited.add(basicBlock);
+        for (BasicBlock bb: basicBlock.getSuccessor()) {
+            if (!visited.contains(bb)) {
+                dfs(bb);
+            }
+        }
     }
 }

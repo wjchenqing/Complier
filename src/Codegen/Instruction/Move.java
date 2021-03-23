@@ -2,6 +2,7 @@ package Codegen.Instruction;
 
 import Codegen.BasicBlock;
 import Codegen.Operand.Register;
+import Codegen.Operand.RegisterVirtual;
 
 public class Move extends Instruction {
     private final Register rd;
@@ -19,5 +20,13 @@ public class Move extends Instruction {
 
     public Register getRs() {
         return rs;
+    }
+
+    @Override
+    public void addToUEVarVarKill() {
+        if (!basicBlock.hasVarKill((RegisterVirtual) rs)) {
+            basicBlock.addUEVar((RegisterVirtual) rs);
+        }
+        basicBlock.addVarKill((RegisterVirtual) rd);
     }
 }

@@ -32,4 +32,12 @@ public class Module {
     public void addGlobalVar(GlobalVar globalVar) {
         globalVarMap.put(globalVar.getIdentifier(), globalVar);
     }
+
+    public Map<String, Function> getFunctionMap() {
+        return functionMap;
+    }
+
+    public Map<String, GlobalVar> getGlobalVarMap() {
+        return globalVarMap;
+    }
 }

@@ -2,6 +2,7 @@ package Codegen;
 
 import Codegen.Instruction.Branch;
 import Codegen.Instruction.Instruction;
+import Codegen.Operand.RegisterVirtual;
 import IR.Instruction.Br;
 import IR.Instruction.IRInst;
 import IR.Instruction.Ret;
@@ -26,6 +27,43 @@ public class BasicBlock {
 
     private final Set<BasicBlock> predecessor = new LinkedHashSet<>();
     private final Set<BasicBlock> successor = new LinkedHashSet<>();
+
+    private final Set<RegisterVirtual> UEVar = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> VarKill = new LinkedHashSet<>();
+
+    private Set<RegisterVirtual> liveOut;
+
+    public void setLiveOut(Set<RegisterVirtual> liveOut) {
+        this.liveOut = liveOut;
+    }
+
+    public Set<RegisterVirtual> getLiveOut() {
+        return liveOut;
+    }
+
+    public void addUEVar(RegisterVirtual registerVirtual) {
+        UEVar.add(registerVirtual);
+    }
+
+    public void addVarKill(RegisterVirtual registerVirtual) {
+        VarKill.add(registerVirtual);
+    }
+
+    public boolean hasUEVar(RegisterVirtual registerVirtual) {
+        return UEVar.contains(registerVirtual);
+    }
+
+    public boolean hasVarKill(RegisterVirtual registerVirtual) {
+        return VarKill.contains(registerVirtual);
+    }
+
+    public Set<RegisterVirtual> getUEVar() {
+        return UEVar;
+    }
+
+    public Set<RegisterVirtual> getVarKill() {
+        return VarKill;
+    }
 
     public BasicBlock(Function function, String name, IR.BasicBlock irBasicBlock) {
         this.function = function;

@@ -3,7 +3,7 @@ package Codegen.Instruction;
 import Codegen.BasicBlock;
 
 abstract public class Instruction {
-    private final BasicBlock basicBlock;
+    protected final BasicBlock basicBlock;
     private Instruction prev = null;
     private Instruction next = null;
 
@@ -30,4 +30,6 @@ abstract public class Instruction {
     public void setNext(Instruction next) {
         this.next = next;
     }
+
+    abstract public void addToUEVarVarKill();
 }

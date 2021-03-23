@@ -10,4 +10,8 @@ public class Call extends Instruction {
         super(basicBlock);
         this.callee = callee;
     }
+
+    @Override
+    public void addToUEVarVarKill() {
+    }
 }

@@ -4,6 +4,7 @@ import Codegen.BasicBlock;
 import Codegen.Operand.Immediate;
 import Codegen.Operand.Operand;
 import Codegen.Operand.Register;
+import Codegen.Operand.RegisterVirtual;
 
 public class BinaryInstruction extends Instruction {
     static public enum Name {
@@ -50,5 +51,16 @@ public class BinaryInstruction extends Instruction {
 
     public Operand getRs2() {
         return rs2;
+    }
+
+    @Override
+    public void addToUEVarVarKill() {
+        if (!basicBlock.hasVarKill((RegisterVirtual) rs1)) {
+            basicBlock.addUEVar((RegisterVirtual) rs1);
+        }
+        if ((!isImmediateType) && (!basicBlock.hasVarKill((RegisterVirtual) rs2))) {
+            basicBlock.addUEVar((RegisterVirtual) rs2);
+        }
+        basicBlock.addVarKill((RegisterVirtual) rd);
     }
 }
