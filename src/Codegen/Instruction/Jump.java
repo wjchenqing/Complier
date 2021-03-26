@@ -18,4 +18,14 @@ public class Jump extends Instruction {
     public void addToUEVarVarKill() {
 
     }
+
+    @Override
+    public String toString() {
+        return "j " + destination.toString();
+    }
+
+    @Override
+    public String printCode() {
+        return "\tj\t" + destination.printCode();
+    }
 }

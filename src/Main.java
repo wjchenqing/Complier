@@ -1,4 +1,7 @@
 import AST.Program;
+import Codegen.Backend.CodegenPrinter;
+import Codegen.Backend.InstructionSelector;
+import Codegen.Backend.RegisterAllocator;
 import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
 import IR.IRBuilder;
@@ -54,5 +57,15 @@ public class Main {
         irBuilder.getModule().accept(irPrinter);
         irPrinter.getPrintWriter().close();
         irPrinter.getOutputStream().close();
+
+        InstructionSelector instructionSelector = new InstructionSelector();
+        irBuilder.getModule().accept(instructionSelector);
+        RegisterAllocator registerAllocator = new RegisterAllocator(instructionSelector.getModule());
+        registerAllocator.run();
+
+        CodegenPrinter codegenPrinter = new CodegenPrinter();
+        instructionSelector.getModule().accept(codegenPrinter);
+        codegenPrinter.getPrintWriter().close();
+        codegenPrinter.getOutputStream().close();
     }
 }

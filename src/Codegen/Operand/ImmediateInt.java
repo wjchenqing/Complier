@@ -19,4 +19,14 @@ public class ImmediateInt extends Immediate {
     public boolean equals(Object obj) {
         return ((obj instanceof ImmediateInt) && ((ImmediateInt) obj).value == value);
     }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+    @Override
+    public String printCode() {
+        return String.valueOf(value);
+    }
 }

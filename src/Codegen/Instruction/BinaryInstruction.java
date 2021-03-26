@@ -15,9 +15,9 @@ public class BinaryInstruction extends Instruction {
     }
     private final boolean isImmediateType;
     private final Name name;
-    private final Register rd;
-    private final Register rs1;
-    private final Operand  rs2;
+    private Register rd;
+    private Register rs1;
+    private Operand  rs2;
 
     public BinaryInstruction(BasicBlock basicBlock, Name name, boolean isImmediateType, Register rd, Register rs1, Operand rs2) {
         super(basicBlock);
@@ -31,6 +31,29 @@ public class BinaryInstruction extends Instruction {
         } else {
             assert rs2 instanceof Register;
         }
+        def.add((RegisterVirtual) rd);
+        use.add((RegisterVirtual) rs1);
+        if (rs2 instanceof RegisterVirtual) {
+            use.add((RegisterVirtual) rs2);
+        }
+    }
+
+    @Override
+    public void replaceDef(RegisterVirtual old, RegisterVirtual n) {
+        assert rd == old;
+        rd = n;
+        super.replaceDef(old, n);
+    }
+
+    @Override
+    public void replaceUse(RegisterVirtual old, RegisterVirtual n) {
+        if (rs1 == old) {
+            rs1 = n;
+        } else {
+            assert rs2 == old;
+            rs2 = n;
+        }
+        super.replaceUse(old, n);
     }
 
     public boolean isImmediateType() {
@@ -62,5 +85,15 @@ public class BinaryInstruction extends Instruction {
             basicBlock.addUEVar((RegisterVirtual) rs2);
         }
         basicBlock.addVarKill((RegisterVirtual) rd);
+    }
+
+    @Override
+    public String toString() {
+        return name.name() + " " + rd.toString() + ", " + rs1.toString() + ", " + rs2.toString();
+    }
+
+    @Override
+    public String printCode() {
+        return "\t" + name.name() + "\t" + rd.printCode() + ", " + rs1.printCode() + ", " + rs2.printCode();
     }
 }

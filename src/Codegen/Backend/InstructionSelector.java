@@ -295,7 +295,7 @@ public class InstructionSelector implements IRVisitor {
             addrList = new ArrayList<>();
             for (int i = 8; i < params.size(); ++i) {
                 RegisterVirtual param = getReg(params.get(i));
-                Addr addr = new Addr(true, null, null);
+                Addr addr = new Addr(true, param, null);
                 addrList.add(addr);
                 curBlock.addInst(new Codegen.Instruction.Store(curBlock, Codegen.Instruction.Store.Name.sw, param, addr));
             }

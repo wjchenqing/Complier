@@ -40,4 +40,8 @@ public class Module {
     public Map<String, GlobalVar> getGlobalVarMap() {
         return globalVarMap;
     }
+
+    public void accept(CodegenVisitor visitor) {
+        visitor.visit(this);
+    }
 }

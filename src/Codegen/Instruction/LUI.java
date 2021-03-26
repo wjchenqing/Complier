@@ -12,6 +12,24 @@ public class LUI extends Instruction{
         super(basicBlock);
         this.rd = rd;
         this.immediate = immediate;
+        def.add(rd);
+    }
+
+    @Override
+    public void replaceDef(RegisterVirtual old, RegisterVirtual n) {
+        assert rd == old;
+        rd = n;
+        super.replaceDef(old, n);
+    }
+
+    @Override
+    public String toString() {
+        return "lui " + rd.toString() + ", " + immediate.toString();
+    }
+
+    @Override
+    public String printCode() {
+        return "\tlui\t" + rd.printCode() + ", " + immediate.printCode();
     }
 
     @Override

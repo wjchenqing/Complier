@@ -1,6 +1,7 @@
 package Codegen;
 
 import Codegen.Operand.Addr;
+import Codegen.Operand.RegisterVirtual;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,7 +10,8 @@ import java.util.Map;
 public class Stack {
     private Function function;
 
-    private ArrayList<Addr> paramsAddrFromCallor = new ArrayList<>();
+    private final Map<RegisterVirtual, Addr> spillLocation = new HashMap<>();
+    private ArrayList<Addr> paramsAddrFromCaller = new ArrayList<>();
     private Map<Function, ArrayList<Addr>> paramsAddrForCallee = new HashMap<>();
 
     public Stack(Function function) {
@@ -20,16 +22,25 @@ public class Stack {
         return function;
     }
 
-    public ArrayList<Addr> getParamsAddrFromCallor() {
-        return paramsAddrFromCallor;
+    public ArrayList<Addr> getParamsAddrFromCaller() {
+        return paramsAddrFromCaller;
     }
 
     public Map<Function, ArrayList<Addr>> getParamsAddrForCallee() {
         return paramsAddrForCallee;
     }
 
-    public void setParamsAddrFromCallor(ArrayList<Addr> paramsAddrFromCallor) {
-        this.paramsAddrFromCallor = paramsAddrFromCallor;
+    public void putSpillLocation(RegisterVirtual rv, Addr addr) {
+        assert addr.isStackLocation();
+        spillLocation.put(rv, addr);
+    }
+
+    public Map<RegisterVirtual, Addr> getSpillLocation() {
+        return spillLocation;
+    }
+
+    public void setParamsAddrFromCaller(ArrayList<Addr> paramsAddrFromCaller) {
+        this.paramsAddrFromCaller = paramsAddrFromCaller;
     }
 
     public void setParamsAddrForCallee(Map<Function, ArrayList<Addr>> paramsAddrForCallee) {
@@ -37,7 +48,7 @@ public class Stack {
     }
 
     public void addFormalParamAddr(Addr addr) {
-        paramsAddrFromCallor.add(addr);
+        paramsAddrFromCaller.add(addr);
     }
 
     public void addAddrList(Function function, ArrayList<Addr> addrs) {
@@ -45,10 +56,32 @@ public class Stack {
     }
 
     public Addr getFormalParamAddr(int i) {
-        return paramsAddrFromCallor.get(i);
+        return paramsAddrFromCaller.get(i);
     }
 
     public ArrayList<Addr> getAddrList(Function function) {
         return paramsAddrForCallee.get(function);
+    }
+
+    public void setAndGetSize() {
+        int spilledParamNum = 0;
+        for (ArrayList<Addr> addr: paramsAddrForCallee.values()) {
+            spilledParamNum = Math.max(spilledParamNum, addr.size());
+        }
+        int size = spilledParamNum + spillLocation.size();
+
+        for (int i = 0; i < paramsAddrFromCaller.size(); i++) {
+            paramsAddrFromCaller.get(i).setOffset(4 * (size + i));
+        }
+        int cnt = 0;
+        for (Addr addr: spillLocation.values()) {
+            addr.setOffset(4 * (spilledParamNum + cnt));
+            ++cnt;
+        }
+        for (ArrayList<Addr> addrs: paramsAddrForCallee.values()) {
+            for (int i = 0; i < addrs.size(); ++i) {
+                addrs.get(i).setOffset(4 * i);
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@ public class Store extends Instruction {
         sb, sw
     }
     private final Name name;
-    private final Register rd;
+    private Register rd;
     private final Addr addr;
 
     public Store(BasicBlock basicBlock, Name name, Register rd, Addr addr) {
@@ -18,6 +18,24 @@ public class Store extends Instruction {
         this.name = name;
         this.rd = rd;
         this.addr = addr;
+        def.add((RegisterVirtual) rd);
+    }
+
+    @Override
+    public void replaceDef(RegisterVirtual old, RegisterVirtual n) {
+        assert rd == old;
+        rd = n;
+        super.replaceDef(old, n);
+    }
+
+    @Override
+    public String toString() {
+        return name.name() + " " + rd.toString() + ", " + addr.toString();
+    }
+
+    @Override
+    public String printCode() {
+        return "\t" + name.name() + "\t" + rd.printCode() + ", " + addr.printCode();
     }
 
     public Name getName() {

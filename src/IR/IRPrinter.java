@@ -162,4 +162,9 @@ public class IRPrinter implements IRVisitor {
     public void visit(Store store) {
         println(tab + store.toString());
     }
+
+    @Override
+    public void visit(Ret ret) {
+
+    }
 }

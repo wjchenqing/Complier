@@ -9,14 +9,40 @@ public class SetInst extends Instruction {
         seqz, snez, sltz, sgtz
     }
     private final Name name;
-    private final Register rd;
-    private final Register rs;
+    private Register rd;
+    private Register rs;
 
     public SetInst(BasicBlock basicBlock, Name name, Register rd, Register rs) {
         super(basicBlock);
         this.name = name;
         this.rd = rd;
         this.rs = rs;
+        def.add((RegisterVirtual) rd);
+        use.add((RegisterVirtual) rs);
+    }
+
+    @Override
+    public void replaceDef(RegisterVirtual old, RegisterVirtual n) {
+        assert rd == old;
+        rd = n;
+        super.replaceDef(old, n);
+    }
+
+    @Override
+    public void replaceUse(RegisterVirtual old, RegisterVirtual n) {
+        assert rs == old;
+        rs = n;
+        super.replaceUse(old, n);
+    }
+
+    @Override
+    public String toString() {
+        return name.name() + " " + rd.toString() + ", " + rs.toString();
+    }
+
+    @Override
+    public String printCode() {
+        return "\t" + name.name() + "\t" + rd.printCode() + ", " + rs.printCode();
     }
 
     public Name getName() {

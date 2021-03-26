@@ -14,4 +14,14 @@ public class Call extends Instruction {
     @Override
     public void addToUEVarVarKill() {
     }
+
+    @Override
+    public String toString() {
+        return "call " + callee.getName();
+    }
+
+    @Override
+    public String printCode() {
+        return "\tcall\t" + callee.getName();
+    }
 }

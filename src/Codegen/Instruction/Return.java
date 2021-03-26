@@ -11,4 +11,14 @@ public class Return extends Instruction {
     public void addToUEVarVarKill() {
 
     }
+
+    @Override
+    public String toString() {
+        return "ret";
+    }
+
+    @Override
+    public String printCode() {
+        return "\tret";
+    }
 }

@@ -1,5 +1,6 @@
 package Codegen;
 
+import Codegen.Instruction.Instruction;
 import Codegen.Operand.RegisterVirtual;
 import IR.Instruction.IRInst;
 import IR.Operand.Parameter;
@@ -29,9 +30,11 @@ public class Function {
         for (IR.BasicBlock irBasicBlock: irFunction.getBlockList()) {
             BasicBlock basicBlock = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irBasicBlock);
             addBasicBlock(basicBlock);
+            blockNum++;
         }
         BasicBlock bb = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irFunction.getReturnBB());
         addBasicBlock(bb);
+        blockNum++;
         for (IR.BasicBlock irBasicBlock: irFunction.getBlockList()) {
             BasicBlock basicBlock = getBasicBlock(irBasicBlock.getName());
             for (IR.BasicBlock predecessor: irBasicBlock.getPredecessor()) {
@@ -102,6 +105,14 @@ public class Function {
         return basicBlocks;
     }
 
+    public ArrayList<Instruction> getInstList() {
+        ArrayList<Instruction> instructions = new ArrayList<>();
+        for (BasicBlock cur = headBB; cur != null; cur = cur.getNextBB()) {
+            instructions.addAll(cur.getInstList());
+        }
+        return instructions;
+    }
+
     public void setStack(Stack stack) {
         assert this.stack == null;
         this.stack = stack;
@@ -151,6 +162,9 @@ public class Function {
     }
 
     public ArrayList<BasicBlock> getDfsList() {
+        if (dfsList.size() == 0) {
+            dfs(headBB);
+        }
         return dfsList;
     }
 
@@ -162,5 +176,18 @@ public class Function {
                 dfs(bb);
             }
         }
+    }
+
+    public Map<String, RegisterVirtual> getOperandMap() {
+        return OperandMap;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public void accept(CodegenVisitor visitor) {
+        visitor.visit(this);
     }
 }

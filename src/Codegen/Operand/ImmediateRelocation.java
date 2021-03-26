@@ -1,7 +1,7 @@
 package Codegen.Operand;
 
 public class ImmediateRelocation extends Immediate {
-    static public enum ImmType {
+    public enum ImmType {
         hi, lo
     }
     private final ImmType immType;
@@ -25,5 +25,15 @@ public class ImmediateRelocation extends Immediate {
 
     public GlobalVar getValue() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        return "%" + immType.name() + "(" + value.toString() + ")";
+    }
+
+    @Override
+    public String printCode() {
+        return "%" + immType.name() + "(" + value.toString() + ")";
     }
 }

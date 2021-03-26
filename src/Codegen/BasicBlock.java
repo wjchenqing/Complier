@@ -1,11 +1,7 @@
 package Codegen;
 
-import Codegen.Instruction.Branch;
 import Codegen.Instruction.Instruction;
 import Codegen.Operand.RegisterVirtual;
-import IR.Instruction.Br;
-import IR.Instruction.IRInst;
-import IR.Instruction.Ret;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -39,6 +35,14 @@ public class BasicBlock {
 
     public Set<RegisterVirtual> getLiveOut() {
         return liveOut;
+    }
+
+    public void setHeadInst(Instruction headInst) {
+        this.headInst = headInst;
+    }
+
+    public void setTailInst(Instruction tailInst) {
+        this.tailInst = tailInst;
     }
 
     public void addUEVar(RegisterVirtual registerVirtual) {
@@ -157,5 +161,18 @@ public class BasicBlock {
 
     public Set<BasicBlock> getSuccessor() {
         return successor;
+    }
+
+    @Override
+    public String toString() {
+        return IrIdentifier;
+    }
+
+    public String printCode() {
+        return name;
+    }
+
+    public void accept(CodegenVisitor visitor) {
+        visitor.visit(this);
     }
 }

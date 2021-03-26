@@ -9,8 +9,8 @@ public class Branch extends Instruction {
         beq,  bne,  ble,  bge,  blt,  bgt
     }
     private final Name name;
-    private final Register rs1;
-    private final Register rs2;
+    private Register rs1;
+    private Register rs2;
     private final BasicBlock destination;
 
     public Branch(BasicBlock basicBlock, Name name, Register rs1, Register rs2, BasicBlock destination) {
@@ -19,6 +19,19 @@ public class Branch extends Instruction {
         this.rs1 = rs1;
         this.rs2 = rs2;
         this.destination = destination;
+        use.add((RegisterVirtual) rs1);
+        use.add((RegisterVirtual) rs2);
+    }
+
+    @Override
+    public void replaceUse(RegisterVirtual old, RegisterVirtual n) {
+        if (rs1 == old) {
+            rs1 = n;
+        } else {
+            assert rs2 == old;
+            rs2 = n;
+        }
+        super.replaceUse(old, n);
     }
 
     public Name getName() {
@@ -45,5 +58,15 @@ public class Branch extends Instruction {
         if (!basicBlock.hasVarKill((RegisterVirtual) rs2)) {
             basicBlock.addUEVar((RegisterVirtual) rs2);
         }
+    }
+
+    @Override
+    public String toString() {
+        return name.name() + " " + rs1.toString() + ", " + rs2.toString() + ", " + destination.toString();
+    }
+
+    @Override
+    public String printCode() {
+        return "\t" + name.name() + "\t" + rs1.printCode() + ", " + rs2.printCode() + ", " + destination.printCode();
     }
 }
