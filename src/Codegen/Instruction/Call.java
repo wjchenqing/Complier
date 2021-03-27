@@ -10,10 +10,13 @@ public class Call extends Instruction {
     };
     private Function callee;
 
-    public Call(BasicBlock basicBlock, Function callee) {
+    public Call(BasicBlock basicBlock, Function callee, int num) {
         super(basicBlock);
         this.callee = callee;
 
+        for (int i = 0; i < num; ++i) {
+            use.add(RegisterPhysical.getVR(10 + i));
+        }
         for (int name: callerSavePRNames) {
             def.add(RegisterPhysical.getVR(name));
         }

@@ -39,7 +39,9 @@ public class Icmp extends IRInst {
         if (op2 instanceof BoolConstant) {
             return;
         }
-        assert op2 instanceof IntegerConstant;
+        if (!(op2 instanceof  IntegerConstant)) {
+            assert op2 instanceof IntegerConstant;
+        }
         if (cond == Condition.sle) {
             cond = Condition.slt;
             op2 = new IntegerConstant(((IntegerConstant) op2).getValue() + 1);

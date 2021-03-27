@@ -62,7 +62,6 @@ public class CodegenPrinter implements CodegenVisitor {
         }
         println(tab + ".globl" + "  " + function.toString());
         println(tab + ".p2align" + tab + "2");
-        println(tab + ".type" + function.toString() + ",@function");
         println(function.toString() + ":");
 
         for (BasicBlock basicBlock: function.getBlockList()) {

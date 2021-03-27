@@ -7,10 +7,10 @@ import Frontend.Type.ClassType2;
 import Frontend.Type.Type2;
 import Frontend.Type.TypeTable;
 import IR.Instruction.Alloca;
+import IR.Instruction.BitCastTo;
+import IR.Instruction.Call;
 import IR.Instruction.Store;
-import IR.Operand.GlobalVariable;
-import IR.Operand.Parameter;
-import IR.Operand.Register;
+import IR.Operand.*;
 import IR.Type.*;
 
 import java.util.ArrayList;
@@ -343,8 +343,16 @@ public class Module {
             parameters.add(parameter);
             newFunction.CheckAndSetName(parameter.getName(), parameter);
             Register addr = new Register(new PointerType(parameter.getType()), className + ".this");
-            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
+            ArrayList<IROper> paramsForMalloc = new ArrayList<>();
+            paramsForMalloc.add(new IntegerConstant(new PointerType(parameter.getType()).getByte()));
+            Function mallocFunc = functionMap.get("malloc");
+            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
+            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
+            currentBB.addInstAtTail(new Call(currentBB, mallocAddr, mallocFunc, paramsForMalloc));
+            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
             currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
+//            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
+//            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
             newFunction.CheckAndSetName(addr.getName(), addr);
         } else {
 //            System.err.println(identifier);
@@ -363,8 +371,16 @@ public class Module {
             parameters.add(parameter);
             newFunction.CheckAndSetName(parameter.getName(), parameter);
             Register addr = new Register(new PointerType(parameter.getType()), identifier + "." +variableEntity.getName());
-            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
+            ArrayList<IROper> paramsForMalloc = new ArrayList<>();
+            paramsForMalloc.add(new IntegerConstant(new PointerType(parameter.getType()).getByte()));
+            Function mallocFunc = functionMap.get("malloc");
+            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
+            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
+            currentBB.addInstAtTail(new Call(currentBB, mallocAddr, mallocFunc, paramsForMalloc));
+            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
             currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
+//            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
+//            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
             newFunction.CheckAndSetName(addr.getName(), addr);
             variableEntity.setAddr(addr);
         }

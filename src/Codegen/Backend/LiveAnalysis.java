@@ -29,6 +29,7 @@ public class LiveAnalysis {
     private void getLiveOut(Function function) {
         ArrayList<BasicBlock> dfsList = function.getDfsList();
         for (BasicBlock basicBlock: dfsList) {
+            basicBlock.setLiveOut(new HashSet<>());
             for (Instruction instruction: basicBlock.getInstList()) {
                 instruction.addToUEVarVarKill();
             }
@@ -39,7 +40,7 @@ public class LiveAnalysis {
             changed = false;
             for (int i = dfsList.size() - 1; i >= 0; --i) {
                 BasicBlock basicBlock = dfsList.get(i);
-                changed = setLiveOut(basicBlock);
+                changed |= setLiveOut(basicBlock);
             }
         }
     }

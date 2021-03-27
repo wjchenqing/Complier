@@ -28,8 +28,8 @@ public class Main {
         MxParser parser;
         ParseTree parseRoot;
         try {
-            inputStream = new FileInputStream("code.txt");
-//            inputStream = System.in;
+//            inputStream = new FileInputStream("code.txt");
+            inputStream = System.in;
             input = CharStreams.fromStream(inputStream);
         } catch (Exception e) {
             assert false;
@@ -50,6 +50,10 @@ public class Main {
         SemanticChecker semanticChecker = new SemanticChecker();
         programRoot.accept(semanticChecker);
 
+        if (args.length > 0) {
+            return;
+        }
+
         IRBuilder irBuilder = new IRBuilder(semanticChecker.getProgramScope(), semanticChecker.getTypeTable());
         programRoot.accept(irBuilder);
 
@@ -61,15 +65,15 @@ public class Main {
         InstructionSelector instructionSelector = new InstructionSelector();
         irBuilder.getModule().accept(instructionSelector);
 
-        CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before.s");
-        instructionSelector.getModule().accept(codegenPrinter_before);
-        codegenPrinter_before.getPrintWriter().close();
-        codegenPrinter_before.getOutputStream().close();
+//        CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before.s");
+//        instructionSelector.getModule().accept(codegenPrinter_before);
+//        codegenPrinter_before.getPrintWriter().close();
+//        codegenPrinter_before.getOutputStream().close();
 
         RegisterAllocator registerAllocator = new RegisterAllocator(instructionSelector.getModule());
         registerAllocator.runAll();
 
-        CodegenPrinter codegenPrinter = new CodegenPrinter("judger/test.s");
+        CodegenPrinter codegenPrinter = new CodegenPrinter("output.s");
         instructionSelector.getModule().accept(codegenPrinter);
         codegenPrinter.getPrintWriter().close();
         codegenPrinter.getOutputStream().close();

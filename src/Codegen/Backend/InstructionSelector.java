@@ -287,9 +287,10 @@ public class InstructionSelector implements IRVisitor {
     public void visit(Br br) {
         Codegen.BasicBlock thenBB = curFunction.getBasicBlock(br.getThenBlock().getName());
         if (br.getCond() != null) {
-            RegisterVirtual cond = curFunction.getRV(br.getCond().getName());
+            RegisterVirtual cond = getReg(br.getCond());
             Codegen.BasicBlock elseBB = curFunction.getBasicBlock(br.getElseBlock().getName());
             curBlock.addInst(new Branch(curBlock, Branch.Name.beq, cond, RegisterPhysical.getVR(0), elseBB));
+            curBlock.addInst(new Jump(curBlock, thenBB));
         } else {
             curBlock.addInst(new Jump(curBlock, thenBB));
         }
@@ -325,7 +326,7 @@ public class InstructionSelector implements IRVisitor {
             stack.addAddrList(callee, addrList);
         }
 
-        curBlock.addInst(new Codegen.Instruction.Call(curBlock, callee));
+        curBlock.addInst(new Codegen.Instruction.Call(curBlock, callee, num));
 
         if (call.getResult() != null) {
             RegisterVirtual registerVirtual = curFunction.getRV(call.getResult().getName());
@@ -411,28 +412,34 @@ public class InstructionSelector implements IRVisitor {
                 }
                 return;
             case sle:
-                icmp.setForRISCV();
-                op2 = getOperand(irOp2);
-                op1 = getReg(irOp1);
-                if (op2 instanceof Immediate) {
-                    name = BinaryInstruction.Name.slti;
-                    curBlock.addInst(new BinaryInstruction(curBlock, name, true, rd, (Codegen.Operand.Register) op1, op2));
-                } else {
-                    name = BinaryInstruction.Name.slt;
-                    curBlock.addInst(new BinaryInstruction(curBlock, name, false, rd, (Codegen.Operand.Register) op1, op2));
-                }
-                return;
-            case sge:
-                icmp.setForRISCV();
+//                icmp.setForRISCV();
+                tmp = new RegisterVirtual("sle_tmp_result");
+                curFunction.CheckAndSetName(tmp.getName(), tmp);
                 op2 = getOperand(irOp1);
                 op1 = getReg(irOp2);
                 if (op2 instanceof Immediate) {
                     name = BinaryInstruction.Name.slti;
-                    curBlock.addInst(new BinaryInstruction(curBlock, name, true, rd, (Codegen.Operand.Register) op1, op2));
+                    curBlock.addInst(new BinaryInstruction(curBlock, name, true, tmp, (Codegen.Operand.Register) op1, op2));
                 } else {
                     name = BinaryInstruction.Name.slt;
-                    curBlock.addInst(new BinaryInstruction(curBlock, name, false, rd, (Codegen.Operand.Register) op1, op2));
+                    curBlock.addInst(new BinaryInstruction(curBlock, name, false, tmp, (Codegen.Operand.Register) op1, op2));
                 }
+                curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.xori, true, rd, tmp, new ImmediateInt(1)));
+                return;
+            case sge:
+//                icmp.setForRISCV();
+                tmp = new RegisterVirtual("sge_tmp_result");
+                curFunction.CheckAndSetName(tmp.getName(), tmp);
+                op2 = getOperand(irOp2);
+                op1 = getReg(irOp1);
+                if (op2 instanceof Immediate) {
+                    name = BinaryInstruction.Name.slti;
+                    curBlock.addInst(new BinaryInstruction(curBlock, name, true, tmp, (Codegen.Operand.Register) op1, op2));
+                } else {
+                    name = BinaryInstruction.Name.slt;
+                    curBlock.addInst(new BinaryInstruction(curBlock, name, false, tmp, (Codegen.Operand.Register) op1, op2));
+                }
+                curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.xori, true, rd, tmp, new ImmediateInt(1)));
                 return;
             case eq:
                 tmp = new RegisterVirtual("tmpResult");
@@ -454,6 +461,27 @@ public class InstructionSelector implements IRVisitor {
                     }
                 }
                 curBlock.addInst(new SetInst(curBlock, SetInst.Name.seqz, rd, tmp));
+                return;
+            case ne:
+                tmp = new RegisterVirtual("tmpResult");
+                curFunction.CheckAndSetName(tmp.getName(), tmp);
+                op2 = getOperand(irOp2);
+                if (op2 instanceof ImmediateInt) {
+                    op1 = getReg(irOp1);
+                    name = BinaryInstruction.Name.xori;
+                    curBlock.addInst(new BinaryInstruction(curBlock, name, true, tmp, (Codegen.Operand.Register) op1, op2));
+                } else {
+                    assert op2 instanceof RegisterVirtual;
+                    op1 = getOperand(irOp1);
+                    if (op1 instanceof ImmediateInt) {
+                        name = BinaryInstruction.Name.xori;
+                        curBlock.addInst(new BinaryInstruction(curBlock, name, true, tmp, (Codegen.Operand.Register) op2, op1));
+                    } else {
+                        name = BinaryInstruction.Name.xor;
+                        curBlock.addInst(new BinaryInstruction(curBlock, name, false, tmp, (Codegen.Operand.Register) op1, op2));
+                    }
+                }
+                curBlock.addInst(new SetInst(curBlock, SetInst.Name.snez, rd, tmp));
         }
     }
 
@@ -502,10 +530,6 @@ public class InstructionSelector implements IRVisitor {
 
     @Override
     public void visit(Ret ret) {
-        if (ret.getReturnVal() != null) {
-            RegisterVirtual reg = getReg(ret.getReturnVal());
-            curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(10), reg));
-        }
 
         for (int cnt: RegisterPhysical.calleeSaveNum) {
             RegisterVirtual rv = curFunction.getRV("x" + cnt);
@@ -515,7 +539,11 @@ public class InstructionSelector implements IRVisitor {
         RegisterVirtual ra = curFunction.getRV("ra.save");
         curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(1), ra));
 
-        Return inst = new Return(curBlock);
+        if (ret.getReturnVal() != null) {
+            RegisterVirtual reg = getReg(ret.getReturnVal());
+            curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(10), reg));
+        }
+        Return inst = new Return(curBlock, ret.getReturnVal() != null);
         curBlock.addInst(inst);
     }
 

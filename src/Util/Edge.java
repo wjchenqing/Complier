@@ -10,4 +10,9 @@ public class Edge extends Pair<RegisterVirtual, RegisterVirtual> {
             setSecond(first);
         }
     }
+
+    @Override
+    public String toString() {
+        return "(" + getFirst().getName() + ", " + getSecond().getName() + ")";
+    }
 }

@@ -65,12 +65,12 @@ public class StructureType extends IRType {
             } else if (ans % typeByte == 0) {
                 ans += typeByte;
             } else {
-                ans = ans + (typeByte - ans % typeByte);
+                ans = ans + (typeByte - ans % typeByte) + typeByte;
             }
             max = Math.max(max, typeByte);
         }
         if (ans % max == 0) {
-            ans += max;
+//            ans += max;
         } else {
             ans = ans + (max - ans % max);
         }
@@ -79,12 +79,12 @@ public class StructureType extends IRType {
 
     public int getOffset(int index) {
         int ans = 0;
-        for (int i = 0; i < index - 1; i++) {
+        for (int i = 0; i < index; i++) {
             int typeByte = typeList.get(i).getByte();
             if (ans % typeByte == 0) {
                 ans += typeByte;
             } else {
-                ans = ans + (typeByte - ans % typeByte);
+                ans = ans + (typeByte - ans % typeByte) + typeByte;
             }
         }
         return ans;
