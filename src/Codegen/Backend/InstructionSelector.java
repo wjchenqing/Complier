@@ -344,21 +344,12 @@ public class InstructionSelector implements IRVisitor {
         } else if (irIndex.size() == 1) {
             IROper index = irIndex.get(0);
             RegisterVirtual ptr = curFunction.getRV(irPointer.getName());
-            if (index instanceof Register) {
-                RegisterVirtual rs1 = curFunction.getRV(index.getName());
-                RegisterVirtual tmp = new RegisterVirtual("tmp");
-                curFunction.CheckAndSetName(tmp.getName(), tmp);
-                curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.slli, true, tmp, rs1, new ImmediateInt(2)));
-                curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.add, false, rd, ptr, tmp));
-            } else {
-                assert index instanceof IntegerConstant;
-                Operand rs = getOperand(new IntegerConstant(((IntegerConstant) index).getValue() * 4));
-                if (rs instanceof Immediate) {
-                    curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.addi, true, rd, ptr, rs));
-                } else {
-                    curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.add, false, rd, ptr, rs));
-                }
-            }
+            RegisterVirtual rs1 = getReg(index);
+            RegisterVirtual tmp = new RegisterVirtual("tmp");
+            curFunction.CheckAndSetName(tmp.getName(), tmp);
+            RegisterVirtual byteSize = getReg(new IntegerConstant(((PointerType) irPointer.getType()).getType().getByte()));
+            curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.mul, false, tmp, rs1, byteSize));
+            curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.add, false, rd, ptr, tmp));
         } else {
             assert irPointer.getType() instanceof PointerType;
             IRType baseType = ((PointerType) irPointer.getType()).getType();
