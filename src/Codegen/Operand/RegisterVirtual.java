@@ -6,11 +6,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class RegisterVirtual extends Register {
-    private Set<RegisterVirtual> adjList = new HashSet<>();
+    private Set<RegisterVirtual> adjList;
     private int degree;
-    private Set<Move> moveList = new HashSet<>();
+    private Set<Move> moveList;
     private RegisterVirtual alias;
     private RegisterPhysical color;
+
+    public void setAdjList(Set<RegisterVirtual> adjList) {
+        this.adjList = adjList;
+    }
+
+    public void setMoveList(Set<Move> moveList) {
+        this.moveList = moveList;
+    }
 
     public RegisterVirtual(String name) {
         this.name = name;

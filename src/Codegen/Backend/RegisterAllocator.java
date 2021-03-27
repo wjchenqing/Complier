@@ -19,46 +19,77 @@ public class RegisterAllocator {
     private Module module;
     private Function function;
 
-    private final Set<RegisterVirtual> precolored = new LinkedHashSet<>();
-    private final Set<RegisterVirtual> initial = new LinkedHashSet<>();
-    private final Set<RegisterVirtual> simplifyWorkList = new LinkedHashSet<>();
-    private final Set<RegisterVirtual> freezeWorkList = new LinkedHashSet<>();
-    private final Set<RegisterVirtual> spillWorkList = new LinkedHashSet<>();
-    private final Set<RegisterVirtual> spilledNodes = new LinkedHashSet<>();
-    private final Set<RegisterVirtual> coalescedNodes = new LinkedHashSet<>();
-    private final Set<RegisterVirtual> coloredNodes = new LinkedHashSet<>();
+    private Set<RegisterVirtual> precolored;
+    private Set<RegisterVirtual> initial;
+    private Set<RegisterVirtual> simplifyWorkList;
+    private Set<RegisterVirtual> freezeWorkList;
+    private Set<RegisterVirtual> spillWorkList;
+    private Set<RegisterVirtual> spilledNodes;
+    private Set<RegisterVirtual> coalescedNodes;
+    private Set<RegisterVirtual> coloredNodes;
 
-    private final Stack<RegisterVirtual> selectStack = new Stack<>();
+    private Stack<RegisterVirtual> selectStack;
 
-    private final Set<Move> coalescedMoves = new LinkedHashSet<>();
-    private final Set<Move> constrainedMoves = new LinkedHashSet<>();
-    private final Set<Move> frozenMoves = new LinkedHashSet<>();
-    private final Set<Move> workListMoves = new LinkedHashSet<>();
-    private final Set<Move> activeMoves = new LinkedHashSet<>();
+    private Set<Move> coalescedMoves;
+    private Set<Move> constrainedMoves;
+    private Set<Move> frozenMoves;
+    private Set<Move> workListMoves;
+    private Set<Move> activeMoves;
 
-    private final Set<Edge> adjSet = new LinkedHashSet<>();
+    private Set<Edge> adjSet;
 
     public RegisterAllocator(Module module) {
         this.module = module;
     }
 
     public void runAll() {
-        System.out.println("Start allocating");
         for (Function function: module.getFunctionMap().values()) {
             if (function.getIrFunction().isNotExternal()) {
+                System.out.println("Start allocating for " + function.getName());
                 this.function = function;
                 run();
                 function.getStack().setAndGetSize();
                 setSP();
+                System.out.println();
             }
         }
     }
 
     public void init() {
-        precolored.clear();
+        precolored = new LinkedHashSet<>();
+        initial = new LinkedHashSet<>();
+        simplifyWorkList = new LinkedHashSet<>();
+        freezeWorkList = new LinkedHashSet<>();
+        spillWorkList = new LinkedHashSet<>();
+        spilledNodes = new LinkedHashSet<>();
+        coalescedNodes = new LinkedHashSet<>();
+        coloredNodes = new LinkedHashSet<>();
+        selectStack = new Stack<>();
+        coalescedMoves = new LinkedHashSet<>();
+        constrainedMoves = new LinkedHashSet<>();
+        frozenMoves = new LinkedHashSet<>();
+        workListMoves = new LinkedHashSet<>();
+        activeMoves = new LinkedHashSet<>();
+        adjSet = new LinkedHashSet<>();
+
         initial.addAll(function.getOperandMap().values());
         precolored.addAll(RegisterPhysical.virtualMap.values());
         initial.removeAll(precolored);
+
+        for (RegisterVirtual rv: initial) {
+            rv.setColor(null);
+            rv.setDegree(0);
+            rv.setAlias(null);
+            rv.setAdjList(new LinkedHashSet<>());
+            rv.setMoveList(new LinkedHashSet<>());
+        }
+
+        for (RegisterVirtual rv: precolored) {
+            rv.setDegree(0);
+            rv.setAlias(null);
+            rv.setAdjList(new LinkedHashSet<>());
+            rv.setMoveList(new LinkedHashSet<>());
+        }
     }
 
     public void run() {
@@ -81,14 +112,14 @@ public class RegisterAllocator {
         if (!spilledNodes.isEmpty()) {
             rewriteProgram();
 
-//            try {
-//                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");
-//                module.accept(codegenPrinter_before);
-//                codegenPrinter_before.getPrintWriter().close();
-//                codegenPrinter_before.getOutputStream().close();
-//            } catch (IOException e) {
-//                // do nothing
-//            }
+            try {
+                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");
+                module.accept(codegenPrinter_before);
+                codegenPrinter_before.getPrintWriter().close();
+                codegenPrinter_before.getOutputStream().close();
+            } catch (IOException e) {
+                // do nothing
+            }
 
             run();
         }
