@@ -93,35 +93,37 @@ public class RegisterAllocator {
     }
 
     public void run() {
-        init();
-        new LiveAnalysis(module).analysis();
-        build();
-        makeWorkList();
-        while (!(simplifyWorkList.isEmpty() && workListMoves.isEmpty() && freezeWorkList.isEmpty() && spillWorkList.isEmpty())) {
-            if (!simplifyWorkList.isEmpty()) {
-                simplify();
-            } else if (!workListMoves.isEmpty()) {
-                coalesce();
-            } else if (!freezeWorkList.isEmpty()) {
-                freeze();
-            } else {
-                selectSpill();
+        while (true) {
+            init();
+            LiveAnalysis.analysis(function);
+            build();
+            makeWorkList();
+            while (!(simplifyWorkList.isEmpty() && workListMoves.isEmpty() && freezeWorkList.isEmpty() && spillWorkList.isEmpty())) {
+                if (!simplifyWorkList.isEmpty()) {
+                    simplify();
+                } else if (!workListMoves.isEmpty()) {
+                    coalesce();
+                } else if (!freezeWorkList.isEmpty()) {
+                    freeze();
+                } else {
+                    selectSpill();
+                }
             }
-        }
-        assignColors();
-        if (!spilledNodes.isEmpty()) {
+            assignColors();
+            if (spilledNodes.isEmpty()) {
+                break;
+            }
             rewriteProgram();
 
-            try {
-                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");
-                module.accept(codegenPrinter_before);
-                codegenPrinter_before.getPrintWriter().close();
-                codegenPrinter_before.getOutputStream().close();
-            } catch (IOException e) {
-                // do nothing
-            }
+//            try {
+//                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");
+//                module.accept(codegenPrinter_before);
+//                codegenPrinter_before.getPrintWriter().close();
+//                codegenPrinter_before.getOutputStream().close();
+//            } catch (IOException e) {
+//                 do nothing
+//            }
 
-            run();
         }
     }
 

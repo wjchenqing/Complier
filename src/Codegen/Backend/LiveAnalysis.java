@@ -12,21 +12,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class LiveAnalysis {
-    private Module module;
 
-    public LiveAnalysis(Module module) {
-        this.module = module;
-    }
-
-    public void analysis() {
-        for (Function function: module.getFunctionMap().values()) {
-            if (function.getIrFunction().isNotExternal()) {
-                getLiveOut(function);
-            }
-        }
-    }
-
-    private void getLiveOut(Function function) {
+    static public void analysis(Function function) {
         ArrayList<BasicBlock> dfsList = function.getDfsList();
         for (BasicBlock basicBlock: dfsList) {
             basicBlock.setLiveOut(new LinkedHashSet<>());
@@ -45,7 +32,7 @@ public class LiveAnalysis {
         }
     }
 
-    private boolean setLiveOut(BasicBlock basicBlock) {
+    static private boolean setLiveOut(BasicBlock basicBlock) {
         Set<RegisterVirtual> liveOut = new LinkedHashSet<>();
         for (BasicBlock successor: basicBlock.getSuccessor()) {
             Set<RegisterVirtual> successorLiveOut = new LinkedHashSet<>(successor.getLiveOut());
