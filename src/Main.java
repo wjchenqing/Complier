@@ -57,10 +57,10 @@ public class Main {
         IRBuilder irBuilder = new IRBuilder(semanticChecker.getProgramScope(), semanticChecker.getTypeTable());
         programRoot.accept(irBuilder);
 
-        IRPrinter irPrinter = new IRPrinter();
-        irBuilder.getModule().accept(irPrinter);
-        irPrinter.getPrintWriter().close();
-        irPrinter.getOutputStream().close();
+//        IRPrinter irPrinter = new IRPrinter();
+//        irBuilder.getModule().accept(irPrinter);
+//        irPrinter.getPrintWriter().close();
+//        irPrinter.getOutputStream().close();
 
         InstructionSelector instructionSelector = new InstructionSelector();
         irBuilder.getModule().accept(instructionSelector);
