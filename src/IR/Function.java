@@ -1,16 +1,11 @@
 package IR;
 
-import IR.Instruction.Alloca;
-import IR.Instruction.Load;
-import IR.Instruction.Ret;
-import IR.Instruction.Store;
+import IR.Instruction.*;
 import IR.Operand.IROper;
+import IR.Operand.IntegerConstant;
 import IR.Operand.Parameter;
 import IR.Operand.Register;
-import IR.Type.FunctionType;
-import IR.Type.IRType;
-import IR.Type.PointerType;
-import IR.Type.VoidType;
+import IR.Type.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +26,7 @@ public class Function {
 
     private boolean notExternal;
 
-    public Function(String name,IRType returnType, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial) {
+    public Function(Module module, String name,IRType returnType, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial) {
         this.name = name;
         this.returnType = returnType;
         this.functionType = functionType;
@@ -48,9 +43,17 @@ public class Function {
             if ((returnType == null) || (returnType instanceof VoidType)) {
                 returnBB.addInstAtTail(new Ret(returnBB, new VoidType(), null));
             } else {
+                ArrayList<IROper> paramForMalloc = new ArrayList<>();
+                paramForMalloc.add(new IntegerConstant(new PointerType(returnType).getByte()));
+                Function mallocFunc = module.getFunction("malloc");
+                Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddr");
+                CheckAndSetName(mallocAddr.getName(), mallocAddr);
                 returnValue = new Register(new PointerType(returnType), name + ".returnValue");
-                headBB.addInstAtTail(new Alloca(headBB, returnValue, returnType));
-                headBB.addInstAtTail(new Store(headBB, returnType.defaultOperand(), returnValue));
+                headBB.addInstAtHead(new Store(headBB, returnType.defaultOperand(), returnValue));
+                headBB.addInstAtHead(new BitCastTo(headBB, returnValue, mallocAddr, new PointerType(returnType)));
+                headBB.addInstAtHead(new Call(headBB, mallocAddr, mallocFunc, paramForMalloc));
+//                headBB.addInstAtTail(new Alloca(headBB, returnValue, returnType));
+//                headBB.addInstAtTail(new Store(headBB, returnType.defaultOperand(), returnValue));
                 OperandMap.put(returnValue.getName(), returnValue);
                 Register returnValueRegister = new Register(returnType, name + "returnValueRegister");
                 returnBB.addInstAtTail(new Load(returnBB, returnValueRegister, returnType, returnValue));

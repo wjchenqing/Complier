@@ -13,11 +13,13 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 public class CodegenPrinter implements CodegenVisitor {
-    private final OutputStream outputStream = new FileOutputStream("judger/test.s");
-    private final PrintWriter printWriter = new PrintWriter(outputStream);
-    private final String tab = "        ";
+    private final OutputStream outputStream;
+    private final PrintWriter printWriter;
+    private final String tab = "    ";
 
-    public CodegenPrinter() throws FileNotFoundException {
+    public CodegenPrinter(String fileName) throws FileNotFoundException {
+        outputStream = new FileOutputStream(fileName);
+        printWriter = new PrintWriter(outputStream);
     }
 
     public OutputStream getOutputStream() {
@@ -46,7 +48,7 @@ public class CodegenPrinter implements CodegenVisitor {
         }
         println("");
 
-        println(tab + ".section\t\".note.GNU-stack\",\"\",@progbits");
+        println(tab + ".section\t.sdata,\"aw\",@progbits");
 
         for (GlobalVar var: module.getGlobalVarMap().values()) {
             var.accept(this);
@@ -55,17 +57,18 @@ public class CodegenPrinter implements CodegenVisitor {
 
     @Override
     public void visit(Function function) {
+        if (!function.getIrFunction().isNotExternal()) {
+            return;
+        }
         println(tab + ".globl" + "  " + function.toString());
-        println(tab + "p2align" + tab + "2");
+        println(tab + ".p2align" + tab + "2");
         println(tab + ".type" + function.toString() + ",@function");
         println(function.toString() + ":");
-        println(tab + ".cfi_startproc");
 
         for (BasicBlock basicBlock: function.getBlockList()) {
             basicBlock.accept(this);
         }
 
-        println(tab + ".cfi_endproc");
         println("");
     }
 
@@ -73,7 +76,7 @@ public class CodegenPrinter implements CodegenVisitor {
     public void visit(BasicBlock basicBlock) {
         println(basicBlock.printCode() + ":");
         for (Instruction inst: basicBlock.getInstList()) {
-            inst.printCode();
+            println(inst.printCode());
         }
     }
 
@@ -87,7 +90,7 @@ public class CodegenPrinter implements CodegenVisitor {
                 break;
             default:
                 println(tab + ".globl" + tab + globalVar.getIdentifier());
-                println(tab + "p2align" + tab + "2");
+                println(tab + ".p2align" + tab + "2");
                 println(globalVar.getIdentifier() + ":");
                 println(globalVar.printCode());
                 println("");

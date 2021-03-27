@@ -50,7 +50,7 @@ public class LiveAnalysis {
             Set<RegisterVirtual> successorLiveOut = new HashSet<>(successor.getLiveOut());
             successorLiveOut.removeAll(successor.getVarKill());
             Set<RegisterVirtual> successorUEVar = new HashSet<>(successor.getUEVar());
-            successorUEVar.removeAll(successorLiveOut);
+            successorUEVar.addAll(successorLiveOut);
             liveOut.addAll(successorUEVar);
         }
         if (liveOut.equals(basicBlock.getLiveOut())) {

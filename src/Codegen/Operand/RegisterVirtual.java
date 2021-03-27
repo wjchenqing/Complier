@@ -67,6 +67,10 @@ public class RegisterVirtual extends Register {
 
     @Override
     public String printCode() {
-        return color.name;
+        if (color == null) {
+            return name;
+        } else {
+            return color.name;
+        }
     }
 }

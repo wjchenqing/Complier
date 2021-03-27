@@ -3,7 +3,7 @@ package Codegen.Operand;
 public class Addr extends Operand {
     private final boolean isStackLocation;
     private String name;
-    private final Register base;
+    private Register base;
     private Object offset;
 
     public Addr(boolean isStackLocation, Register base, Immediate offset) {
@@ -17,6 +17,10 @@ public class Addr extends Operand {
             this.base = base;
             this.offset = offset;
         }
+    }
+
+    public void setBase(Register base) {
+        this.base = base;
     }
 
     public String getName() {
@@ -44,6 +48,7 @@ public class Addr extends Operand {
 
     public void setOffset(int offset) {
         assert isStackLocation;
+        System.out.println("set offset: " + name);
         this.offset = offset;
     }
 

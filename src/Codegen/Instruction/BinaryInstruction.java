@@ -11,7 +11,6 @@ public class BinaryInstruction extends Instruction {
         addi, slti, sltiu, xori, ori, andi, slli, srli, srai,
         add, sub, sll, slt, sltu, xor, srl, sra, or, and,
         mul, div, rem,
-        seqz, snez, sltz, sgtz
     }
     private final boolean isImmediateType;
     private final Name name;
@@ -29,7 +28,9 @@ public class BinaryInstruction extends Instruction {
         if (isImmediateType) {
             assert rs2 instanceof Immediate;
         } else {
-            assert rs2 instanceof Register;
+            if (!(rs2 instanceof Register)) {
+                assert false;
+            }
         }
         def.add((RegisterVirtual) rd);
         use.add((RegisterVirtual) rs1);

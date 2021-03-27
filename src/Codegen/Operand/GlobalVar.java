@@ -68,7 +68,8 @@ public class GlobalVar extends Operand {
             case Int:
                 return "\t.word\t" + Integer.toUnsignedLong(IntWord);
             case String:
-                return "\t.asciz\t\"" + stringAsciz + "\"";
+                String tmp = "\t.asciz\t\"" + stringAsciz + "\"";
+                return tmp;
         }
         return null;
     }

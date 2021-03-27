@@ -10,40 +10,48 @@ public class Store extends Instruction {
         sb, sw
     }
     private final Name name;
-    private Register rd;
+    private Register rs;
     private final Addr addr;
 
-    public Store(BasicBlock basicBlock, Name name, Register rd, Addr addr) {
+    public Store(BasicBlock basicBlock, Name name, Register rs, Addr addr) {
         super(basicBlock);
         this.name = name;
-        this.rd = rd;
+        this.rs = rs;
         this.addr = addr;
-        def.add((RegisterVirtual) rd);
+        use.add((RegisterVirtual) rs);
+        if (!addr.isStackLocation()) {
+            use.add((RegisterVirtual) addr.getBase());
+        }
     }
 
     @Override
-    public void replaceDef(RegisterVirtual old, RegisterVirtual n) {
-        assert rd == old;
-        rd = n;
-        super.replaceDef(old, n);
+    public void replaceUse(RegisterVirtual old, RegisterVirtual n) {
+        if (rs == old) {
+            rs = n;
+        } else {
+            assert !addr.isStackLocation();
+            assert addr.getBase() == old;
+            addr.setBase(n);
+        }
+        super.replaceUse(old, n);
     }
 
     @Override
     public String toString() {
-        return name.name() + " " + rd.toString() + ", " + addr.toString();
+        return name.name() + " " + rs.toString() + ", " + addr.toString();
     }
 
     @Override
     public String printCode() {
-        return "\t" + name.name() + "\t" + rd.printCode() + ", " + addr.printCode();
+        return "\t" + name.name() + "\t" + rs.printCode() + ", " + addr.printCode();
     }
 
     public Name getName() {
         return name;
     }
 
-    public Register getRd() {
-        return rd;
+    public Register getRs() {
+        return rs;
     }
 
     public Addr getAddr() {
@@ -52,6 +60,14 @@ public class Store extends Instruction {
 
     @Override
     public void addToUEVarVarKill() {
-        basicBlock.addVarKill((RegisterVirtual) rd);
+        if (!basicBlock.hasVarKill((RegisterVirtual) rs)) {
+            basicBlock.addUEVar((RegisterVirtual) rs);
+        }
+        if (addr.isStackLocation()) {
+            return;
+        }
+        if (!basicBlock.hasVarKill((RegisterVirtual) addr.getBase())) {
+            basicBlock.addUEVar((RegisterVirtual) addr.getBase());
+        }
     }
 }

@@ -99,6 +99,17 @@ public class BasicBlock {
         }
     }
 
+    public void addInstAtFront(Instruction instruction) {
+        if (isEmpty()) {
+            headInst = instruction;
+            tailInst = instruction;
+        } else {
+            instruction.setNext(headInst);
+            headInst.setPrev(instruction);
+            headInst = instruction;
+        }
+    }
+
     public boolean isEmpty() {
         return headInst == null;
     }

@@ -19,6 +19,9 @@ public class LoadGlobal extends Instruction {
         this.rd = rd;
         this.addr = addr;
         def.add((RegisterVirtual) rd);
+        if (!addr.isStackLocation()) {
+            use.add((RegisterVirtual) addr.getBase());
+        }
     }
 
     @Override
@@ -38,6 +41,16 @@ public class LoadGlobal extends Instruction {
         super.replaceDef(old, n);
     }
 
+    @Override
+    public void replaceUse(RegisterVirtual old, RegisterVirtual n) {
+        if (addr.isStackLocation()) {
+            return;
+        }
+        assert addr.getBase() == old;
+        addr.setBase(n);
+        super.replaceUse(old, n);
+    }
+
     public Name getName() {
         return name;
     }
@@ -53,5 +66,11 @@ public class LoadGlobal extends Instruction {
     @Override
     public void addToUEVarVarKill() {
         basicBlock.addVarKill((RegisterVirtual) rd);
+        if (addr.isStackLocation()) {
+            return;
+        }
+        if (!basicBlock.hasVarKill((RegisterVirtual) addr.getBase())) {
+            basicBlock.addUEVar((RegisterVirtual) addr.getBase());
+        }
     }
 }

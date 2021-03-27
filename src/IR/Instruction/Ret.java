@@ -35,6 +35,14 @@ public class Ret extends IRInst {
         }
     }
 
+    public IRType getReturnType() {
+        return returnType;
+    }
+
+    public IROper getReturnVal() {
+        return returnVal;
+    }
+
     @Override
     public Register getResult() {
         return null;

@@ -71,7 +71,7 @@ abstract public class Instruction {
 
     public void addInstPrev(Instruction instruction) {
         instruction.setPrev(prev);
-        instruction.setNext(next);
+        instruction.setNext(this);
         if (prev != null) {
             prev.setNext(instruction);
         } else {

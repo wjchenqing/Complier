@@ -79,7 +79,7 @@ public class InstructionSelector implements IRVisitor {
             if (function.isNotExternal()) {
                 asmModule.addFunction(new Codegen.Function(function.getName(), asmModule, function));
             } else {
-                asmModule.addFunction(new Codegen.Function(function.getName(), asmModule, null));
+                asmModule.addFunction(new Codegen.Function(function.getName(), asmModule, function));
             }
         }
 
@@ -98,6 +98,28 @@ public class InstructionSelector implements IRVisitor {
         curFunction.setStack(stack);
         curBlock = curFunction.getHeadBB();
 
+        RegisterVirtual ra = new RegisterVirtual("ra.save");
+        curFunction.CheckAndSetName(ra.getName(), ra);
+        curBlock.addInst(new Move(curBlock, ra, RegisterPhysical.getVR(1)));
+
+        for (int num: RegisterPhysical.calleeSaveNum) {
+            RegisterVirtual rv = new RegisterVirtual("x" + num);
+            curFunction.CheckAndSetName(rv.getName(), rv);
+            curBlock.addInst(new Move(curBlock, rv, RegisterPhysical.getVR(num)));
+        }
+
+        int minNum = Integer.min(function.getParameters().size(), 8);
+        for (int i = 0; i < minNum; ++i) {
+            RegisterVirtual rv = curFunction.getRV(function.getParameters().get(i).getName());
+            curBlock.addInst(new Move(curBlock, rv, RegisterPhysical.getVR(10 + i)));
+        }
+
+        for (int i = 8; i < function.getParameters().size(); ++i) {
+            RegisterVirtual rv = curFunction.getRV(function.getParameters().get(i).getName());
+            Addr addr = new Addr(true, new RegisterVirtual(rv.getName() + "_addr"), null);
+            stack.addFormalParamAddr(addr);
+            curBlock.addInst(new LoadGlobal(curBlock, LoadGlobal.Name.lw, rv, addr));
+        }
 
         for (BasicBlock basicBlock: function.getBlockList()) {
             basicBlock.accept(this);
@@ -279,7 +301,7 @@ public class InstructionSelector implements IRVisitor {
         ArrayList<IROper> params = call.getParams();
 
         int num = Math.min(params.size(), 8);
-        for (int i = 0; i < 8; ++i) {
+        for (int i = 0; i < num; ++i) {
             RegisterVirtual param = getReg(params.get(i));
             curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(10 + i), param));
         }
@@ -295,7 +317,8 @@ public class InstructionSelector implements IRVisitor {
             addrList = new ArrayList<>();
             for (int i = 8; i < params.size(); ++i) {
                 RegisterVirtual param = getReg(params.get(i));
-                Addr addr = new Addr(true, param, null);
+                assert param != null;
+                Addr addr = new Addr(true, new RegisterVirtual(param.getName() + "_addr"), null);
                 addrList.add(addr);
                 curBlock.addInst(new Codegen.Instruction.Store(curBlock, Codegen.Instruction.Store.Name.sw, param, addr));
             }
@@ -430,7 +453,7 @@ public class InstructionSelector implements IRVisitor {
                         curBlock.addInst(new BinaryInstruction(curBlock, name, false, tmp, (Codegen.Operand.Register) op1, op2));
                     }
                 }
-                curBlock.addInst(new BinaryInstruction(curBlock, BinaryInstruction.Name.seqz, false, rd, tmp, null));
+                curBlock.addInst(new SetInst(curBlock, SetInst.Name.seqz, rd, tmp));
         }
     }
 
@@ -460,7 +483,7 @@ public class InstructionSelector implements IRVisitor {
 
     @Override
     public void visit(Store store) {
-        RegisterVirtual rd = curFunction.getRV(store.getResult().getName());
+        RegisterVirtual rs = getReg(store.getValue());
         Codegen.Instruction.Store.Name name = store.getValue().getType().getByte() == 1 ? Codegen.Instruction.Store.Name.sb : Codegen.Instruction.Store.Name.sw;
         IROper pointer = store.getPointer();
         if (pointer instanceof GlobalVariable) {
@@ -468,21 +491,29 @@ public class InstructionSelector implements IRVisitor {
             RegisterVirtual luiTmp = new RegisterVirtual("luiTmp");
             curFunction.CheckAndSetName(luiTmp.getName(), luiTmp);
             curBlock.addInst(new LUI(curBlock, luiTmp, new ImmediateRelocation(ImmediateRelocation.ImmType.hi, ptr)));
-            curBlock.addInst(new Codegen.Instruction.Store(curBlock, name, rd, new Addr(false, luiTmp, new ImmediateRelocation(ImmediateRelocation.ImmType.lo, ptr))));
+            curBlock.addInst(new Codegen.Instruction.Store(curBlock, name, rs, new Addr(false, luiTmp, new ImmediateRelocation(ImmediateRelocation.ImmType.lo, ptr))));
         } else if (pointer instanceof NullConstant) {
             assert false;
         } else {
             RegisterVirtual ptr = curFunction.getRV(pointer.getName());
-            curBlock.addInst(new Codegen.Instruction.Store(curBlock, name, rd, new Addr(false, ptr, new ImmediateInt(0))));
+            curBlock.addInst(new Codegen.Instruction.Store(curBlock, name, rs, new Addr(false, ptr, new ImmediateInt(0))));
         }
     }
 
     @Override
     public void visit(Ret ret) {
-        if (ret.getResult() != null) {
-            RegisterVirtual reg = getReg(ret.getResult());
+        if (ret.getReturnVal() != null) {
+            RegisterVirtual reg = getReg(ret.getReturnVal());
             curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(10), reg));
         }
+
+        for (int cnt: RegisterPhysical.calleeSaveNum) {
+            RegisterVirtual rv = curFunction.getRV("x" + cnt);
+            curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(cnt), rv));
+        }
+
+        RegisterVirtual ra = curFunction.getRV("ra.save");
+        curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(1), ra));
 
         Return inst = new Return(curBlock);
         curBlock.addInst(inst);

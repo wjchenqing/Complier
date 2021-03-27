@@ -28,8 +28,8 @@ public class Main {
         MxParser parser;
         ParseTree parseRoot;
         try {
-//            inputStream = new FileInputStream("code.txt");
-            inputStream = System.in;
+            inputStream = new FileInputStream("code.txt");
+//            inputStream = System.in;
             input = CharStreams.fromStream(inputStream);
         } catch (Exception e) {
             assert false;
@@ -60,10 +60,16 @@ public class Main {
 
         InstructionSelector instructionSelector = new InstructionSelector();
         irBuilder.getModule().accept(instructionSelector);
-        RegisterAllocator registerAllocator = new RegisterAllocator(instructionSelector.getModule());
-        registerAllocator.run();
 
-        CodegenPrinter codegenPrinter = new CodegenPrinter();
+        CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before.s");
+        instructionSelector.getModule().accept(codegenPrinter_before);
+        codegenPrinter_before.getPrintWriter().close();
+        codegenPrinter_before.getOutputStream().close();
+
+        RegisterAllocator registerAllocator = new RegisterAllocator(instructionSelector.getModule());
+        registerAllocator.runAll();
+
+        CodegenPrinter codegenPrinter = new CodegenPrinter("judger/test.s");
         instructionSelector.getModule().accept(codegenPrinter);
         codegenPrinter.getPrintWriter().close();
         codegenPrinter.getOutputStream().close();

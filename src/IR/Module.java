@@ -50,7 +50,7 @@ public class Module {
         parameterList = new ArrayList<>();
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("print", returnType, functionType, parameterList, false);
+        function = new Function(this, "print", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new VoidType();
@@ -60,7 +60,7 @@ public class Module {
         parameterList = new ArrayList<>();
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("println", returnType, functionType, parameterList, false);
+        function = new Function(this,"println", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new VoidType();
@@ -70,7 +70,7 @@ public class Module {
         parameterList = new ArrayList<>();
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("printInt", returnType, functionType, parameterList, false);
+        function = new Function(this,"printInt", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new VoidType();
@@ -80,7 +80,7 @@ public class Module {
         parameterList = new ArrayList<>();
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("printlnInt", returnType, functionType, parameterList, false);
+        function = new Function(this,"printlnInt", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
 
@@ -88,14 +88,14 @@ public class Module {
         paramTypeList = new ArrayList<>();
         parameterList = new ArrayList<>();
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("getString", returnType, functionType, parameterList, false);
+        function = new Function(this,"getString", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(32);
         paramTypeList = new ArrayList<>();
         parameterList = new ArrayList<>();
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("getInt", returnType, functionType, parameterList, false);
+        function = new Function(this,"getInt", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(1);
@@ -108,7 +108,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_less", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_less", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(1);
@@ -121,7 +121,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_greater", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_greater", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(1);
@@ -134,7 +134,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_lessEqual", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_lessEqual", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(1);
@@ -147,7 +147,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_greaterEqual", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_greaterEqual", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(1);
@@ -160,7 +160,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_equal", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_equal", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(1);
@@ -173,7 +173,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_notequal",returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_notequal",returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(32);
@@ -183,7 +183,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_length", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_length", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new PointerType(new IntegerType(8));
@@ -193,7 +193,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("toString", returnType, functionType, parameterList, false);
+        function = new Function(this, "toString", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new PointerType(new IntegerType(8));
@@ -209,7 +209,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_substring", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_substring", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(32);
@@ -222,7 +222,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_ord", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_ord", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new PointerType(new IntegerType(8));
@@ -235,7 +235,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_concatenate", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_concatenate", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(32);
@@ -245,7 +245,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_array_size", returnType, functionType, parameterList, false);
+        function = new Function(this, "_array_size", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new IntegerType(32);
@@ -255,7 +255,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("_string_parseInt", returnType, functionType, parameterList, false);
+        function = new Function(this, "_string_parseInt", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
         returnType = new PointerType(new IntegerType(8));
@@ -265,7 +265,7 @@ public class Module {
         paramTypeList.add(parameter.getType());
         parameterList.add(parameter);
         functionType = new FunctionType(returnType, paramTypeList);
-        function = new Function("malloc", returnType, functionType, parameterList, false);
+        function = new Function(this, "malloc", returnType, functionType, parameterList, false);
         functionMap.put(function.getName(), function);
 
     }
@@ -331,7 +331,7 @@ public class Module {
             String className = functionScope.getClassType().getTypeName();
             identifier = className + "." + identifier;
 
-            newFunction = new Function(identifier, returnType, null, null, true);
+            newFunction = new Function(this, identifier, returnType, null, null, true);
             currentBB = newFunction.getHeadBB();
             IRType tmp = irTypeTable.get(functionScope.getClassType());
             if (tmp instanceof StructureType) {
@@ -348,7 +348,7 @@ public class Module {
             newFunction.CheckAndSetName(addr.getName(), addr);
         } else {
 //            System.err.println(identifier);
-            newFunction = new Function(identifier, returnType, null, null, true);
+            newFunction = new Function(this, identifier, returnType, null, null, true);
             currentBB = newFunction.getHeadBB();
         }
 

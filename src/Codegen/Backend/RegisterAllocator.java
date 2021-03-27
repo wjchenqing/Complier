@@ -5,10 +5,12 @@ import Codegen.Function;
 import Codegen.Instruction.*;
 import Codegen.Module;
 import Codegen.Operand.Addr;
+import Codegen.Operand.ImmediateInt;
 import Codegen.Operand.RegisterPhysical;
 import Codegen.Operand.RegisterVirtual;
 import Util.Edge;
 
+import java.io.IOException;
 import java.util.*;
 
 public class RegisterAllocator {
@@ -17,24 +19,24 @@ public class RegisterAllocator {
     private Module module;
     private Function function;
 
-    private final Set<RegisterVirtual> precolored = new HashSet<>();
-    private final Set<RegisterVirtual> initial = new HashSet<>();
-    private final Set<RegisterVirtual> simplifyWorkList = new HashSet<>();
-    private final Set<RegisterVirtual> freezeWorkList = new HashSet<>();
-    private final Set<RegisterVirtual> spillWorkList = new HashSet<>();
-    private final Set<RegisterVirtual> spilledNodes = new HashSet<>();
-    private final Set<RegisterVirtual> coalescedNodes = new HashSet<>();
-    private final Set<RegisterVirtual> coloredNodes = new HashSet<>();
+    private final Set<RegisterVirtual> precolored = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> initial = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> simplifyWorkList = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> freezeWorkList = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> spillWorkList = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> spilledNodes = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> coalescedNodes = new LinkedHashSet<>();
+    private final Set<RegisterVirtual> coloredNodes = new LinkedHashSet<>();
 
     private final Stack<RegisterVirtual> selectStack = new Stack<>();
 
-    private final Set<Move> coalescedMoves = new HashSet<>();
-    private final Set<Move> constrainedMoves = new HashSet<>();
-    private final Set<Move> frozenMoves = new HashSet<>();
-    private final Set<Move> workListMoves = new HashSet<>();
-    private final Set<Move> activeMoves = new HashSet<>();
+    private final Set<Move> coalescedMoves = new LinkedHashSet<>();
+    private final Set<Move> constrainedMoves = new LinkedHashSet<>();
+    private final Set<Move> frozenMoves = new LinkedHashSet<>();
+    private final Set<Move> workListMoves = new LinkedHashSet<>();
+    private final Set<Move> activeMoves = new LinkedHashSet<>();
 
-    private final Set<Edge> adjSet = new HashSet<>();
+    private final Set<Edge> adjSet = new LinkedHashSet<>();
 
     public RegisterAllocator(Module module) {
         this.module = module;
@@ -45,11 +47,14 @@ public class RegisterAllocator {
             if (function.getIrFunction().isNotExternal()) {
                 this.function = function;
                 run();
+                function.getStack().setAndGetSize();
+                setSP();
             }
         }
     }
 
     public void init() {
+        precolored.clear();
         initial.addAll(function.getOperandMap().values());
         precolored.addAll(RegisterPhysical.virtualMap.values());
         initial.removeAll(precolored);
@@ -57,7 +62,7 @@ public class RegisterAllocator {
 
     public void run() {
         init();
-        new LiveAnalysis(module);
+        new LiveAnalysis(module).analysis();
         build();
         makeWorkList();
         while (!(simplifyWorkList.isEmpty() && workListMoves.isEmpty() && freezeWorkList.isEmpty() && spillWorkList.isEmpty())) {
@@ -74,7 +79,32 @@ public class RegisterAllocator {
         assignColors();
         if (!spilledNodes.isEmpty()) {
             rewriteProgram();
+
+//            try {
+//                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");
+//                module.accept(codegenPrinter_before);
+//                codegenPrinter_before.getPrintWriter().close();
+//                codegenPrinter_before.getOutputStream().close();
+//            } catch (IOException e) {
+//                // do nothing
+//            }
+
             run();
+        }
+    }
+
+    public void setSP() {
+        if (function.getStack().getSize() == 0) {
+            return;
+        }
+        RegisterVirtual sp = RegisterPhysical.getVR(2);
+        function.getHeadBB().addInstAtFront(new BinaryInstruction(function.getHeadBB(), BinaryInstruction.Name.addi, true,
+                sp, sp, new ImmediateInt(- 4 * function.getStack().getSize())));
+        for (BasicBlock basicBlock: function.getBlockList()) {
+            if (basicBlock.getTailInst() instanceof Return) {
+                basicBlock.getTailInst().addInstPrev(new BinaryInstruction(basicBlock, BinaryInstruction.Name.addi, true,
+                        sp, sp, new ImmediateInt(4 * function.getStack().getSize())));
+            }
         }
     }
 
@@ -96,7 +126,7 @@ public class RegisterAllocator {
                 liveOut.addAll(inst.getDef());
                 for (RegisterVirtual rv: inst.getDef()) {
                     for (RegisterVirtual live: liveOut) {
-                        adjSet.add(new Edge(rv, live));
+                        addEdge(rv, live);
                     }
                 }
                 liveOut.removeAll(inst.getDef());
@@ -122,7 +152,6 @@ public class RegisterAllocator {
 
     public void makeWorkList() {
         for (RegisterVirtual rv: initial) {
-            initial.remove(rv);
             if (rv.getDegree() >= K) {
                 spillWorkList.add(rv);
             } else if (moveRelated(rv)) {
@@ -131,6 +160,7 @@ public class RegisterAllocator {
                 simplifyWorkList.add(rv);
             }
         }
+        initial.clear();
     }
 
     public Set<RegisterVirtual> adjacent(RegisterVirtual n) {
@@ -267,7 +297,7 @@ public class RegisterAllocator {
         coalescedNodes.add(u);
         v.setAlias(u);
         u.getMoveList().addAll(v.getMoveList());
-        Set<RegisterVirtual> tmp = new HashSet<>();
+        Set<RegisterVirtual> tmp = new LinkedHashSet<>();
         tmp.add(v);
         enableMoves(tmp);
         for (RegisterVirtual t: adjacent(v)) {
@@ -349,12 +379,13 @@ public class RegisterAllocator {
 
     public void rewriteProgram() {
         for (RegisterVirtual rv: spilledNodes) {
-            Addr addr = new Addr(true, rv, null);
+            Addr addr = new Addr(true, new RegisterVirtual(rv.getName() + "_addr"), null);
             function.getStack().putSpillLocation(rv, addr);
             spillAddrMap.put(rv, addr);
         }
         for (Instruction inst: function.getInstList()) {
-            for (RegisterVirtual rv: inst.getDef()) {
+            ArrayList<RegisterVirtual> defs = new ArrayList<>(inst.getDef());
+            for (RegisterVirtual rv: defs) {
                 Addr addr = spillAddrMap.get(rv);
                 if (addr != null) {
                     RegisterVirtual n = new RegisterVirtual(rv.getName());
@@ -363,7 +394,8 @@ public class RegisterAllocator {
                     inst.addInstNext(new Store(inst.getBasicBlock(), Store.Name.sw, n, addr));
                 }
             }
-            for (RegisterVirtual rv: inst.getUse()) {
+            ArrayList<RegisterVirtual> uses = new ArrayList<>(inst.getUse());
+            for (RegisterVirtual rv: uses) {
                 Addr addr = spillAddrMap.get(rv);
                 if (addr != null) {
                     RegisterVirtual n = new RegisterVirtual(rv.getName());
@@ -373,6 +405,10 @@ public class RegisterAllocator {
                 }
             }
         }
+        for (RegisterVirtual rv: spilledNodes) {
+            function.getOperandMap().remove(rv.getName());
+        }
+        System.out.println("finish a round of spill");
         spilledNodes.clear();
         spillAddrMap.clear();
     }

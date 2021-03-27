@@ -2,6 +2,7 @@ package Codegen.Instruction;
 
 import Codegen.BasicBlock;
 import Codegen.Operand.Register;
+import Codegen.Operand.RegisterPhysical;
 import Codegen.Operand.RegisterVirtual;
 
 public class SetInst extends Instruction {
@@ -19,6 +20,7 @@ public class SetInst extends Instruction {
         this.rs = rs;
         def.add((RegisterVirtual) rd);
         use.add((RegisterVirtual) rs);
+        use.add(RegisterPhysical.getVR(0));
     }
 
     @Override

@@ -10,6 +10,8 @@ import java.util.Map;
 public class Stack {
     private Function function;
 
+    int size;
+
     private final Map<RegisterVirtual, Addr> spillLocation = new HashMap<>();
     private ArrayList<Addr> paramsAddrFromCaller = new ArrayList<>();
     private Map<Function, ArrayList<Addr>> paramsAddrForCallee = new HashMap<>();
@@ -32,6 +34,7 @@ public class Stack {
 
     public void putSpillLocation(RegisterVirtual rv, Addr addr) {
         assert addr.isStackLocation();
+        System.out.println("put spill location: " + addr.getName());
         spillLocation.put(rv, addr);
     }
 
@@ -68,7 +71,7 @@ public class Stack {
         for (ArrayList<Addr> addr: paramsAddrForCallee.values()) {
             spilledParamNum = Math.max(spilledParamNum, addr.size());
         }
-        int size = spilledParamNum + spillLocation.size();
+        size = spilledParamNum + spillLocation.size();
 
         for (int i = 0; i < paramsAddrFromCaller.size(); i++) {
             paramsAddrFromCaller.get(i).setOffset(4 * (size + i));
@@ -83,5 +86,9 @@ public class Stack {
                 addrs.get(i).setOffset(4 * i);
             }
         }
+    }
+
+    public int getSize() {
+        return size;
     }
 }
