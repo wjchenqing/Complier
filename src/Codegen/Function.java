@@ -17,7 +17,7 @@ public class Function {
     private final Map<String, BasicBlock> blockMap = new HashMap<>();
     private int blockNum = 0;
 
-    private final Map<String, RegisterVirtual> OperandMap = new HashMap<>();
+    private final Map<String, RegisterVirtual> OperandMap = new LinkedHashMap<>();
 
     private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
     private final Set<BasicBlock> visited = new LinkedHashSet<>();

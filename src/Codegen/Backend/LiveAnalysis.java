@@ -29,7 +29,7 @@ public class LiveAnalysis {
     private void getLiveOut(Function function) {
         ArrayList<BasicBlock> dfsList = function.getDfsList();
         for (BasicBlock basicBlock: dfsList) {
-            basicBlock.setLiveOut(new HashSet<>());
+            basicBlock.setLiveOut(new LinkedHashSet<>());
             for (Instruction instruction: basicBlock.getInstList()) {
                 instruction.addToUEVarVarKill();
             }
@@ -48,9 +48,9 @@ public class LiveAnalysis {
     private boolean setLiveOut(BasicBlock basicBlock) {
         Set<RegisterVirtual> liveOut = new LinkedHashSet<>();
         for (BasicBlock successor: basicBlock.getSuccessor()) {
-            Set<RegisterVirtual> successorLiveOut = new HashSet<>(successor.getLiveOut());
+            Set<RegisterVirtual> successorLiveOut = new LinkedHashSet<>(successor.getLiveOut());
             successorLiveOut.removeAll(successor.getVarKill());
-            Set<RegisterVirtual> successorUEVar = new HashSet<>(successor.getUEVar());
+            Set<RegisterVirtual> successorUEVar = new LinkedHashSet<>(successor.getUEVar());
             successorUEVar.addAll(successorLiveOut);
             liveOut.addAll(successorUEVar);
         }
