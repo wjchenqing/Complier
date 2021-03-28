@@ -135,13 +135,23 @@ public class IRBuilder implements ASTVisitor {
             ArrayList<IROper> paramForMalloc = new ArrayList<>();
             paramForMalloc.add(new IntegerConstant(new PointerType(type).getByte()));
             IR.Function mallocFunction = module.getFunction("malloc");
-            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddr");
-            currentFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
+//            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddr");
+//            currentFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
             Register addr = new Register(new PointerType(type), identifier);
             BasicBlock headBB = currentFunction.getHeadBB();
             headBB.addInstAtHead(new Store(headBB, type2.defaultOperand(), addr));
-            headBB.addInstAtHead(new BitCastTo(headBB, addr, mallocAddr, new PointerType(type)));
-            headBB.addInstAtHead(new Call(headBB, mallocAddr, mallocFunction, paramForMalloc));
+//            headBB.addInstAtHead(new BitCastTo(headBB, addr, mallocAddr, new PointerType(type)));
+            headBB.addInstAtHead(new Call(headBB, addr, mallocFunction, paramForMalloc));
+//            ArrayList<IROper> paramForMalloc = new ArrayList<>();
+//            paramForMalloc.add(new IntegerConstant(new PointerType(type).getByte()));
+//            IR.Function mallocFunction = module.getFunction("malloc");
+//            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddr");
+//            currentFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
+//            Register addr = new Register(new PointerType(type), identifier);
+//            BasicBlock headBB = currentFunction.getHeadBB();
+//            headBB.addInstAtHead(new Store(headBB, type2.defaultOperand(), addr));
+//            headBB.addInstAtHead(new BitCastTo(headBB, addr, mallocAddr, new PointerType(type)));
+//            headBB.addInstAtHead(new Call(headBB, mallocAddr, mallocFunction, paramForMalloc));
 //            headBB.addInstAtHead(new Store(headBB, type2.defaultOperand(), addr));
 //            headBB.addInstAtHead(new Alloca(headBB, addr, type));
             currentFunction.CheckAndSetName(identifier, addr);
@@ -472,13 +482,19 @@ public class IRBuilder implements ASTVisitor {
         paramForMalloc.add(arraySizeWithTag);
         currentFunction.CheckAndSetName(arraySizeWithTag.getName(), arraySizeWithTag);
 
-        Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
+//        Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
+//        IR.Function mallocFunction = module.getFunction("malloc");
+//        currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
+//        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
+//        Register mallocI32Ptr = new Register(new PointerType(new IntegerType(32)), "mallocI32Ptr");
+//        currentBB.addInstAtTail(new BitCastTo(currentBB, mallocI32Ptr, mallocResult, new PointerType(new IntegerType(32))));
+//        currentFunction.CheckAndSetName(mallocI32Ptr.getName(), mallocI32Ptr);
+//        Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
         IR.Function mallocFunction = module.getFunction("malloc");
-        currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
-        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
-
         Register mallocI32Ptr = new Register(new PointerType(new IntegerType(32)), "mallocI32Ptr");
-        currentBB.addInstAtTail(new BitCastTo(currentBB, mallocI32Ptr, mallocResult, new PointerType(new IntegerType(32))));
+        currentBB.addInstAtTail(new Call(currentBB, mallocI32Ptr, mallocFunction, paramForMalloc));
+//        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
+//        currentBB.addInstAtTail(new BitCastTo(currentBB, mallocI32Ptr, mallocResult, new PointerType(new IntegerType(32))));
         currentFunction.CheckAndSetName(mallocI32Ptr.getName(), mallocI32Ptr);
 
         currentBB.addInstAtTail(new Store(currentBB, sizePerDim.getFirst(), mallocI32Ptr));
@@ -589,15 +605,24 @@ public class IRBuilder implements ASTVisitor {
             assert structureType instanceof StructureType;
             structureType = new PointerType(structureType);
 
+//            ArrayList<IROper> paramForMalloc = new ArrayList<>();
+//            paramForMalloc.add(new IntegerConstant(structureSize));
+//            Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
+//            Register addr = new Register(structureType, "classAddr");
+//            IR.Function mallocFunction = module.getFunction("malloc");
+//            currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
+//            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
+//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
+//            currentFunction.CheckAndSetName(addr.getName(), addr);
+
             ArrayList<IROper> paramForMalloc = new ArrayList<>();
             paramForMalloc.add(new IntegerConstant(structureSize));
-            Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
-            IR.Function mallocFunction = module.getFunction("malloc");
-            currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
-            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
-
+//            Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
             Register addr = new Register(structureType, "classAddr");
-            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
+            IR.Function mallocFunction = module.getFunction("malloc");
+            currentBB.addInstAtTail(new Call(currentBB, addr, mallocFunction, paramForMalloc));
+//            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
+//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
             currentFunction.CheckAndSetName(addr.getName(), addr);
 
             if (((ClassType2) type2).getConstructor() != null) {
@@ -1256,13 +1281,24 @@ public class IRBuilder implements ASTVisitor {
                 ArrayList<IROper> paramForAndMalloc = new ArrayList<>();
                 paramForAndMalloc.add(new IntegerConstant(1));
                 IR.Function andMalloc = module.getFunction("malloc");
-                Register andMallocResult = new Register(new PointerType(new IntegerType(8)), "andMallocResult");
-                currentFunction.CheckAndSetName(andMallocResult.getName(), andMallocResult);
+//                Register andMallocResult = new Register(new PointerType(new IntegerType(8)), "andMallocResult");
+//                currentFunction.CheckAndSetName(andMallocResult.getName(), andMallocResult);
                 resultAddr = new Register(new PointerType(new IntegerType(1)), "andResult");
                 currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
                 currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
-                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, andMallocResult, new PointerType(new IntegerType(1))));
-                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), andMallocResult, andMalloc, paramForAndMalloc));
+//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, andMallocResult, new PointerType(new IntegerType(1))));
+                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), resultAddr, andMalloc, paramForAndMalloc));
+
+//                ArrayList<IROper> paramForAndMalloc = new ArrayList<>();
+//                paramForAndMalloc.add(new IntegerConstant(1));
+//                IR.Function andMalloc = module.getFunction("malloc");
+//                Register andMallocResult = new Register(new PointerType(new IntegerType(8)), "andMallocResult");
+//                currentFunction.CheckAndSetName(andMallocResult.getName(), andMallocResult);
+//                resultAddr = new Register(new PointerType(new IntegerType(1)), "andResult");
+//                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
+//                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
+//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, andMallocResult, new PointerType(new IntegerType(1))));
+//                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), andMallocResult, andMalloc, paramForAndMalloc));
 //                currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), resultAddr, new IntegerType(1)));
                 opd2BB = new BasicBlock("opd2BB", currentFunction);
                 exitBB = new BasicBlock("exitBB", currentFunction);
@@ -1324,13 +1360,23 @@ public class IRBuilder implements ASTVisitor {
                 ArrayList<IROper> paramForOrMalloc = new ArrayList<>();
                 paramForOrMalloc.add(new IntegerConstant(1));
                 IR.Function orMalloc = module.getFunction("malloc");
-                Register orMallocResult = new Register(new PointerType(new IntegerType(8)), "orMallocResult");
-                currentFunction.CheckAndSetName(orMallocResult.getName(), orMallocResult);
+//                Register orMallocResult = new Register(new PointerType(new IntegerType(8)), "orMallocResult");
+//                currentFunction.CheckAndSetName(orMallocResult.getName(), orMallocResult);
                 resultAddr = new Register(new PointerType(new IntegerType(1)), "orResult");
                 currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
                 currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
-                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, orMallocResult, new PointerType(new IntegerType(1))));
-                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), orMallocResult, orMalloc, paramForOrMalloc));
+//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, orMallocResult, new PointerType(new IntegerType(1))));
+                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), resultAddr, orMalloc, paramForOrMalloc));
+//                ArrayList<IROper> paramForOrMalloc = new ArrayList<>();
+//                paramForOrMalloc.add(new IntegerConstant(1));
+//                IR.Function orMalloc = module.getFunction("malloc");
+//                Register orMallocResult = new Register(new PointerType(new IntegerType(8)), "orMallocResult");
+//                currentFunction.CheckAndSetName(orMallocResult.getName(), orMallocResult);
+//                resultAddr = new Register(new PointerType(new IntegerType(1)), "orResult");
+//                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
+//                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
+//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, orMallocResult, new PointerType(new IntegerType(1))));
+//                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), orMallocResult, orMalloc, paramForOrMalloc));
 //                currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), resultAddr, new IntegerType(1)));
                 opd2BB = new BasicBlock("opd2BB", currentFunction);
                 exitBB = new BasicBlock("exitBB", currentFunction);

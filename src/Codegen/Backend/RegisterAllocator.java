@@ -11,6 +11,8 @@ import Codegen.Operand.RegisterVirtual;
 import Util.Edge;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class RegisterAllocator {
@@ -30,13 +32,16 @@ public class RegisterAllocator {
 
     private Stack<RegisterVirtual> selectStack;
 
-    private Set<Move> coalescedMoves;
-    private Set<Move> constrainedMoves;
-    private Set<Move> frozenMoves;
+//    private Set<Move> coalescedMoves;
+//    private Set<Move> constrainedMoves;
+//    private Set<Move> frozenMoves;
     private Set<Move> workListMoves;
     private Set<Move> activeMoves;
 
     private Set<Edge> adjSet;
+
+    private Map<RegisterVirtual, Set<Instruction>> regUseIn;
+    private Map<RegisterVirtual, Set<Instruction>> regDefIn;
 
     public RegisterAllocator(Module module) {
         this.module = module;
@@ -65,12 +70,14 @@ public class RegisterAllocator {
         coalescedNodes = new HashSet<>();
         coloredNodes = new HashSet<>();
         selectStack = new Stack<>();
-        coalescedMoves = new HashSet<>();
-        constrainedMoves = new HashSet<>();
-        frozenMoves = new HashSet<>();
+//        coalescedMoves = new HashSet<>();
+//        constrainedMoves = new HashSet<>();
+//        frozenMoves = new HashSet<>();
         workListMoves = new LinkedHashSet<>();
         activeMoves = new LinkedHashSet<>();
         adjSet = new HashSet<>();
+        regDefIn = new HashMap<>();
+        regUseIn = new HashMap<>();
 
         initial.addAll(function.getOperandMap().values());
         precolored.addAll(RegisterPhysical.virtualMap.values());
@@ -92,15 +99,21 @@ public class RegisterAllocator {
         }
     }
 
+
     public void run() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         int cnt = 1;
         while (true) {
             System.out.println("run round: " + cnt);
             ++cnt;
             init();
             LiveAnalysis.analysis(function);
+            System.out.println("Start building: " + dtf.format(LocalDateTime.now()));
             build();
+            System.out.println("Finish building: " + dtf.format(LocalDateTime.now()));
+
             makeWorkList();
+            System.out.println("Finish making worklist: " + dtf.format(LocalDateTime.now()));
             while (!(simplifyWorkList.isEmpty() && workListMoves.isEmpty() && freezeWorkList.isEmpty() && spillWorkList.isEmpty())) {
                 if (!simplifyWorkList.isEmpty()) {
                     simplify();
@@ -112,11 +125,14 @@ public class RegisterAllocator {
                     selectSpill();
                 }
             }
+            System.out.println("Finish while loop: " + dtf.format(LocalDateTime.now()));
             assignColors();
+            System.out.println("Finish assigning colors: " + dtf.format(LocalDateTime.now()));
             if (spilledNodes.isEmpty()) {
                 break;
             }
             rewriteProgram();
+            System.out.println("Finish rewriting: " + dtf.format(LocalDateTime.now()));
 
 //            try {
 //                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");
@@ -152,6 +168,24 @@ public class RegisterAllocator {
             ArrayList<Instruction> instructions = basicBlock.getInstList();
             for (int i = instructions.size() - 1; i >= 0; --i) {
                 Instruction inst = instructions.get(i);
+                for (RegisterVirtual rv: inst.getDef()) {
+                    if (!regDefIn.containsKey(rv)) {
+                        Set<Instruction> tmp = new HashSet<>();
+                        tmp.add(inst);
+                        regDefIn.put(rv, tmp);
+                    } else {
+                        regDefIn.get(rv).add(inst);
+                    }
+                }
+                for (RegisterVirtual rv: inst.getUse()) {
+                    if (!regUseIn.containsKey(rv)) {
+                        Set<Instruction> tmp = new HashSet<>();
+                        tmp.add(inst);
+                        regUseIn.put(rv, tmp);
+                    } else {
+                        regUseIn.get(rv).add(inst);
+                    }
+                }
                 if (inst instanceof Move) {
                     liveOut.removeAll(inst.getUse());
                     for (RegisterVirtual rv: inst.getUse()) {
@@ -294,15 +328,15 @@ public class RegisterAllocator {
         }
         workListMoves.remove(m);
         if (u == v) {
-            coalescedMoves.add(m);
+//            coalescedMoves.add(m);
             addWorkList(u);
         } else if ((precolored.contains(v)) || (adjSet.contains(new Edge(u, v)))) {
-            constrainedMoves.add(m);
+//            constrainedMoves.add(m);
             addWorkList(u);
             addWorkList(v);
         } else if (((precolored.contains(u)) && (testOK(adjacent(v), u)))
                 || ((!precolored.contains(u)) && (conservative(unionAdjacentResult(u, v))))) {
-            coalescedMoves.add(m);
+//            coalescedMoves.add(m);
             combine(u, v);
             addWorkList(u);
         } else {
@@ -372,7 +406,7 @@ public class RegisterAllocator {
                 v = getAlias(y);
             }
             activeMoves.remove(m);
-            frozenMoves.add(m);
+//            frozenMoves.add(m);
             if (freezeWorkList.contains(v) && (nodeMoves(v).isEmpty())) {
                 freezeWorkList.remove(v);
                 simplifyWorkList.add(v);
@@ -389,20 +423,25 @@ public class RegisterAllocator {
     }
 
     public void assignColors() {
+        System.out.println("selectStack.size() = " + selectStack.size());
         while (!selectStack.isEmpty()) {
             RegisterVirtual n = selectStack.pop();
             Set<RegisterPhysical> okColors = new HashSet<>(RegisterPhysical.colorSet);
+            Set<RegisterVirtual> union = new HashSet<>(coloredNodes);
+            union.addAll(precolored);
             for (RegisterVirtual w: n.getAdjList()) {
-                Set<RegisterVirtual> union = new HashSet<>(coloredNodes);
-                union.addAll(precolored);
                 if (union.contains(getAlias(w))) {
                     okColors.remove(getAlias(w).getColor());
+                }
+                if (okColors.isEmpty()) {
+                    break;
                 }
             }
             if (okColors.isEmpty()) {
                 spilledNodes.add(n);
             } else {
                 coloredNodes.add(n);
+                union.add(n);
                 RegisterPhysical c = okColors.iterator().next();
                 n.setColor(c);
             }
@@ -413,32 +452,22 @@ public class RegisterAllocator {
     }
 
     public void rewriteProgram() {
-        Map<RegisterVirtual, Addr> spillAddrMap = new HashMap<>();
+//        Map<RegisterVirtual, Addr> spillAddrMap = new HashMap<>();
         for (RegisterVirtual rv: spilledNodes) {
             Addr addr = new Addr(true, new RegisterVirtual(rv.getName() + "_addr"), null);
             function.getStack().putSpillLocation(rv, addr);
-            spillAddrMap.put(rv, addr);
-        }
-        for (Instruction inst: function.getInstList()) {
-            ArrayList<RegisterVirtual> defs = new ArrayList<>(inst.getDef());
-            for (RegisterVirtual rv: defs) {
-                Addr addr = spillAddrMap.get(rv);
-                if (addr != null) {
-                    RegisterVirtual n = new RegisterVirtual(rv.getName());
-                    function.CheckAndSetName(n.getName(), n);
-                    inst.replaceDef(rv, n);
-                    inst.addInstNext(new Store(inst.getBasicBlock(), Store.Name.sw, n, addr));
-                }
+//            spillAddrMap.put(rv, addr);
+            for (Instruction inst: regDefIn.get(rv)) {
+                RegisterVirtual n = new RegisterVirtual(rv.getName());
+                function.CheckAndSetName(n.getName(), n);
+                inst.replaceDef(rv, n);
+                inst.addInstNext(new Store(inst.getBasicBlock(), Store.Name.sw, n, addr));
             }
-            ArrayList<RegisterVirtual> uses = new ArrayList<>(inst.getUse());
-            for (RegisterVirtual rv: uses) {
-                Addr addr = spillAddrMap.get(rv);
-                if (addr != null) {
-                    RegisterVirtual n = new RegisterVirtual(rv.getName());
-                    function.CheckAndSetName(n.getName(), n);
-                    inst.replaceUse(rv, n);
-                    inst.addInstPrev(new LoadGlobal(inst.getBasicBlock(), LoadGlobal.Name.lw, n, addr));
-                }
+            for (Instruction inst: regUseIn.get(rv)) {
+                RegisterVirtual n = new RegisterVirtual(rv.getName());
+                function.CheckAndSetName(n.getName(), n);
+                inst.replaceUse(rv, n);
+                inst.addInstPrev(new LoadGlobal(inst.getBasicBlock(), LoadGlobal.Name.lw, n, addr));
             }
         }
         for (RegisterVirtual rv: spilledNodes) {
