@@ -34,7 +34,7 @@ public class Stack {
 
     public void putSpillLocation(RegisterVirtual rv, Addr addr) {
         assert addr.isStackLocation();
-        System.out.println("put spill location: " + addr.getName());
+//        System.out.println("put spill location: " + addr.getName());
         spillLocation.put(rv, addr);
     }
 

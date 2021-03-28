@@ -48,7 +48,7 @@ public class Addr extends Operand {
 
     public void setOffset(int offset) {
         assert isStackLocation;
-        System.out.println("set offset: " + name);
+//        System.out.println("set offset: " + name);
         this.offset = offset;
     }
 

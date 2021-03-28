@@ -50,12 +50,12 @@ public class RegisterAllocator {
     public void runAll() {
         for (Function function: module.getFunctionMap().values()) {
             if (function.getIrFunction().isNotExternal()) {
-                System.out.println("Start allocating for " + function.getName());
+//                System.out.println("Start allocating for " + function.getName());
                 this.function = function;
                 run();
                 function.getStack().setAndGetSize();
                 setSP();
-                System.out.println();
+//                System.out.println();
             }
         }
     }
@@ -101,19 +101,19 @@ public class RegisterAllocator {
 
 
     public void run() {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         int cnt = 1;
         while (true) {
-            System.out.println("run round: " + cnt);
+//            System.out.println("run round: " + cnt);
             ++cnt;
             init();
             LiveAnalysis.analysis(function);
-            System.out.println("Start building: " + dtf.format(LocalDateTime.now()));
+//            System.out.println("Start building: " + dtf.format(LocalDateTime.now()));
             build();
-            System.out.println("Finish building: " + dtf.format(LocalDateTime.now()));
+//            System.out.println("Finish building: " + dtf.format(LocalDateTime.now()));
 
             makeWorkList();
-            System.out.println("Finish making worklist: " + dtf.format(LocalDateTime.now()));
+//            System.out.println("Finish making worklist: " + dtf.format(LocalDateTime.now()));
             while (!(simplifyWorkList.isEmpty() && workListMoves.isEmpty() && freezeWorkList.isEmpty() && spillWorkList.isEmpty())) {
                 if (!simplifyWorkList.isEmpty()) {
                     simplify();
@@ -125,14 +125,14 @@ public class RegisterAllocator {
                     selectSpill();
                 }
             }
-            System.out.println("Finish while loop: " + dtf.format(LocalDateTime.now()));
+//            System.out.println("Finish while loop: " + dtf.format(LocalDateTime.now()));
             assignColors();
-            System.out.println("Finish assigning colors: " + dtf.format(LocalDateTime.now()));
+//            System.out.println("Finish assigning colors: " + dtf.format(LocalDateTime.now()));
             if (spilledNodes.isEmpty()) {
                 break;
             }
             rewriteProgram();
-            System.out.println("Finish rewriting: " + dtf.format(LocalDateTime.now()));
+//            System.out.println("Finish rewriting: " + dtf.format(LocalDateTime.now()));
 
 //            try {
 //                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");
@@ -423,7 +423,7 @@ public class RegisterAllocator {
     }
 
     public void assignColors() {
-        System.out.println("selectStack.size() = " + selectStack.size());
+//        System.out.println("selectStack.size() = " + selectStack.size());
         Set<RegisterVirtual> union = new HashSet<>(coloredNodes);
         union.addAll(precolored);
         while (!selectStack.isEmpty()) {
@@ -473,7 +473,7 @@ public class RegisterAllocator {
         for (RegisterVirtual rv: spilledNodes) {
             function.getOperandMap().remove(rv.getName());
         }
-        System.out.println("finish a round of spill");
+//        System.out.println("finish a round of spill");
         spilledNodes.clear();
     }
 }
