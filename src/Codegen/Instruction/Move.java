@@ -16,6 +16,14 @@ public class Move extends Instruction {
         use.add((RegisterVirtual) rs);
     }
 
+    public void setRd(Register rd) {
+        this.rd = rd;
+    }
+
+    public void setRs(Register rs) {
+        this.rs = rs;
+    }
+
     public Register getRd() {
         return rd;
     }

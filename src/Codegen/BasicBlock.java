@@ -1,6 +1,7 @@
 package Codegen;
 
 import Codegen.Instruction.Instruction;
+import Codegen.Instruction.Move;
 import Codegen.Operand.RegisterVirtual;
 
 import java.util.ArrayList;
@@ -107,6 +108,24 @@ public class BasicBlock {
             instruction.setNext(headInst);
             headInst.setPrev(instruction);
             headInst = instruction;
+        }
+    }
+
+    public void simplifyMove() {
+        for (Instruction cur = headInst; cur != null;) {
+            Instruction next = cur.getNext();
+            if (cur instanceof Move) {
+                if ((next instanceof Move) && ((Move) cur).getRd() instanceof RegisterVirtual) {
+                    if (((Move) next).getRs() == ((Move) cur).getRd()) {
+                        ((Move) next).setRs(((Move) cur).getRd());
+                        if (((RegisterVirtual) ((Move) cur).getRd()).getColor() == null){
+                            function.getOperandMap().remove(((RegisterVirtual) ((Move) cur).getRd()));
+                        }
+                        cur.deleteInst();
+                    }
+                }
+            }
+            cur = next;
         }
     }
 

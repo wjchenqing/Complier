@@ -62,15 +62,15 @@ public class RegisterAllocator {
         freezeWorkList = new LinkedHashSet<>();
         spillWorkList = new LinkedHashSet<>();
         spilledNodes = new LinkedHashSet<>();
-        coalescedNodes = new LinkedHashSet<>();
-        coloredNodes = new LinkedHashSet<>();
+        coalescedNodes = new HashSet<>();
+        coloredNodes = new HashSet<>();
         selectStack = new Stack<>();
-        coalescedMoves = new LinkedHashSet<>();
-        constrainedMoves = new LinkedHashSet<>();
-        frozenMoves = new LinkedHashSet<>();
+        coalescedMoves = new HashSet<>();
+        constrainedMoves = new HashSet<>();
+        frozenMoves = new HashSet<>();
         workListMoves = new LinkedHashSet<>();
         activeMoves = new LinkedHashSet<>();
-        adjSet = new LinkedHashSet<>();
+        adjSet = new HashSet<>();
 
         initial.addAll(function.getOperandMap().values());
         precolored.addAll(RegisterPhysical.virtualMap.values());
@@ -80,20 +80,23 @@ public class RegisterAllocator {
             rv.setColor(null);
             rv.setDegree(0);
             rv.setAlias(null);
-            rv.setAdjList(new LinkedHashSet<>());
-            rv.setMoveList(new LinkedHashSet<>());
+            rv.setAdjList(new HashSet<>());
+            rv.setMoveList(new HashSet<>());
         }
 
         for (RegisterVirtual rv: precolored) {
             rv.setDegree(0);
             rv.setAlias(null);
-            rv.setAdjList(new LinkedHashSet<>());
-            rv.setMoveList(new LinkedHashSet<>());
+            rv.setAdjList(new HashSet<>());
+            rv.setMoveList(new HashSet<>());
         }
     }
 
     public void run() {
+        int cnt = 1;
         while (true) {
+            System.out.println("run round: " + cnt);
+            ++cnt;
             init();
             LiveAnalysis.analysis(function);
             build();
@@ -145,8 +148,10 @@ public class RegisterAllocator {
     public void build() {
         for (BasicBlock basicBlock: function.getDfsList()) {
             Set<RegisterVirtual> liveOut = basicBlock.getLiveOut();
-            Instruction inst = basicBlock.getTailInst();
-            while (inst != null) {
+//            Instruction inst = basicBlock.getTailInst();
+            ArrayList<Instruction> instructions = basicBlock.getInstList();
+            for (int i = instructions.size() - 1; i >= 0; --i) {
+                Instruction inst = instructions.get(i);
                 if (inst instanceof Move) {
                     liveOut.removeAll(inst.getUse());
                     for (RegisterVirtual rv: inst.getUse()) {
@@ -198,17 +203,17 @@ public class RegisterAllocator {
     }
 
     public Set<RegisterVirtual> adjacent(RegisterVirtual n) {
-        Set<RegisterVirtual> union = new LinkedHashSet<>(selectStack);
+        Set<RegisterVirtual> union = new HashSet<>(selectStack);
         union.addAll(coalescedNodes);
-        Set<RegisterVirtual> ans = new LinkedHashSet<>(n.getAdjList());
+        Set<RegisterVirtual> ans = new HashSet<>(n.getAdjList());
         ans.removeAll(union);
         return ans;
     }
 
     public Set<Move> nodeMoves(RegisterVirtual n) {
-        Set<Move> union = new LinkedHashSet<>(activeMoves);
+        Set<Move> union = new HashSet<>(activeMoves);
         union.addAll(workListMoves);
-        Set<Move> tmp = new LinkedHashSet<>(n.getMoveList());
+        Set<Move> tmp = new HashSet<>(n.getMoveList());
         tmp.containsAll(union);
         return tmp;
     }
@@ -230,7 +235,7 @@ public class RegisterAllocator {
         int d = m.getDegree();
         m.setDegree(d - 1);
         if (d == K) {
-            Set<RegisterVirtual> union = new LinkedHashSet<>(adjacent(m));
+            Set<RegisterVirtual> union = new HashSet<>(adjacent(m));
             union.add(m);
             enableMoves(union);
             spillWorkList.remove(m);
@@ -315,7 +320,7 @@ public class RegisterAllocator {
     }
 
     private Set<RegisterVirtual> unionAdjacentResult(RegisterVirtual u, RegisterVirtual v) {
-        Set<RegisterVirtual> ans = new LinkedHashSet<>(adjacent(u));
+        Set<RegisterVirtual> ans = new HashSet<>(adjacent(u));
         ans.addAll(adjacent(v));
         return ans;
     }
@@ -329,7 +334,7 @@ public class RegisterAllocator {
         coalescedNodes.add(v);
         v.setAlias(u);
         u.getMoveList().addAll(v.getMoveList());
-        Set<RegisterVirtual> tmp = new LinkedHashSet<>();
+        Set<RegisterVirtual> tmp = new HashSet<>();
         tmp.add(v);
         enableMoves(tmp);
         for (RegisterVirtual t: adjacent(v)) {
@@ -386,9 +391,9 @@ public class RegisterAllocator {
     public void assignColors() {
         while (!selectStack.isEmpty()) {
             RegisterVirtual n = selectStack.pop();
-            Set<RegisterPhysical> okColors = new LinkedHashSet<>(RegisterPhysical.colorSet);
+            Set<RegisterPhysical> okColors = new HashSet<>(RegisterPhysical.colorSet);
             for (RegisterVirtual w: n.getAdjList()) {
-                Set<RegisterVirtual> union = new LinkedHashSet<>(coloredNodes);
+                Set<RegisterVirtual> union = new HashSet<>(coloredNodes);
                 union.addAll(precolored);
                 if (union.contains(getAlias(w))) {
                     okColors.remove(getAlias(w).getColor());
@@ -407,9 +412,8 @@ public class RegisterAllocator {
         }
     }
 
-    private final Map<RegisterVirtual, Addr> spillAddrMap = new LinkedHashMap<>();
-
     public void rewriteProgram() {
+        Map<RegisterVirtual, Addr> spillAddrMap = new HashMap<>();
         for (RegisterVirtual rv: spilledNodes) {
             Addr addr = new Addr(true, new RegisterVirtual(rv.getName() + "_addr"), null);
             function.getStack().putSpillLocation(rv, addr);
@@ -442,6 +446,5 @@ public class RegisterAllocator {
         }
         System.out.println("finish a round of spill");
         spilledNodes.clear();
-        spillAddrMap.clear();
     }
 }

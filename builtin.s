@@ -1111,13 +1111,12 @@ _string_parseInt:                       # @_string_parseInt
 	mv	a0, zero
 	ret
 .Lfunc_end17:
-	.size	_string_parseInt, .Lfunc_end17-_string_parseInt
                                         # -- End function
 	.globl	_array_size             # -- Begin function _array_size
 	.p2align	2
 _array_size:                            # @_array_size
 # %bb.0:
-	lw	a0, -8(a0)
+	lw	a0, -4(a0)
 	ret
 .Lfunc_end18:
                                         # -- End function

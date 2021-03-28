@@ -132,6 +132,7 @@ public class InstructionSelector implements IRVisitor {
         curBlock = curFunction.getBasicBlock(basicBlock.getName());
         for (IRInst irInst: basicBlock.getInstList()) {
             irInst.accept(this);
+//            curBlock.simplifyMove();
         }
     }
 
@@ -303,8 +304,13 @@ public class InstructionSelector implements IRVisitor {
 
         int num = Math.min(params.size(), 8);
         for (int i = 0; i < num; ++i) {
-            RegisterVirtual param = getReg(params.get(i));
-            curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(10 + i), param));
+            IROper parameter = params.get(i);
+            if ((parameter instanceof IntegerConstant) && !(((IntegerConstant) parameter).getValue() >= (1 << 11) || ((IntegerConstant) parameter).getValue() < -(1 << 11))) {
+                curBlock.addInst(new LoadImmediate(curBlock, RegisterPhysical.getVR(10 + i), new ImmediateInt(((IntegerConstant) parameter).getValue())));
+            } else {
+                RegisterVirtual param = getReg(parameter);
+                curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(10 + i), param));
+            }
         }
 
         Stack stack = curFunction.getStack();

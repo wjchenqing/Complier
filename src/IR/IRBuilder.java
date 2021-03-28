@@ -267,7 +267,7 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock exitBlock = new BasicBlock("exit_block", currentFunction);
         BasicBlock loopBody = new BasicBlock("loop_body", currentFunction);
 
-        loopContinueBlocks.push(loopBody);
+        loopContinueBlocks.push(conditionBlock);
         loopExitBlocks.push(exitBlock);
 
         currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));

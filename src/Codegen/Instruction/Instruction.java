@@ -24,6 +24,19 @@ abstract public class Instruction {
         use.add(n);
     }
 
+    public void deleteInst() {
+        if (prev == null) {
+            basicBlock.setHeadInst(next);
+            next.setPrev(null);
+        } else if (next == null) {
+            basicBlock.setTailInst(prev);
+            prev.setNext(null);
+        } else {
+            prev.setNext(next);
+            next.setPrev(prev);
+        }
+    }
+
     public Set<RegisterVirtual> getDef() {
         return def;
     }

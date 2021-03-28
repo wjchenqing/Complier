@@ -127,5 +127,5 @@ int _string_parseInt(char* str) {
 }
 
 int _array_size(char* array) {
-    return *(((long long*) array) - 1);
+    return *(((int*) array) - 1);
 }
