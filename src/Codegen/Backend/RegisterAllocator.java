@@ -164,19 +164,11 @@ public class RegisterAllocator {
     public void build() {
         for (BasicBlock basicBlock: function.getDfsList()) {
             Set<RegisterVirtual> liveOut = basicBlock.getLiveOut();
-//            Instruction inst = basicBlock.getTailInst();
-            ArrayList<Instruction> instructions = basicBlock.getInstList();
-            for (int i = instructions.size() - 1; i >= 0; --i) {
-                Instruction inst = instructions.get(i);
-                for (RegisterVirtual rv: inst.getDef()) {
-                    if (!regDefIn.containsKey(rv)) {
-                        Set<Instruction> tmp = new HashSet<>();
-                        tmp.add(inst);
-                        regDefIn.put(rv, tmp);
-                    } else {
-                        regDefIn.get(rv).add(inst);
-                    }
-                }
+            Instruction inst = basicBlock.getTailInst();
+//            ArrayList<Instruction> instructions = basicBlock.getInstList();
+//            System.out.println("instructions.size() = " + instructions.size() + "; instNum = " + basicBlock.getInstNum());
+            for (int i = basicBlock.instNum - 1; i >= 0; --i) {
+//                Instruction inst = instructions.get(i);
                 for (RegisterVirtual rv: inst.getUse()) {
                     if (!regUseIn.containsKey(rv)) {
                         Set<Instruction> tmp = new HashSet<>();
@@ -198,6 +190,13 @@ public class RegisterAllocator {
                 liveOut.add(RegisterPhysical.getVR(0));
                 liveOut.addAll(inst.getDef());
                 for (RegisterVirtual rv: inst.getDef()) {
+                    if (!regDefIn.containsKey(rv)) {
+                        Set<Instruction> tmp = new HashSet<>();
+                        tmp.add(inst);
+                        regDefIn.put(rv, tmp);
+                    } else {
+                        regDefIn.get(rv).add(inst);
+                    }
                     for (RegisterVirtual live: liveOut) {
                         addEdge(rv, live);
                     }
@@ -269,7 +268,7 @@ public class RegisterAllocator {
         int d = m.getDegree();
         m.setDegree(d - 1);
         if (d == K) {
-            Set<RegisterVirtual> union = new HashSet<>(adjacent(m));
+            Set<RegisterVirtual> union = adjacent(m);
             union.add(m);
             enableMoves(union);
             spillWorkList.remove(m);
@@ -424,13 +423,12 @@ public class RegisterAllocator {
 
     public void assignColors() {
 //        System.out.println("selectStack.size() = " + selectStack.size());
-        Set<RegisterVirtual> union = new HashSet<>(coloredNodes);
-        union.addAll(precolored);
         while (!selectStack.isEmpty()) {
             RegisterVirtual n = selectStack.pop();
             Set<RegisterPhysical> okColors = new HashSet<>(RegisterPhysical.colorSet);
             for (RegisterVirtual w: n.getAdjList()) {
-                if (union.contains(getAlias(w))) {
+                RegisterVirtual alias = getAlias(w);
+                if (coloredNodes.contains(alias) || precolored.contains(alias)) {
                     okColors.remove(getAlias(w).getColor());
                 }
                 if (okColors.isEmpty()) {
@@ -441,7 +439,6 @@ public class RegisterAllocator {
                 spilledNodes.add(n);
             } else {
                 coloredNodes.add(n);
-                union.add(n);
                 RegisterPhysical c = okColors.iterator().next();
                 n.setColor(c);
             }

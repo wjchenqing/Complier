@@ -35,6 +35,7 @@ abstract public class Instruction {
             prev.setNext(next);
             next.setPrev(prev);
         }
+       --basicBlock.instNum;
     }
 
     public Set<RegisterVirtual> getDef() {
@@ -80,6 +81,7 @@ abstract public class Instruction {
             basicBlock.setTailInst(instruction);
         }
         next = instruction;
+        ++basicBlock.instNum;
     }
 
     public void addInstPrev(Instruction instruction) {
@@ -91,6 +93,7 @@ abstract public class Instruction {
             basicBlock.setHeadInst(instruction);
         }
         prev = instruction;
+        ++basicBlock.instNum;
     }
 
     @Override

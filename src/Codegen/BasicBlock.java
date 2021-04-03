@@ -21,6 +21,7 @@ public class BasicBlock {
     private Instruction tailInst = null;
 
     private final ArrayList<Instruction> instructions = new ArrayList<>();
+    public int instNum = 0;
 
     private final Set<BasicBlock> predecessor = new LinkedHashSet<>();
     private final Set<BasicBlock> successor = new LinkedHashSet<>();
@@ -29,6 +30,14 @@ public class BasicBlock {
     private final Set<RegisterVirtual> VarKill = new LinkedHashSet<>();
 
     private Set<RegisterVirtual> liveOut;
+
+    public int getInstNum() {
+        return instNum;
+    }
+
+    public void setInstNum(int instNum) {
+        this.instNum = instNum;
+    }
 
     public void setLiveOut(Set<RegisterVirtual> liveOut) {
         this.liveOut = liveOut;
@@ -98,6 +107,7 @@ public class BasicBlock {
             tailInst.setNext(instruction);
             tailInst = instruction;
         }
+        instNum++;
     }
 
     public void addInstAtFront(Instruction instruction) {
@@ -109,6 +119,7 @@ public class BasicBlock {
             headInst.setPrev(instruction);
             headInst = instruction;
         }
+        instNum++;
     }
 
     public void simplifyMove() {
