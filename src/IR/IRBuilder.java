@@ -1278,75 +1278,49 @@ public class IRBuilder implements ASTVisitor {
 
 
             case and:
-                ArrayList<IROper> paramForAndMalloc = new ArrayList<>();
-                paramForAndMalloc.add(new IntegerConstant(1));
-                IR.Function andMalloc = module.getFunction("malloc");
-//                Register andMallocResult = new Register(new PointerType(new IntegerType(8)), "andMallocResult");
-//                currentFunction.CheckAndSetName(andMallocResult.getName(), andMallocResult);
-                resultAddr = new Register(new PointerType(new IntegerType(1)), "andResult");
-                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
-                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
-//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, andMallocResult, new PointerType(new IntegerType(1))));
-                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), resultAddr, andMalloc, paramForAndMalloc));
-
+//------------------------------------------------Russing Codegen---------------------------------------------------------
 //                ArrayList<IROper> paramForAndMalloc = new ArrayList<>();
 //                paramForAndMalloc.add(new IntegerConstant(1));
 //                IR.Function andMalloc = module.getFunction("malloc");
-//                Register andMallocResult = new Register(new PointerType(new IntegerType(8)), "andMallocResult");
-//                currentFunction.CheckAndSetName(andMallocResult.getName(), andMallocResult);
+////                Register andMallocResult = new Register(new PointerType(new IntegerType(8)), "andMallocResult");
+////                currentFunction.CheckAndSetName(andMallocResult.getName(), andMallocResult);
 //                resultAddr = new Register(new PointerType(new IntegerType(1)), "andResult");
 //                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
 //                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
-//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, andMallocResult, new PointerType(new IntegerType(1))));
-//                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), andMallocResult, andMalloc, paramForAndMalloc));
-//                currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), resultAddr, new IntegerType(1)));
-                opd2BB = new BasicBlock("opd2BB", currentFunction);
-                exitBB = new BasicBlock("exitBB", currentFunction);
-
-                opd1Result = node.getOpd1().accept(this);
-                opd1BB = currentBB;
-                assert opd1Result instanceof ExprResultPair;
-                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd1Result).result, resultAddr));
-                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, opd2BB, exitBB));
-
-                currentBB = opd2BB;
-                opd2Result = node.getOpd2().accept(this);
-                assert opd2Result instanceof ExprResultPair;
-                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd2Result).result, resultAddr));
-                currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
-                currentFunction.addBasicBlock(opd2BB);
-                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
-
-                currentBB = exitBB;
-                result = new Register(new IntegerType(1), "and");
-                currentBB.addInstAtTail(new Load(currentBB, result, new IntegerType(1), resultAddr));
-                currentFunction.addBasicBlock(currentBB);
-                currentFunction.CheckAndSetName(result.getName(), result);
-                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
-
-                return new ExprResultPair(result, null);
-
+////                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, andMallocResult, new PointerType(new IntegerType(1))));
+//                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), resultAddr, andMalloc, paramForAndMalloc));
+//
+////                ArrayList<IROper> paramForAndMalloc = new ArrayList<>();
+////                paramForAndMalloc.add(new IntegerConstant(1));
+////                IR.Function andMalloc = module.getFunction("malloc");
+////                Register andMallocResult = new Register(new PointerType(new IntegerType(8)), "andMallocResult");
+////                currentFunction.CheckAndSetName(andMallocResult.getName(), andMallocResult);
+////                resultAddr = new Register(new PointerType(new IntegerType(1)), "andResult");
+////                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
+////                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
+////                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, andMallocResult, new PointerType(new IntegerType(1))));
+////                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), andMallocResult, andMalloc, paramForAndMalloc));
+////                currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), resultAddr, new IntegerType(1)));
 //                opd2BB = new BasicBlock("opd2BB", currentFunction);
 //                exitBB = new BasicBlock("exitBB", currentFunction);
 //
 //                opd1Result = node.getOpd1().accept(this);
 //                opd1BB = currentBB;
 //                assert opd1Result instanceof ExprResultPair;
+//                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd1Result).result, resultAddr));
 //                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, opd2BB, exitBB));
 //
 //                currentBB = opd2BB;
 //                opd2Result = node.getOpd2().accept(this);
 //                assert opd2Result instanceof ExprResultPair;
+//                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd2Result).result, resultAddr));
 //                currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
 //                currentFunction.addBasicBlock(opd2BB);
 //                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 //
 //                currentBB = exitBB;
 //                result = new Register(new IntegerType(1), "and");
-//                possiblePredecessorSet = new LinkedHashSet<>();
-//                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd1BB, new BoolConstant(false)));
-//                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd2BB, ((ExprResultPair) opd2Result).result));
-//                currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
+//                currentBB.addInstAtTail(new Load(currentBB, result, new IntegerType(1), resultAddr));
 //                currentFunction.addBasicBlock(currentBB);
 //                currentFunction.CheckAndSetName(result.getName(), result);
 //                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
@@ -1355,57 +1329,60 @@ public class IRBuilder implements ASTVisitor {
 
 
 
-
-            case or:
-                ArrayList<IROper> paramForOrMalloc = new ArrayList<>();
-                paramForOrMalloc.add(new IntegerConstant(1));
-                IR.Function orMalloc = module.getFunction("malloc");
-//                Register orMallocResult = new Register(new PointerType(new IntegerType(8)), "orMallocResult");
-//                currentFunction.CheckAndSetName(orMallocResult.getName(), orMallocResult);
-                resultAddr = new Register(new PointerType(new IntegerType(1)), "orResult");
-                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
-                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
-//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, orMallocResult, new PointerType(new IntegerType(1))));
-                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), resultAddr, orMalloc, paramForOrMalloc));
-//                ArrayList<IROper> paramForOrMalloc = new ArrayList<>();
-//                paramForOrMalloc.add(new IntegerConstant(1));
-//                IR.Function orMalloc = module.getFunction("malloc");
-//                Register orMallocResult = new Register(new PointerType(new IntegerType(8)), "orMallocResult");
-//                currentFunction.CheckAndSetName(orMallocResult.getName(), orMallocResult);
-//                resultAddr = new Register(new PointerType(new IntegerType(1)), "orResult");
-//                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
-//                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
-//                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, orMallocResult, new PointerType(new IntegerType(1))));
-//                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), orMallocResult, orMalloc, paramForOrMalloc));
-//                currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), resultAddr, new IntegerType(1)));
+//----------------------------------------Phi Solution---------------------------------------------------
                 opd2BB = new BasicBlock("opd2BB", currentFunction);
                 exitBB = new BasicBlock("exitBB", currentFunction);
 
                 opd1Result = node.getOpd1().accept(this);
                 opd1BB = currentBB;
                 assert opd1Result instanceof ExprResultPair;
-//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
-                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd1Result).result, resultAddr));
-                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, exitBB, opd2BB));
+                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, opd2BB, exitBB));
 
                 currentBB = opd2BB;
                 opd2Result = node.getOpd2().accept(this);
                 assert opd2Result instanceof ExprResultPair;
-//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
-                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd2Result).result, resultAddr));
                 currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
                 currentFunction.addBasicBlock(opd2BB);
                 currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 currentBB = exitBB;
-                result = new Register(new IntegerType(1), "or");
-                currentBB.addInstAtTail(new Load(currentBB, result, new IntegerType(1), resultAddr));
+                result = new Register(new IntegerType(1), "and");
+                possiblePredecessorSet = new LinkedHashSet<>();
+                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd1BB, new BoolConstant(false)));
+                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd2BB, ((ExprResultPair) opd2Result).result));
+                currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
                 currentFunction.addBasicBlock(currentBB);
                 currentFunction.CheckAndSetName(result.getName(), result);
                 currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 return new ExprResultPair(result, null);
 
+
+
+
+            case or:
+//------------------------------------------------Russing Codegen---------------------------------------------------------
+//                ArrayList<IROper> paramForOrMalloc = new ArrayList<>();
+//                paramForOrMalloc.add(new IntegerConstant(1));
+//                IR.Function orMalloc = module.getFunction("malloc");
+////                Register orMallocResult = new Register(new PointerType(new IntegerType(8)), "orMallocResult");
+////                currentFunction.CheckAndSetName(orMallocResult.getName(), orMallocResult);
+//                resultAddr = new Register(new PointerType(new IntegerType(1)), "orResult");
+//                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
+//                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
+////                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, orMallocResult, new PointerType(new IntegerType(1))));
+//                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), resultAddr, orMalloc, paramForOrMalloc));
+////                ArrayList<IROper> paramForOrMalloc = new ArrayList<>();
+////                paramForOrMalloc.add(new IntegerConstant(1));
+////                IR.Function orMalloc = module.getFunction("malloc");
+////                Register orMallocResult = new Register(new PointerType(new IntegerType(8)), "orMallocResult");
+////                currentFunction.CheckAndSetName(orMallocResult.getName(), orMallocResult);
+////                resultAddr = new Register(new PointerType(new IntegerType(1)), "orResult");
+////                currentFunction.CheckAndSetName(resultAddr.getName(), resultAddr);
+////                currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new BoolConstant(false), resultAddr));
+////                currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), resultAddr, orMallocResult, new PointerType(new IntegerType(1))));
+////                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), orMallocResult, orMalloc, paramForOrMalloc));
+////                currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), resultAddr, new IntegerType(1)));
 //                opd2BB = new BasicBlock("opd2BB", currentFunction);
 //                exitBB = new BasicBlock("exitBB", currentFunction);
 //
@@ -1413,27 +1390,57 @@ public class IRBuilder implements ASTVisitor {
 //                opd1BB = currentBB;
 //                assert opd1Result instanceof ExprResultPair;
 ////                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+//                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd1Result).result, resultAddr));
 //                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, exitBB, opd2BB));
 //
 //                currentBB = opd2BB;
 //                opd2Result = node.getOpd2().accept(this);
 //                assert opd2Result instanceof ExprResultPair;
 ////                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+//                currentBB.addInstAtTail(new Store(currentBB, ((ExprResultPair) opd2Result).result, resultAddr));
 //                currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
 //                currentFunction.addBasicBlock(opd2BB);
 //                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 //
 //                currentBB = exitBB;
 //                result = new Register(new IntegerType(1), "or");
-//                possiblePredecessorSet = new LinkedHashSet<>();
-//                possiblePredecessorSet.add(new Pair<>(opd1BB, new BoolConstant(true)));
-//                possiblePredecessorSet.add(new Pair<>(opd2BB, ((ExprResultPair) opd2Result).result));
-//                currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
+//                currentBB.addInstAtTail(new Load(currentBB, result, new IntegerType(1), resultAddr));
 //                currentFunction.addBasicBlock(currentBB);
 //                currentFunction.CheckAndSetName(result.getName(), result);
 //                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 //
 //                return new ExprResultPair(result, null);
+
+
+//-----------------------------------Phi Solution---------------------------------------------
+                opd2BB = new BasicBlock("opd2BB", currentFunction);
+                exitBB = new BasicBlock("exitBB", currentFunction);
+
+                opd1Result = node.getOpd1().accept(this);
+                opd1BB = currentBB;
+                assert opd1Result instanceof ExprResultPair;
+//                opd1ResultReg = (Register) ((ExprResultPair) opd1Result).result;
+                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, exitBB, opd2BB));
+
+                currentBB = opd2BB;
+                opd2Result = node.getOpd2().accept(this);
+                assert opd2Result instanceof ExprResultPair;
+//                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
+                currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
+                currentFunction.addBasicBlock(opd2BB);
+                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
+
+                currentBB = exitBB;
+                result = new Register(new IntegerType(1), "or");
+                possiblePredecessorSet = new LinkedHashSet<>();
+                possiblePredecessorSet.add(new Pair<>(opd1BB, new BoolConstant(true)));
+                possiblePredecessorSet.add(new Pair<>(opd2BB, ((ExprResultPair) opd2Result).result));
+                currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
+                currentFunction.addBasicBlock(currentBB);
+                currentFunction.CheckAndSetName(result.getName(), result);
+                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
+
+                return new ExprResultPair(result, null);
 
 
 
