@@ -7,9 +7,7 @@ import IR.Operand.Parameter;
 import IR.Operand.Register;
 import IR.Type.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -43,15 +41,15 @@ public class Function {
             if ((returnType == null) || (returnType instanceof VoidType)) {
                 returnBB.addInstAtTail(new Ret(returnBB, new VoidType(), null));
             } else {
-                ArrayList<IROper> paramForMalloc = new ArrayList<>();
-                paramForMalloc.add(new IntegerConstant(new PointerType(returnType).getByte()));
-                Function mallocFunc = module.getFunction("malloc");
+//                ArrayList<IROper> paramForMalloc = new ArrayList<>();
+//                paramForMalloc.add(new IntegerConstant(new PointerType(returnType).getByte()));
+//                Function mallocFunc = module.getFunction("malloc");
 //                Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddr");
 //                CheckAndSetName(mallocAddr.getName(), mallocAddr);
                 returnValue = new Register(new PointerType(returnType), name + ".returnValue");
-                headBB.addInstAtHead(new Store(headBB, returnType.defaultOperand(), returnValue));
+//                headBB.addInstAtHead(new Store(headBB, returnType.defaultOperand(), returnValue));
 //                headBB.addInstAtHead(new BitCastTo(headBB, returnValue, mallocAddr, new PointerType(returnType)));
-                headBB.addInstAtHead(new Call(headBB, returnValue, mallocFunc, paramForMalloc));
+//                headBB.addInstAtHead(new Call(headBB, returnValue, mallocFunc, paramForMalloc));
 //                ArrayList<IROper> paramForMalloc = new ArrayList<>();
 //                paramForMalloc.add(new IntegerConstant(new PointerType(returnType).getByte()));
 //                Function mallocFunc = module.getFunction("malloc");
@@ -61,8 +59,8 @@ public class Function {
 //                headBB.addInstAtHead(new Store(headBB, returnType.defaultOperand(), returnValue));
 //                headBB.addInstAtHead(new BitCastTo(headBB, returnValue, mallocAddr, new PointerType(returnType)));
 //                headBB.addInstAtHead(new Call(headBB, mallocAddr, mallocFunc, paramForMalloc));
-//                headBB.addInstAtTail(new Alloca(headBB, returnValue, returnType));
-//                headBB.addInstAtTail(new Store(headBB, returnType.defaultOperand(), returnValue));
+                headBB.addInstAtTail(new Alloca(headBB, returnValue, returnType));
+                headBB.addInstAtTail(new Store(headBB, returnType.defaultOperand(), returnValue));
                 OperandMap.put(returnValue.getName(), returnValue);
                 Register returnValueRegister = new Register(returnType, name + "returnValueRegister");
                 returnBB.addInstAtTail(new Load(returnBB, returnValueRegister, returnType, returnValue));

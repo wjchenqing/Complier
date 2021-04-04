@@ -338,19 +338,6 @@ public class Module {
                 tmp = new PointerType(tmp);
             }
 
-            Parameter parameter = new Parameter(tmp, "this");
-            paramTypeList.add(parameter.getType());
-            parameters.add(parameter);
-            newFunction.CheckAndSetName(parameter.getName(), parameter);
-            Register addr = new Register(new PointerType(parameter.getType()), className + ".this");
-            ArrayList<IROper> paramsForMalloc = new ArrayList<>();
-            paramsForMalloc.add(new IntegerConstant(new PointerType(parameter.getType()).getByte()));
-            Function mallocFunc = functionMap.get("malloc");
-//            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
-//            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
-            currentBB.addInstAtTail(new Call(currentBB, addr, mallocFunc, paramsForMalloc));
-//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
-            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
 //            Parameter parameter = new Parameter(tmp, "this");
 //            paramTypeList.add(parameter.getType());
 //            parameters.add(parameter);
@@ -361,11 +348,24 @@ public class Module {
 //            Function mallocFunc = functionMap.get("malloc");
 //            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
 //            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
+//            currentBB.addInstAtTail(new Call(currentBB, addr, mallocFunc, paramsForMalloc));
+//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
+//            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
+            Parameter parameter = new Parameter(tmp, "this");
+            paramTypeList.add(parameter.getType());
+            parameters.add(parameter);
+            newFunction.CheckAndSetName(parameter.getName(), parameter);
+            Register addr = new Register(new PointerType(parameter.getType()), className + ".this");
+//            ArrayList<IROper> paramsForMalloc = new ArrayList<>();
+//            paramsForMalloc.add(new IntegerConstant(new PointerType(parameter.getType()).getByte()));
+//            Function mallocFunc = functionMap.get("malloc");
+//            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
+//            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
 //            currentBB.addInstAtTail(new Call(currentBB, mallocAddr, mallocFunc, paramsForMalloc));
 //            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
 //            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
-//            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
-//            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
+            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
+            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
             newFunction.CheckAndSetName(addr.getName(), addr);
         } else {
 //            System.err.println(identifier);
@@ -379,19 +379,6 @@ public class Module {
             if (tmp instanceof StructureType) {
                 tmp = new PointerType(tmp);
             }
-            Parameter parameter = new Parameter(tmp, variableEntity.getName());
-            paramTypeList.add(parameter.getType());
-            parameters.add(parameter);
-            newFunction.CheckAndSetName(parameter.getName(), parameter);
-            Register addr = new Register(new PointerType(parameter.getType()), identifier + "." +variableEntity.getName());
-            ArrayList<IROper> paramsForMalloc = new ArrayList<>();
-            paramsForMalloc.add(new IntegerConstant(new PointerType(parameter.getType()).getByte()));
-            Function mallocFunc = functionMap.get("malloc");
-//            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
-//            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
-            currentBB.addInstAtTail(new Call(currentBB, addr, mallocFunc, paramsForMalloc));
-//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
-            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
 //            Parameter parameter = new Parameter(tmp, variableEntity.getName());
 //            paramTypeList.add(parameter.getType());
 //            parameters.add(parameter);
@@ -402,11 +389,24 @@ public class Module {
 //            Function mallocFunc = functionMap.get("malloc");
 //            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
 //            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
+//            currentBB.addInstAtTail(new Call(currentBB, addr, mallocFunc, paramsForMalloc));
+//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
+//            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
+            Parameter parameter = new Parameter(tmp, variableEntity.getName());
+            paramTypeList.add(parameter.getType());
+            parameters.add(parameter);
+            newFunction.CheckAndSetName(parameter.getName(), parameter);
+            Register addr = new Register(new PointerType(parameter.getType()), identifier + "." +variableEntity.getName());
+//            ArrayList<IROper> paramsForMalloc = new ArrayList<>();
+//            paramsForMalloc.add(new IntegerConstant(new PointerType(parameter.getType()).getByte()));
+//            Function mallocFunc = functionMap.get("malloc");
+//            Register mallocAddr = new Register(new PointerType(new IntegerType(8)), "mallocAddrForParam");
+//            newFunction.CheckAndSetName(mallocAddr.getName(), mallocAddr);
 //            currentBB.addInstAtTail(new Call(currentBB, mallocAddr, mallocFunc, paramsForMalloc));
 //            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocAddr, new PointerType(parameter.getType())));
 //            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
-//            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
-//            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
+            currentBB.addInstAtTail(new Alloca(currentBB, addr, parameter.getType()));
+            currentBB.addInstAtTail(new Store(currentBB, parameter, addr));
             newFunction.CheckAndSetName(addr.getName(), addr);
             variableEntity.setAddr(addr);
         }
