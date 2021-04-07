@@ -24,8 +24,10 @@ public class Ret extends IRInst {
         }
         this.returnType = returnType;
         this.returnVal = returnVal;
-        uses.add(returnVal);
-        returnVal.addUse(this);
+        if (returnVal != null) {
+            uses.add(returnVal);
+            returnVal.addUse(this);
+        }
     }
 
     @Override

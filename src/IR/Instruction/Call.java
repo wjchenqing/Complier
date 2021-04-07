@@ -39,8 +39,10 @@ public class Call extends IRInst {
         this.result = result;
         this.function = function;
         this.params = params;
-        defs.add(result);
-        result.addDef(this);
+        if (result != null) {
+            defs.add(result);
+            result.addDef(this);
+        }
     }
 
     @Override

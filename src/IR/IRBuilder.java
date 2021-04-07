@@ -486,20 +486,20 @@ public class IRBuilder implements ASTVisitor {
         paramForMalloc.add(arraySizeWithTag);
         currentFunction.CheckAndSetName(arraySizeWithTag.getName(), arraySizeWithTag);
 
+        Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
+        IR.Function mallocFunction = module.getFunction("malloc");
+        currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
+        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
+        Register mallocI32Ptr = new Register(new PointerType(new IntegerType(32)), "mallocI32Ptr");
+        currentBB.addInstAtTail(new BitCastTo(currentBB, mallocI32Ptr, mallocResult, new PointerType(new IntegerType(32))));
+        currentFunction.CheckAndSetName(mallocI32Ptr.getName(), mallocI32Ptr);
 //        Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
 //        IR.Function mallocFunction = module.getFunction("malloc");
-//        currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
-//        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
 //        Register mallocI32Ptr = new Register(new PointerType(new IntegerType(32)), "mallocI32Ptr");
+//        currentBB.addInstAtTail(new Call(currentBB, mallocI32Ptr, mallocFunction, paramForMalloc));
+//        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
 //        currentBB.addInstAtTail(new BitCastTo(currentBB, mallocI32Ptr, mallocResult, new PointerType(new IntegerType(32))));
 //        currentFunction.CheckAndSetName(mallocI32Ptr.getName(), mallocI32Ptr);
-//        Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
-        IR.Function mallocFunction = module.getFunction("malloc");
-        Register mallocI32Ptr = new Register(new PointerType(new IntegerType(32)), "mallocI32Ptr");
-        currentBB.addInstAtTail(new Call(currentBB, mallocI32Ptr, mallocFunction, paramForMalloc));
-//        currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
-//        currentBB.addInstAtTail(new BitCastTo(currentBB, mallocI32Ptr, mallocResult, new PointerType(new IntegerType(32))));
-        currentFunction.CheckAndSetName(mallocI32Ptr.getName(), mallocI32Ptr);
 
         currentBB.addInstAtTail(new Store(currentBB, sizePerDim.getFirst(), mallocI32Ptr));
 
@@ -522,7 +522,7 @@ public class IRBuilder implements ASTVisitor {
 
 
 //        ArrayList<IROper> paramForMallocIterator = new ArrayList<>();
-//        IntegerConstant iterator = new IntegerConstant(0);
+        IntegerConstant iterator = new IntegerConstant(0);
 //        IntegerConstant size = new IntegerConstant(iterator.getType().getByte());
 //        paramForMallocIterator.add(size);
 //        Register iteratorAddr = new Register(new PointerType(new IntegerType(8)), "iteratorAddr");
@@ -536,7 +536,7 @@ public class IRBuilder implements ASTVisitor {
 //                iteratorAddr, new PointerType(new IntegerType(32))));
 //        currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), iteratorAddr,
 //                mallocFunction, paramForMallocIterator));
-//        currentBB.addInstAtTail(new Store(currentBB, iterator, Addr));
+        currentBB.addInstAtTail(new Store(currentBB, iterator, Addr));
 
 
         BasicBlock condBB = new BasicBlock("condBB", currentFunction);
@@ -609,25 +609,25 @@ public class IRBuilder implements ASTVisitor {
             assert structureType instanceof StructureType;
             structureType = new PointerType(structureType);
 
-//            ArrayList<IROper> paramForMalloc = new ArrayList<>();
-//            paramForMalloc.add(new IntegerConstant(structureSize));
-//            Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
-//            Register addr = new Register(structureType, "classAddr");
-//            IR.Function mallocFunction = module.getFunction("malloc");
-//            currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
-//            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
-//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
-//            currentFunction.CheckAndSetName(addr.getName(), addr);
-
             ArrayList<IROper> paramForMalloc = new ArrayList<>();
             paramForMalloc.add(new IntegerConstant(structureSize));
-//            Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
+            Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
             Register addr = new Register(structureType, "classAddr");
             IR.Function mallocFunction = module.getFunction("malloc");
-            currentBB.addInstAtTail(new Call(currentBB, addr, mallocFunction, paramForMalloc));
-//            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
-//            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
+            currentBB.addInstAtTail(new Call(currentBB, mallocResult, mallocFunction, paramForMalloc));
+            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
+            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
             currentFunction.CheckAndSetName(addr.getName(), addr);
+
+//            ArrayList<IROper> paramForMalloc = new ArrayList<>();
+//            paramForMalloc.add(new IntegerConstant(structureSize));
+////            Register mallocResult = new Register(new PointerType(new IntegerType(8)), "mallocResult");
+//            Register addr = new Register(structureType, "classAddr");
+//            IR.Function mallocFunction = module.getFunction("malloc");
+//            currentBB.addInstAtTail(new Call(currentBB, addr, mallocFunction, paramForMalloc));
+////            currentFunction.CheckAndSetName(mallocResult.getName(), mallocResult);
+////            currentBB.addInstAtTail(new BitCastTo(currentBB, addr, mallocResult, structureType));
+//            currentFunction.CheckAndSetName(addr.getName(), addr);
 
             if (((ClassType2) type2).getConstructor() != null) {
                 IR.Function constructor = module.getFunction(type2.getTypeName() + "." + ((ClassType2) type2).getConstructor().getName());

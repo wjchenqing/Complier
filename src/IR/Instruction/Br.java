@@ -19,8 +19,10 @@ public class Br extends IRInst {
         this.cond = cond;
         this.thenBlock = thenBlock;
         this.elseBlock = elseBlock;
-        uses.add(cond);
-        cond.addUse(this);
+        if (cond != null) {
+            uses.add(cond);
+            cond.addUse(this);
+        }
     }
 
     @Override
