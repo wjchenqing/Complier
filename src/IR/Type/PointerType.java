@@ -31,6 +31,6 @@ public class PointerType extends IRType {
 
     @Override
     public int getByte() {
-        return 4;
+        return 8;
     }
 }

@@ -19,6 +19,18 @@ public class Br extends IRInst {
         this.cond = cond;
         this.thenBlock = thenBlock;
         this.elseBlock = elseBlock;
+        uses.add(cond);
+        cond.addUse(this);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        if (cond == o) {
+            uses.remove(cond);
+            uses.add(n);
+            cond = n;
+            n.addUse(this);
+        }
     }
 
     public IROper getCond() {

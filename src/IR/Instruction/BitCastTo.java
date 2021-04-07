@@ -9,7 +9,7 @@ import IR.Type.PointerType;
 
 public class BitCastTo extends IRInst {
     private final Register result;
-    private final IROper   value;
+    private IROper   value;
     private final IRType   targetType;
 
     public BitCastTo(BasicBlock currentBB, Register result, IROper value, IRType targetType) {
@@ -20,6 +20,20 @@ public class BitCastTo extends IRInst {
         this.result = result;
         this.value = value;
         this.targetType = targetType;
+        defs.add(result);
+        uses.add(value);
+        result.addDef(this);
+        value.addUse(this);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        if (value == o) {
+            uses.remove(value);
+            uses.add(n);
+            value = n;
+            n.addUse(this);
+        }
     }
 
     @Override

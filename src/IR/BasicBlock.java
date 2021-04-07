@@ -6,6 +6,7 @@ import IR.Instruction.Ret;
 import IR.Operand.IROper;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -22,6 +23,11 @@ public class BasicBlock {
 
     private IRInst headInst = null;
     private IRInst tailInst = null;
+
+    public BasicBlock dom = null;
+    public int dfsNum;
+    public Set<BasicBlock> DominanceFrontier = new HashSet<>();
+    public Set<BasicBlock> DomChildren = new HashSet<>();
 
     public BasicBlock(String name, Function currentFunction) {
         this.name = name;

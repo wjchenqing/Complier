@@ -33,6 +33,20 @@ public class Load extends IRInst {
         this.result = result;
         this.type = type;
         this.pointer = pointer;
+        defs.add(result);
+        result.addDef(this);
+        uses.add(pointer);
+        pointer.addUse(this);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        if (pointer == o) {
+            uses.remove(o);
+            uses.add(n);
+            pointer = n;
+            n.addUse(this);
+        }
     }
 
     @Override

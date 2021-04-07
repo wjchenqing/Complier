@@ -28,6 +28,28 @@ public class BinaryOperation extends IRInst {
         this.type = type;
         this.op1 = op1;
         this.op2 = op2;
+        defs.add(result);
+        uses.add(op1);
+        uses.add(op2);
+        result.addDef(this);
+        op1.addUse(this);
+        op2.addUse(this);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        if (op1 == o) {
+            uses.remove(op1);
+            uses.add(n);
+            op1 = n;
+            n.addUse(this);
+        }
+        if (op2 == o) {
+            uses.remove(op2);
+            uses.add(n);
+            op2 = n;
+            n.addUse(this);
+        }
     }
 
     @Override

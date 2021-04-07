@@ -2,6 +2,7 @@ package IR.Instruction;
 
 import IR.BasicBlock;
 import IR.IRVisitor;
+import IR.Operand.IROper;
 import IR.Operand.Register;
 import IR.Type.IRType;
 import IR.Type.PointerType;
@@ -17,6 +18,14 @@ public class Alloca extends IRInst {
         }
         this.result = result;
         this.type = type;
+        defs.add(result);
+        result.addDef(this);
+        currentBB.getCurrentFunction().allocaResults.add(result);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+
     }
 
     @Override

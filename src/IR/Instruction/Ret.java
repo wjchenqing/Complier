@@ -9,7 +9,7 @@ import IR.Type.VoidType;
 
 public class Ret extends IRInst {
     private final IRType returnType;
-    private final IROper returnVal;
+    private IROper returnVal;
 
     public Ret(BasicBlock currentBB, IRType returnType, IROper returnVal) {
         super(currentBB);
@@ -24,6 +24,18 @@ public class Ret extends IRInst {
         }
         this.returnType = returnType;
         this.returnVal = returnVal;
+        uses.add(returnVal);
+        returnVal.addUse(this);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        if (returnVal == o) {
+            uses.remove(o);
+            uses.add(n);
+            returnVal = n;
+            n.addUse(this);
+        }
     }
 
     @Override

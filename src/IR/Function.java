@@ -21,8 +21,15 @@ public class Function {
     private BasicBlock returnBB = null;
     private Register returnValue = null;
     private final Map<String, Object> OperandMap = new HashMap<>();
+    public final Map<String, Register> registerMap = new HashMap<>();
+
+    public Set<Register> allocaResults = new HashSet<>();
 
     private boolean notExternal;
+
+    private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
+    private final Set<BasicBlock> visited = new LinkedHashSet<>();
+
 
     public Function(Module module, String name,IRType returnType, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial) {
         this.name = name;
@@ -113,6 +120,9 @@ public class Function {
         }
         OperandMap.put(tmp, operand);
         operand.setName(tmp);
+        if (operand instanceof Register) {
+            registerMap.put(tmp, (Register) operand);
+        }
     }
 
     public void CheckAndSetName(String name, BasicBlock operand) {
@@ -202,5 +212,26 @@ public class Function {
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public ArrayList<BasicBlock> getDfsList() {
+        if (dfsList.size() == 0) {
+            dfs(headBB, 1);
+        }
+        return dfsList;
+    }
+
+    private void dfs(BasicBlock basicBlock, int n) {
+        int cnt = n;
+        dfsList.add(basicBlock);
+        visited.add(basicBlock);
+        basicBlock.dfsNum = cnt;
+        ++cnt;
+        for (BasicBlock bb: basicBlock.getSuccessor()) {
+            if (!visited.contains(bb)) {
+                dfs(bb, cnt);
+                ++cnt;
+            }
+        }
     }
 }

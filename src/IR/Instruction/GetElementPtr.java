@@ -30,6 +30,34 @@ public class GetElementPtr extends IRInst {
         this.result = result;
         this.pointer = pointer;
         this.idxes = idxes;
+        defs.add(result);
+        result.addDef(this);
+        uses.add(pointer);
+        pointer.addUse(this);
+        for (IROper irOper: idxes) {
+            uses.add(irOper);
+            irOper.addUse(this);
+        }
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        if (pointer == o) {
+            pointer = n;
+            uses.remove(o);
+            uses.add(n);
+            n.addUse(this);
+        }
+        int i = 0;
+        for (IROper irOper: idxes) {
+            if (irOper == o) {
+                idxes.set(i, n);
+                uses.remove(o);
+                uses.add(n);
+                n.addUse(this);
+            }
+            ++i;
+        }
     }
 
     @Override

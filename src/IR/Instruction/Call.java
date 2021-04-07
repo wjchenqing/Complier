@@ -11,7 +11,6 @@ import IR.Type.PointerType;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 public class Call extends IRInst {
     private Register result;
@@ -27,7 +26,10 @@ public class Call extends IRInst {
         } else {
             int bound = params.size();
             for (int i = 0; i < bound; i++) {
-                if (params.get(i) instanceof NullConstant) {
+                IROper param = params.get(i);
+                uses.add(param);
+                param.addUse(this);
+                if (param instanceof NullConstant) {
                     assert paramTypes.get(i) instanceof PointerType;
                 } else {
 //                    assert params.get(i).getType().equals(paramTypes.get(i));
@@ -37,6 +39,22 @@ public class Call extends IRInst {
         this.result = result;
         this.function = function;
         this.params = params;
+        defs.add(result);
+        result.addDef(this);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        int i = 0;
+        for (IROper param: params) {
+            if (param == o) {
+                params.set(i, n);
+                uses.remove(o);
+                uses.add(n);
+                n.addUse(this);
+            }
+            ++i;
+        }
     }
 
     @Override

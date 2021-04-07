@@ -29,6 +29,26 @@ public class Store extends IRInst {
         }
         this.value = value;
         this.pointer = pointer;
+        uses.add(value);
+        uses.add(pointer);
+        value.addUse(this);
+        pointer.addUse(this);
+    }
+
+    @Override
+    public void replaceUse(IROper o, IROper n) {
+        if (value == o) {
+            value = n;
+            uses.remove(o);
+            uses.add(n);
+            n.addUse(this);
+        }
+        if (pointer == o) {
+            pointer = n;
+            uses.remove(o);
+            uses.add(n);
+            n.addUse(this);
+        }
     }
 
     public IROper getValue() {
