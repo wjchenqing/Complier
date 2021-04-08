@@ -13,11 +13,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class IRPrinter implements IRVisitor {
 
 //    private final OutputStream outputStream = new FileOutputStream("cqqqq.ll");
-    private final OutputStream outputStream = new FileOutputStream("judger/test.ll");
-    private final PrintWriter printWriter = new PrintWriter(outputStream);
+    private final OutputStream outputStream;
+    private final PrintWriter printWriter;
     private final String tab = "    ";
 
-    public IRPrinter() throws FileNotFoundException {
+    public IRPrinter(String name) throws FileNotFoundException {
+        outputStream = new FileOutputStream(name);
+        printWriter = new PrintWriter(outputStream);
     }
 
     public OutputStream getOutputStream() {

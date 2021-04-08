@@ -102,5 +102,14 @@ abstract public class IRInst {
         }
     }
 
+    public void destroy() {
+        for (IROper irOper: uses) {
+            irOper.getUses().remove(this);
+        }
+        for (IROper irOper: defs) {
+            irOper.getDefs().remove(this);
+        }
+    }
+
     abstract public void replaceUse(IROper o, IROper n);
 }

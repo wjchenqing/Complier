@@ -26,6 +26,7 @@ public class BasicBlock {
 
     public BasicBlock dom = null;
     public int dfsNum;
+    public int postDfsNum = 0;
     public Set<BasicBlock> DominanceFrontier = new HashSet<>();
     public Set<BasicBlock> DomChildren = new HashSet<>();
 
@@ -147,4 +148,25 @@ public class BasicBlock {
         visitor.visit(this);
     }
 
+    public void delete() {
+        if (currentFunction.getHeadBB() == this) {
+            currentFunction.setHeadBB(this.nextBB);
+            nextBB.setPrevBB(null);
+        } if (currentFunction.getTailBB() == this) {
+            currentFunction.setTailBB(this.prevBB);
+            prevBB.setNextBB(null);
+        } else {
+            prevBB.setNextBB(nextBB);
+            nextBB.setPrevBB(prevBB);
+        }
+        for (BasicBlock basicBlock: predecessor) {
+            basicBlock.getSuccessor().remove(this);
+        }
+        for (BasicBlock basicBlock: successor) {
+            basicBlock.getPredecessor().remove(this);
+        }
+        for (IRInst cur = headInst; cur != null; cur = cur.getNextInst()) {
+            cur.destroy();
+        }
+    }
 }

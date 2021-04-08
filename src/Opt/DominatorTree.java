@@ -16,21 +16,31 @@ public class DominatorTree {
         this.module = module;
     }
 
+    public void run() {
+        for (Function function: module.getFunctionMap().values()) {
+            if (function.isNotExternal()) {
+                constructDominatorTree(function);
+                computeDominanceFrontier(function);
+            }
+        }
+    }
+
     public void constructDominatorTree(Function function) {
         function.getHeadBB().dom = function.getHeadBB();
         boolean changed = true;
-        ArrayList<BasicBlock> dfsList = function.getDfsList();
+        ArrayList<BasicBlock> postDfsList = function.getPostDfsList();
         while (changed) {
             changed = false;
-            for (int i = dfsList.size() - 1; i > 0; --i) {
-                BasicBlock b = dfsList.get(i);
-                BasicBlock choose = b.getPredecessor().iterator().next();
-                BasicBlock new_iDom = choose;
+            for (int i = postDfsList.size() - 2; i >= 0; --i) {
+                BasicBlock b = postDfsList.get(i);
+                BasicBlock new_iDom = null;
                 for (BasicBlock p: b.getPredecessor()) {
-                    if (p == choose) {
+                    if (p.postDfsNum == 0) {
                         continue;
                     }
-                    if (p.dom != null) {
+                    if (new_iDom == null) {
+                        new_iDom = p;
+                    }else if (p.dom != null) {
                         new_iDom = intersect(p, new_iDom);
                     }
                 }
@@ -46,10 +56,10 @@ public class DominatorTree {
         BasicBlock finger1 = b1;
         BasicBlock finger2 = b2;
         while (finger1 != finger2) {
-            while (finger1.dfsNum > finger2.dfsNum) {
+            while (finger1.postDfsNum < finger2.postDfsNum) {
                 finger1 = finger1.dom;
             }
-            while (finger2.dfsNum > finger1.dfsNum) {
+            while (finger2.postDfsNum < finger1.postDfsNum) {
                 finger2 = finger2.dom;
             }
         }
@@ -57,14 +67,17 @@ public class DominatorTree {
     }
 
     public void computeDominanceFrontier(Function function) {
-        ArrayList<BasicBlock> dfsList = function.getDfsList();
-        for (BasicBlock b: dfsList) {
+        ArrayList<BasicBlock> postDfsList = function.getPostDfsList();
+        for (BasicBlock b: postDfsList) {
             if (b.getPredecessor().size() == 1) {
                 continue;
             }
             for (BasicBlock p: b.getPredecessor()) {
+                if (p.postDfsNum == 0) {
+                    continue;
+                }
                 BasicBlock runner = p;
-                while (runner.dfsNum != b.dom.dfsNum) {
+                while (runner != b.dom) {
                     runner.DominanceFrontier.add(b);
                     runner = runner.dom;
                 }

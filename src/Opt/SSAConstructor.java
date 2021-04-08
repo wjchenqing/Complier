@@ -26,6 +26,14 @@ public class SSAConstructor {
         this.module = module;
     }
 
+    public void run() {
+        for (Function function: module.getFunctionMap().values()) {
+            if (function.isNotExternal()) {
+                InsertingPhi(function);
+            }
+        }
+    }
+
     public void InsertingPhi(Function function) {
         Phis = new HashMap<>();
         visited = new HashSet<>();
@@ -62,6 +70,12 @@ public class SSAConstructor {
         }
 
         rename(function.getHeadBB(), null);
+
+        for (Register register: allocaResults) {
+            for (IRInst irInst: register.getDefs()) {
+                irInst.deleteInst();
+            }
+        }
     }
 
     private void addPhi(BasicBlock Y, Register allocaResult) {
@@ -84,12 +98,14 @@ public class SSAConstructor {
 
     public void rename(BasicBlock basicBlock, BasicBlock predecessor) {
         Map<Register, Phi> newPhis = Phis.get(basicBlock);
-        if (predecessor != null){
+        if (newPhis != null){
             for (Register allocaResult : newPhis.keySet()) {
                 Phi phi = newPhis.get(allocaResult);
                 Stack<Pair<BasicBlock, IROper>> defStack = defStacks.get(allocaResult);
                 phi.addPair(predecessor, defStack.peek().getSecond());
-                defStack.add(new Pair<>(basicBlock, phi.getResult()));
+                if (!visited.contains(basicBlock)) {
+                    defStack.add(new Pair<>(basicBlock, phi.getResult()));
+                }
             }
         }
         if (visited.contains(basicBlock)) {
@@ -108,6 +124,7 @@ public class SSAConstructor {
                 IROper pointer = ((Store) irInst).getPointer();
                 if ((pointer instanceof Register) && (allocaResults.contains(pointer))) {
                     defStacks.get(pointer).add(new Pair<>(basicBlock, ((Store) irInst).getValue()));
+                    irInst.deleteInst();
                 }
             }
         }
@@ -117,12 +134,12 @@ public class SSAConstructor {
         }
 
         for (Stack<Pair<BasicBlock, IROper>> defStack: defStacks.values()) {
-            while (defStack.peek().getFirst() == basicBlock) {
+            while (!(defStack.empty()) && (defStack.peek().getFirst() == basicBlock)) {
                 defStack.pop();
             }
         }
 
-        if (predecessor != null){
+        if (newPhis != null){
             for (Phi phi : newPhis.values()) {
                 basicBlock.addInstAtHead(phi);
             }

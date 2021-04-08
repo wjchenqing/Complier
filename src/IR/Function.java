@@ -28,7 +28,8 @@ public class Function {
     private boolean notExternal;
 
     private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
-    private final Set<BasicBlock> visited = new LinkedHashSet<>();
+    private final ArrayList<BasicBlock> postDfsList = new ArrayList<>();
+    private Set<BasicBlock> visited;
 
 
     public Function(Module module, String name,IRType returnType, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial) {
@@ -215,6 +216,7 @@ public class Function {
     }
 
     public ArrayList<BasicBlock> getDfsList() {
+        visited = new HashSet<>();
         if (dfsList.size() == 0) {
             dfs(headBB, 1);
         }
@@ -233,5 +235,24 @@ public class Function {
                 ++cnt;
             }
         }
+    }
+
+    public ArrayList<BasicBlock> getPostDfsList() {
+        visited = new HashSet<>();
+        if (postDfsList.size() == 0) {
+            post(headBB);
+        }
+        return postDfsList;
+    }
+
+    private void post(BasicBlock basicBlock) {
+        visited.add(basicBlock);
+        for (BasicBlock bb: basicBlock.getSuccessor()) {
+            if (!visited.contains(bb)) {
+                post(bb);
+            }
+        }
+        postDfsList.add(basicBlock);
+        basicBlock.postDfsNum = postDfsList.size();
     }
 }
