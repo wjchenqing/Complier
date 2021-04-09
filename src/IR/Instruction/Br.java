@@ -82,15 +82,26 @@ public class Br extends IRInst {
             thenBlock = n;
             currentBB.getSuccessor().remove(o);
             currentBB.getSuccessor().add(n);
-            n.getPredecessor().remove(o);
             n.getPredecessor().add(currentBB);
+            o.getPredecessor().remove(currentBB);
         }
         if (elseBlock == o) {
             elseBlock = n;
             currentBB.getSuccessor().remove(o);
             currentBB.getSuccessor().add(n);
-            n.getPredecessor().remove(o);
             n.getPredecessor().add(currentBB);
+            o.getPredecessor().remove(currentBB);
+        }
+    }
+
+    @Override
+    public void deleteInst() {
+        super.deleteInst();
+        thenBlock.getPredecessor().remove(currentBB);
+        currentBB.getSuccessor().remove(thenBlock);
+        if (elseBlock != null) {
+            elseBlock.getPredecessor().remove(currentBB);
+            currentBB.getSuccessor().remove(elseBlock);
         }
     }
 }
