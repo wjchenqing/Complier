@@ -38,7 +38,7 @@ public class DominatorTree {
                     if (p.postDfsNum == 0) {
                         continue;
                     }
-                    if (new_iDom == null) {
+                    if ((new_iDom == null) && (p.dom != null)) {
                         new_iDom = p;
                     }else if (p.dom != null) {
                         new_iDom = intersect(p, new_iDom);

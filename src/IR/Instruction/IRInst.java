@@ -16,6 +16,8 @@ abstract public class IRInst {
     protected Set<IROper> uses = new HashSet<>();
     protected Set<IROper> defs = new HashSet<>();
 
+//    protected Set<BasicBlock> useBB = new HashSet<>();
+
     public IRInst(BasicBlock currentBB) {
         this.currentBB = currentBB;
     }
@@ -109,6 +111,10 @@ abstract public class IRInst {
         for (IROper irOper: defs) {
             irOper.getDefs().remove(this);
         }
+    }
+
+    public void replaceBBUse(BasicBlock o, BasicBlock n) {
+
     }
 
     abstract public void replaceUse(IROper o, IROper n);

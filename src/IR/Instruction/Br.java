@@ -75,4 +75,22 @@ public class Br extends IRInst {
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public void replaceBBUse(BasicBlock o, BasicBlock n) {
+        if (thenBlock == o) {
+            thenBlock = n;
+            currentBB.getSuccessor().remove(o);
+            currentBB.getSuccessor().add(n);
+            n.getPredecessor().remove(o);
+            n.getPredecessor().add(currentBB);
+        }
+        if (elseBlock == o) {
+            elseBlock = n;
+            currentBB.getSuccessor().remove(o);
+            currentBB.getSuccessor().add(n);
+            n.getPredecessor().remove(o);
+            n.getPredecessor().add(currentBB);
+        }
+    }
 }
