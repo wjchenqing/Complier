@@ -155,7 +155,9 @@ public class BasicBlock {
         } if (currentFunction.getTailBB() == this) {
             currentFunction.setTailBB(this.prevBB);
             prevBB.setNextBB(null);
-        } else {
+        } else if ((nextBB == null)) {
+            currentFunction.setReturnBB(null);
+        }else {
             prevBB.setNextBB(nextBB);
             nextBB.setPrevBB(prevBB);
         }
@@ -167,6 +169,33 @@ public class BasicBlock {
         }
         for (IRInst cur = headInst; cur != null; cur = cur.getNextInst()) {
             cur.destroy();
+        }
+    }
+
+    public void mergeWithSuccessor(BasicBlock basicBlock) {
+        tailInst.deleteInst();
+        tailInst.setNextInst(basicBlock.headInst);
+        basicBlock.headInst.setPrevInst(tailInst);
+        tailInst = basicBlock.tailInst;
+
+        for (IRInst irInst = basicBlock.headInst; irInst != null; irInst = irInst.getNextInst()) {
+            irInst.setCurrentBB(this);
+        }
+
+        if (currentFunction.getTailBB() == basicBlock) {
+            currentFunction.setTailBB(basicBlock.prevBB);
+            basicBlock.prevBB.setNextBB(null);
+        } else if (basicBlock.getNextBB() == null) {
+            currentFunction.setReturnBB(null);
+        } else {
+            basicBlock.prevBB.setNextBB(basicBlock.nextBB);
+            basicBlock.nextBB.setPrevBB(basicBlock.prevBB);
+        }
+        successor.remove(basicBlock);
+        for (BasicBlock bb: basicBlock.successor) {
+            bb.getPredecessor().remove(basicBlock);
+            bb.getPredecessor().add(this);
+            successor.add(bb);
         }
     }
 }

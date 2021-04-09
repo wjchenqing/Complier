@@ -83,7 +83,9 @@ public class IRPrinter implements IRVisitor {
             basicBlock.accept(this);
             println("");
         }
-        function.getReturnBB().accept(this);
+        if (function.getReturnBB() != null) {
+            function.getReturnBB().accept(this);
+        }
         println("}");
     }
 

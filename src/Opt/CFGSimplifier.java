@@ -5,6 +5,9 @@ import IR.Function;
 import IR.Instruction.Br;
 import IR.Module;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class CFGSimplifier {
     private final Module module;
 
@@ -27,10 +30,14 @@ public class CFGSimplifier {
             } else if (cur.getHeadInst() instanceof Br) {
 //                 deleteBBHasOnlyOneInst----Br
                 BasicBlock target = ((Br) cur.getHeadInst()).getThenBlock();
-                for (BasicBlock pre: cur.getPredecessor()) {
+                Set<BasicBlock> tmp = new HashSet<>(cur.getPredecessor());
+                for (BasicBlock pre: tmp) {
                     pre.getTailInst().replaceBBUse(cur, target);
                 }
                 cur.delete();
+            } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() == 1)) {
+                BasicBlock tmp = cur.getSuccessor().iterator().next();
+                cur.mergeWithSuccessor(tmp);
             }
         }
     }
