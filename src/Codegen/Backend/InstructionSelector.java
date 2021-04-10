@@ -124,7 +124,9 @@ public class InstructionSelector implements IRVisitor {
         for (BasicBlock basicBlock: function.getBlockList()) {
             basicBlock.accept(this);
         }
-        function.getReturnBB().accept(this);
+        if (function.getReturnBB() != null) {
+            function.getReturnBB().accept(this);
+        }
     }
 
     @Override
@@ -542,6 +544,18 @@ public class InstructionSelector implements IRVisitor {
         }
         Return inst = new Return(curBlock, ret.getReturnVal() != null);
         curBlock.addInst(inst);
+    }
+
+    @Override
+    public void visit(IRMove IRMove) {
+        Operand value = getOperand(IRMove.getSource());
+        RegisterVirtual result = curFunction.getRV(IRMove.getResult().getName());
+        if (value instanceof RegisterVirtual) {
+            curBlock.addInst(new Move(curBlock, result, (RegisterVirtual) value));
+        } else {
+            assert value instanceof ImmediateInt;
+            curBlock.addInst(new LoadImmediate(curBlock, result, (Immediate) value));
+        }
     }
 
     private RegisterVirtual getReg(IROper irOper) {

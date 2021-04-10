@@ -26,6 +26,10 @@ public class Phi extends IRInst {
         }
     }
 
+    public Set<Pair<BasicBlock, IROper>> getPossiblePredecessorSet() {
+        return possiblePredecessorSet;
+    }
+
     public void addPair(BasicBlock basicBlock, IROper irOper) {
         possiblePredecessorSet.add(new Pair<>(basicBlock, irOper));
     }

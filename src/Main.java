@@ -6,6 +6,10 @@ import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
 import IR.IRBuilder;
 import IR.IRPrinter;
+import Opt.CFGSimplifier;
+import Opt.DominatorTree;
+import Opt.SSAConstructor;
+import Opt.SSADestructor;
 import Parser.ErrorListener;
 import Parser.MxLexer;
 import Parser.MxParser;
@@ -57,10 +61,37 @@ public class Main {
         IRBuilder irBuilder = new IRBuilder(semanticChecker.getProgramScope(), semanticChecker.getTypeTable());
         programRoot.accept(irBuilder);
 
-//        IRPrinter irPrinter = new IRPrinter();
+//        IRPrinter irPrinter1 = new IRPrinter("judger/test_before.ll");
+//        irBuilder.getModule().accept(irPrinter1);
+//        irPrinter1.getPrintWriter().close();
+//        irPrinter1.getOutputStream().close();
+
+        CFGSimplifier cfgSimplifier = new CFGSimplifier(irBuilder.getModule());
+        cfgSimplifier.run();
+
+//        IRPrinter irPrinter2 = new IRPrinter("judger/test_cfg.ll");
+//        irBuilder.getModule().accept(irPrinter2);
+//        irPrinter2.getPrintWriter().close();
+//        irPrinter2.getOutputStream().close();
+
+        DominatorTree dominatorTree = new DominatorTree(irBuilder.getModule());
+        dominatorTree.run();
+
+        SSAConstructor ssaConstructor = new SSAConstructor(irBuilder.getModule());
+        ssaConstructor.run();
+
+//        IRPrinter irPrinter = new IRPrinter("judger/test.ll");
 //        irBuilder.getModule().accept(irPrinter);
 //        irPrinter.getPrintWriter().close();
 //        irPrinter.getOutputStream().close();
+
+        SSADestructor ssaDestructor = new SSADestructor(irBuilder.getModule());
+        ssaDestructor.run();
+
+//        IRPrinter irPrinter3 = new IRPrinter("judger/test_to_codegen.ll");
+//        irBuilder.getModule().accept(irPrinter3);
+//        irPrinter3.getPrintWriter().close();
+//        irPrinter3.getOutputStream().close();
 
         InstructionSelector instructionSelector = new InstructionSelector();
         irBuilder.getModule().accept(instructionSelector);
@@ -74,6 +105,7 @@ public class Main {
         registerAllocator.runAll();
 
         CodegenPrinter codegenPrinter = new CodegenPrinter("output.s");
+//        CodegenPrinter codegenPrinter = new CodegenPrinter("judger/test.s");
         instructionSelector.getModule().accept(codegenPrinter);
         codegenPrinter.getPrintWriter().close();
         codegenPrinter.getOutputStream().close();

@@ -33,9 +33,12 @@ public class Function {
                 addBasicBlock(basicBlock);
                 blockNum++;
             }
-            BasicBlock bb = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irFunction.getReturnBB());
-            addBasicBlock(bb);
-            blockNum++;
+            BasicBlock bb = null;
+            if (irFunction.getReturnBB() != null) {
+                bb = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irFunction.getReturnBB());
+                addBasicBlock(bb);
+                blockNum++;
+            }
 
             for (IR.BasicBlock irBasicBlock : irFunction.getBlockList()) {
                 BasicBlock basicBlock = getBasicBlock(irBasicBlock.getName());
@@ -46,11 +49,13 @@ public class Function {
                     basicBlock.addSuccessor(getBasicBlock(successor.getName()));
                 }
             }
-            for (IR.BasicBlock predecessor : irFunction.getReturnBB().getPredecessor()) {
-                bb.addPredecessor(getBasicBlock(predecessor.getName()));
-            }
-            for (IR.BasicBlock successor : irFunction.getReturnBB().getSuccessor()) {
-                bb.addSuccessor(getBasicBlock(successor.getName()));
+            if (irFunction.getReturnBB() != null) {
+                for (IR.BasicBlock predecessor : irFunction.getReturnBB().getPredecessor()) {
+                    bb.addPredecessor(getBasicBlock(predecessor.getName()));
+                }
+                for (IR.BasicBlock successor : irFunction.getReturnBB().getSuccessor()) {
+                    bb.addSuccessor(getBasicBlock(successor.getName()));
+                }
             }
 
 
@@ -67,10 +72,12 @@ public class Function {
                     }
                 }
             }
-            for (IRInst inst : irFunction.getReturnBB().getInstList()) {
-                if (inst.getResult() != null) {
-                    RegisterVirtual registerVirtual = new RegisterVirtual(inst.getResult().getName());
-                    CheckAndSetName(registerVirtual.getName(), registerVirtual);
+            if (irFunction.getReturnBB() != null) {
+                for (IRInst inst : irFunction.getReturnBB().getInstList()) {
+                    if (inst.getResult() != null) {
+                        RegisterVirtual registerVirtual = new RegisterVirtual(inst.getResult().getName());
+                        CheckAndSetName(registerVirtual.getName(), registerVirtual);
+                    }
                 }
             }
         }

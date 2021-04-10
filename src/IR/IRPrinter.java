@@ -171,4 +171,9 @@ public class IRPrinter implements IRVisitor {
     public void visit(Ret ret) {
 
     }
+
+    @Override
+    public void visit(IRMove IRMove) {
+
+    }
 }

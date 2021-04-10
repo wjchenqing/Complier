@@ -19,4 +19,5 @@ public interface IRVisitor {
     void visit(Phi phi);
     void visit(Store store);
     void visit(Ret ret);
+    void visit(IRMove IRMove);
 }
