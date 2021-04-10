@@ -55,6 +55,16 @@ public class RegisterAllocator {
                 run();
                 function.getStack().setAndGetSize();
                 setSP();
+                for (Instruction instruction: function.getInstList()) {
+                    if (instruction instanceof Move) {
+                        RegisterPhysical rdColor, rsColor;
+                        rdColor = (((Move) instruction).getRd() instanceof RegisterPhysical) ? (RegisterPhysical) ((Move) instruction).getRd() : ((RegisterVirtual) ((Move) instruction).getRd()).getColor();
+                        rsColor = (((Move) instruction).getRs() instanceof RegisterPhysical) ? (RegisterPhysical) ((Move) instruction).getRs() : ((RegisterVirtual) ((Move) instruction).getRs()).getColor();
+                        if (rdColor == rsColor) {
+                            instruction.deleteInst();
+                        }
+                    }
+                }
 //                System.out.println();
             }
         }
