@@ -27,8 +27,8 @@ public class Branch extends Instruction {
     public void replaceUse(RegisterVirtual old, RegisterVirtual n) {
         if (rs1 == old) {
             rs1 = n;
-        } else {
-            assert rs2 == old;
+        }
+        if (rs2 == old){
             rs2 = n;
         }
         super.replaceUse(old, n);

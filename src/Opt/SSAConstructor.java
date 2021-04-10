@@ -35,16 +35,16 @@ public class SSAConstructor {
     }
 
     public void InsertingPhi(Function function) {
-        Phis = new HashMap<>();
-        visited = new HashSet<>();
-        defStacks = new HashMap<>();
+        Phis = new LinkedHashMap<>();
+        visited = new LinkedHashSet<>();
+        defStacks = new LinkedHashMap<>();
         allocaResults = function.allocaResults;
         this.function = function;
         for (Register allocaResult: function.allocaResults) {
             defStacks.put(allocaResult, new Stack<>());
-            Set<BasicBlock> F = new HashSet<>();            //set of bbs where Phi is added
-            Set<BasicBlock> W = new HashSet<>();            //set of bbs that contains store to allocaResult
-            Set<BasicBlock> Defs = new HashSet<>();
+            Set<BasicBlock> F = new LinkedHashSet<>();            //set of bbs where Phi is added
+            Set<BasicBlock> W = new LinkedHashSet<>();            //set of bbs that contains store to allocaResult
+            Set<BasicBlock> Defs = new LinkedHashSet<>();
             for (IRInst irInst: allocaResult.getUses()) {
                 if (irInst instanceof Store) {
                     W.add(irInst.getCurrentBB());
@@ -82,7 +82,7 @@ public class SSAConstructor {
         String name = allocaResult.getName() + "_ssa";
         Register newResult = new Register(((PointerType) allocaResult.getType()).getType(), name);
         function.CheckAndSetName(newResult.getName(), newResult);
-        Phi newPhi = new Phi(Y, newResult, new HashSet<>());
+        Phi newPhi = new Phi(Y, newResult, new LinkedHashSet<>());
         putIntoPhis(Y, allocaResult, newPhi);
     }
 
@@ -90,7 +90,7 @@ public class SSAConstructor {
         if (Phis.containsKey(bb)) {
             Phis.get(bb).put(allocaResult, phi);
         } else {
-            Map<Register, Phi> tmp = new HashMap<>();
+            Map<Register, Phi> tmp = new LinkedHashMap<>();
             tmp.put(allocaResult, phi);
             Phis.put(bb, tmp);
         }

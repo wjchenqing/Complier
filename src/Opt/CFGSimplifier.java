@@ -5,7 +5,7 @@ import IR.Function;
 import IR.Instruction.Br;
 import IR.Module;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class CFGSimplifier {
@@ -30,7 +30,7 @@ public class CFGSimplifier {
             } else if (cur.getHeadInst() instanceof Br) {
 //                 deleteBBHasOnlyOneInst----Br
                 BasicBlock target = ((Br) cur.getHeadInst()).getThenBlock();
-                Set<BasicBlock> tmp = new HashSet<>(cur.getPredecessor());
+                Set<BasicBlock> tmp = new LinkedHashSet<>(cur.getPredecessor());
                 for (BasicBlock pre: tmp) {
                     pre.getTailInst().replaceBBUse(cur, target);
                 }
