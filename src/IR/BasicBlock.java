@@ -150,8 +150,14 @@ public class BasicBlock {
 
     public void delete() {
         if (currentFunction.getHeadBB() == this) {
-            currentFunction.setHeadBB(this.nextBB);
-            nextBB.setPrevBB(null);
+            if (nextBB != null) {
+                currentFunction.setHeadBB(this.nextBB);
+                nextBB.setPrevBB(null);
+            } else {
+                currentFunction.setHeadBB(currentFunction.getReturnBB());
+                currentFunction.setTailBB(currentFunction.getReturnBB());
+                currentFunction.setReturnBB(null);
+            }
         } if (currentFunction.getTailBB() == this) {
             currentFunction.setTailBB(this.prevBB);
             prevBB.setNextBB(null);

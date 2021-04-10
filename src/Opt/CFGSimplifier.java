@@ -24,8 +24,8 @@ public class CFGSimplifier {
     }
 
     public void deleteBBWithoutPredecessor(Function function) {
-        for (BasicBlock cur = function.getHeadBB().getNextBB(); cur != null; cur = cur.getNextBB()) {
-            if (cur.getPredecessor().isEmpty()) {
+        for (BasicBlock cur = function.getHeadBB(); cur != null; cur = cur.getNextBB()) {
+            if (cur.getPredecessor().isEmpty() && (cur != function.getHeadBB())) {
                 cur.delete();
             } else if (cur.getHeadInst() instanceof Br) {
 //                 deleteBBHasOnlyOneInst----Br
