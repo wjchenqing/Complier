@@ -45,7 +45,7 @@ public class SSADestructor {
             Set<BasicBlock> predecessors = new LinkedHashSet<>(cur.getPredecessor());
             for (BasicBlock predecessor: predecessors) {
                 if (predecessor.getSuccessor().size() > 1) {
-                    BasicBlock newBB = new BasicBlock("between_" + predecessor.getName() + "_" + cur.getName(), function);
+                    BasicBlock newBB = new BasicBlock("between_" + predecessor.getName() + "_" + cur.getName(), function, predecessor.depth);
                     function.CheckAndSetName(newBB.getName(), newBB);
                     if (newBB_head == null) {
                         newBB_head = newBB;

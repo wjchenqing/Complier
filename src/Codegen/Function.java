@@ -17,6 +17,8 @@ public class Function {
     private final Map<String, BasicBlock> blockMap = new HashMap<>();
     private int blockNum = 0;
 
+    private BasicBlock returnBB;
+    public boolean hasReturnVal = true;
     private final Map<String, RegisterVirtual> OperandMap = new LinkedHashMap<>();
 
     private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
@@ -38,6 +40,7 @@ public class Function {
                 bb = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irFunction.getReturnBB());
                 addBasicBlock(bb);
                 blockNum++;
+                returnBB = bb;
             }
 
             for (IR.BasicBlock irBasicBlock : irFunction.getBlockList()) {
@@ -47,6 +50,9 @@ public class Function {
                 }
                 for (IR.BasicBlock successor : irBasicBlock.getSuccessor()) {
                     basicBlock.addSuccessor(getBasicBlock(successor.getName()));
+                }
+                if (irBasicBlock.getSuccessor().isEmpty()) {
+                    returnBB = basicBlock;
                 }
             }
             if (irFunction.getReturnBB() != null) {
@@ -81,6 +87,10 @@ public class Function {
                 }
             }
         }
+    }
+
+    public BasicBlock getReturnBB() {
+        return returnBB;
     }
 
     public void addBasicBlock(BasicBlock basicBlock) {

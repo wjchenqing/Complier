@@ -12,6 +12,8 @@ public class RegisterVirtual extends Register {
     private RegisterVirtual alias;
     private RegisterPhysical color;
 
+    public double spillCost = 0;
+
     public void setAdjList(Set<RegisterVirtual> adjList) {
         this.adjList = adjList;
     }

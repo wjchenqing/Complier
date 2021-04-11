@@ -40,11 +40,11 @@ public class Function {
         this.notExternal = notExternalThusShouldInitial;
 
         if (notExternalThusShouldInitial) {
-            BasicBlock basicBlock = new BasicBlock(name + ".headBB", this);
+            BasicBlock basicBlock = new BasicBlock(name + ".headBB", this, 0);
             addBasicBlock(basicBlock);
             OperandMap.put(headBB.getName(), basicBlock);
 
-            returnBB = new BasicBlock(name + ".returnBB", this);
+            returnBB = new BasicBlock(name + ".returnBB", this, 0);
             OperandMap.put(returnBB.getName(), returnBB);
             if ((returnType == null) || (returnType instanceof VoidType)) {
                 returnBB.addInstAtTail(new Ret(returnBB, new VoidType(), null));

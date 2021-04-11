@@ -20,6 +20,8 @@ public class BasicBlock {
     private Instruction headInst = null;
     private Instruction tailInst = null;
 
+    public int depth;
+
     private final ArrayList<Instruction> instructions = new ArrayList<>();
     public int instNum = 0;
 
@@ -84,6 +86,7 @@ public class BasicBlock {
         this.name = name;
         IrIdentifier = irBasicBlock.getName();
         this.irBasicBlock = irBasicBlock;
+        depth = irBasicBlock.depth;
     }
 
     public void setName(String name) {

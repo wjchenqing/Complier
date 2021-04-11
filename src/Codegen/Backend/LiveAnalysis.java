@@ -4,6 +4,7 @@ import Codegen.BasicBlock;
 import Codegen.Function;
 import Codegen.Instruction.Instruction;
 import Codegen.Module;
+import Codegen.Operand.RegisterPhysical;
 import Codegen.Operand.RegisterVirtual;
 
 import java.util.ArrayList;
@@ -22,6 +23,21 @@ public class LiveAnalysis {
             }
         }
 
+//        BasicBlock returnBB = function.getReturnBB();
+//        for (int cnt: RegisterPhysical.calleeSaveNum) {
+//            RegisterVirtual rv = RegisterPhysical.getVR(cnt);
+//            returnBB.addUEVar(rv);
+//            returnBB.getVarKill().remove(rv);
+//        }
+//        RegisterVirtual ra = RegisterPhysical.getVR(1);
+//        returnBB.addUEVar(ra);
+//        returnBB.getVarKill().remove(ra);
+//        if (function.hasReturnVal) {
+//            RegisterVirtual a0 = RegisterPhysical.getVR(10);
+//            returnBB.addUEVar(a0);
+//            returnBB.getVarKill().remove(a0);
+//        }
+
         boolean changed = true;
         while (changed) {
             changed = false;
@@ -30,6 +46,24 @@ public class LiveAnalysis {
                 changed |= setLiveOut(basicBlock);
             }
         }
+
+        BasicBlock returnBB = function.getReturnBB();
+        for (int cnt: RegisterPhysical.calleeSaveNum) {
+            RegisterVirtual rv = RegisterPhysical.getVR(cnt);
+            returnBB.getLiveOut().add(rv);
+//            returnBB.addUEVar(rv);
+//            returnBB.getVarKill().remove(rv);
+        }
+        RegisterVirtual ra = RegisterPhysical.getVR(1);
+        returnBB.getLiveOut().add(ra);
+//        returnBB.addUEVar(ra);
+//        returnBB.getVarKill().remove(ra);
+//        if (function.hasReturnVal) {
+//            RegisterVirtual a0 = RegisterPhysical.getVR(10);
+//            returnBB.getLiveOut().add(a0);
+//            returnBB.addUEVar(a0);
+//            returnBB.getVarKill().remove(a0);
+//        }
     }
 
     static private boolean setLiveOut(BasicBlock basicBlock) {

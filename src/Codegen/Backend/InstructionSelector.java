@@ -541,6 +541,9 @@ public class InstructionSelector implements IRVisitor {
         if (ret.getReturnVal() != null) {
             RegisterVirtual reg = getReg(ret.getReturnVal());
             curBlock.addInst(new Move(curBlock, RegisterPhysical.getVR(10), reg));
+            curFunction.hasReturnVal = true;
+        } else {
+            curFunction.hasReturnVal = false;
         }
         Return inst = new Return(curBlock, ret.getReturnVal() != null);
         curBlock.addInst(inst);

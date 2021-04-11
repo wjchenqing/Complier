@@ -30,7 +30,10 @@ public class BasicBlock {
     public Set<BasicBlock> DominanceFrontier = new HashSet<>();
     public Set<BasicBlock> DomChildren = new HashSet<>();
 
-    public BasicBlock(String name, Function currentFunction) {
+    public int depth;
+
+    public BasicBlock(String name, Function currentFunction, int depth) {
+        this.depth = depth;
         this.name = name;
         this.currentFunction = currentFunction;
     }

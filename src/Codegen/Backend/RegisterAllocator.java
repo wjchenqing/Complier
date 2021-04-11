@@ -117,6 +117,7 @@ public class RegisterAllocator {
 //            System.out.println("run round: " + cnt);
             ++cnt;
             init();
+            computeSpillCost();
             LiveAnalysis.analysis(function);
 //            System.out.println("Start building: " + dtf.format(LocalDateTime.now()));
             build();
@@ -167,6 +168,23 @@ public class RegisterAllocator {
             if (basicBlock.getTailInst() instanceof Return) {
                 basicBlock.getTailInst().addInstPrev(new BinaryInstruction(basicBlock, BinaryInstruction.Name.addi, true,
                         sp, sp, new ImmediateInt(4 * function.getStack().getSize())));
+            }
+        }
+    }
+
+
+    private void computeSpillCost() {
+        for (BasicBlock basicBlock: function.getDfsList()) {
+            int depth = basicBlock.depth;
+            Instruction ptr = basicBlock.getHeadInst();
+            while (ptr != null) {
+                for (RegisterVirtual def: ptr.getDef()) {
+                    def.spillCost += Math.pow(10, depth);
+                }
+                for (RegisterVirtual use: ptr.getUse()) {
+                    use.spillCost += Math.pow(10, depth);
+                }
+                ptr = ptr.getNext();
             }
         }
     }
@@ -425,10 +443,50 @@ public class RegisterAllocator {
 
 
     public void selectSpill() {
-        RegisterVirtual m = spillWorkList.iterator().next(); // todo: select using favorite heuristic.
+//        RegisterVirtual m = spillWorkList.iterator().next();
+        RegisterVirtual m = select();
+//        System.out.println("spill " + m.toString() + ", cost = " + computeCost(m));
         spillWorkList.remove(m);
         simplifyWorkList.add(m);
         freezeMoves(m);
+    }
+
+    private double computeCost(RegisterVirtual rv) {
+        boolean hasNegCost = false;
+        boolean hasInfCost = false;
+        Set<Instruction> def = regDefIn.get(rv);
+        Set<Instruction> use = regUseIn.get(rv);
+        if (def != null && use != null) {
+            Instruction d = def.iterator().next();
+            Instruction u = use.iterator().next();
+            if (def.size() == 1 && use.size() == 1) {
+                if (d instanceof LoadGlobal && u instanceof Store) {
+                    hasNegCost = ((LoadGlobal) d).getAddr() == ((Store) u).getAddr();
+                }
+            }
+
+            hasInfCost = def.size() == 1 && use.size() == 1 && d.equals(u);
+        }
+        if (hasNegCost) {
+            return Double.NEGATIVE_INFINITY;
+        } else if (hasInfCost) {
+            return Double.POSITIVE_INFINITY;
+        } else {
+            return rv.spillCost / rv.getDegree();
+        }
+    }
+
+    private RegisterVirtual select() {
+        double min = Double.POSITIVE_INFINITY;
+        RegisterVirtual selected = null;
+        for (RegisterVirtual rv: spillWorkList) {
+            double cur = computeCost(rv);
+            if (cur <= min) {
+                min = cur;
+                selected = rv;
+            }
+        }
+        return selected;
     }
 
     public void assignColors() {
