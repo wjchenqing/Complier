@@ -3,6 +3,7 @@ package Opt;
 import IR.BasicBlock;
 import IR.Function;
 import IR.Instruction.Br;
+import IR.Instruction.Phi;
 import IR.Module;
 
 import java.util.LinkedHashSet;
@@ -29,12 +30,16 @@ public class CFGSimplifier {
                 cur.delete();
             } else if (cur.getHeadInst() instanceof Br) {
 //                 deleteBBHasOnlyOneInst----Br
-                BasicBlock target = ((Br) cur.getHeadInst()).getThenBlock();
-                Set<BasicBlock> tmp = new LinkedHashSet<>(cur.getPredecessor());
-                for (BasicBlock pre: tmp) {
-                    pre.getTailInst().replaceBBUse(cur, target);
+                if (((Br) cur.getHeadInst()).getCond() == null) {
+                    BasicBlock target = ((Br) cur.getHeadInst()).getThenBlock();
+                    if (!(target.getHeadInst() instanceof Phi)){
+                        Set<BasicBlock> tmp = new LinkedHashSet<>(cur.getPredecessor());
+                        for (BasicBlock pre : tmp) {
+                            pre.getTailInst().replaceBBUse(cur, target);
+                        }
+                        cur.delete();
+                    }
                 }
-                cur.delete();
             } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() == 1)) {
                 BasicBlock tmp = cur.getSuccessor().iterator().next();
                 cur.mergeWithSuccessor(tmp);

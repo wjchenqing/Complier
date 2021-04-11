@@ -105,8 +105,12 @@ abstract public class Scope {
 
     public boolean IsMember(String name) {
         Entity entity = entityMap.get(name);
-        if ((entityMap.containsKey(name) && entity instanceof VariableEntity) && (entity.getAddr() == null)) {
-            return (this instanceof ClassScope);
+        if ((entityMap.containsKey(name) && entity instanceof VariableEntity)) {
+            if (entity.getAddr() == null) {
+                return (this instanceof ClassScope);
+            } else {
+                return false;
+            }
         } else if (parentScope != null) {
             return parentScope.IsMember(name);
         } else {

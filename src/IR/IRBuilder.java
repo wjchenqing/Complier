@@ -1336,6 +1336,8 @@ public class IRBuilder implements ASTVisitor {
 //----------------------------------------Phi Solution---------------------------------------------------
                 opd2BB = new BasicBlock("opd2BB", currentFunction);
                 exitBB = new BasicBlock("exitBB", currentFunction);
+                currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
+                currentFunction.CheckAndSetName(exitBB.getName(), exitBB);
 
                 opd1Result = node.getOpd1().accept(this);
                 opd1BB = currentBB;
@@ -1347,7 +1349,7 @@ public class IRBuilder implements ASTVisitor {
                 assert opd2Result instanceof ExprResultPair;
                 currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
                 currentFunction.addBasicBlock(opd2BB);
-                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
+                opd2BB = currentBB;
 
                 currentBB = exitBB;
                 result = new Register(new IntegerType(1), "and");
@@ -1357,7 +1359,6 @@ public class IRBuilder implements ASTVisitor {
                 currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
                 currentFunction.addBasicBlock(currentBB);
                 currentFunction.CheckAndSetName(result.getName(), result);
-                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 return new ExprResultPair(result, null);
 
@@ -1419,6 +1420,8 @@ public class IRBuilder implements ASTVisitor {
 //-----------------------------------Phi Solution---------------------------------------------
                 opd2BB = new BasicBlock("opd2BB", currentFunction);
                 exitBB = new BasicBlock("exitBB", currentFunction);
+                currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
+                currentFunction.CheckAndSetName(exitBB.getName(), exitBB);
 
                 opd1Result = node.getOpd1().accept(this);
                 opd1BB = currentBB;
@@ -1432,7 +1435,7 @@ public class IRBuilder implements ASTVisitor {
 //                opd2ResultReg = (Register) ((ExprResultPair) opd2Result).result;
                 currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
                 currentFunction.addBasicBlock(opd2BB);
-                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
+                opd2BB = currentBB;
 
                 currentBB = exitBB;
                 result = new Register(new IntegerType(1), "or");
@@ -1442,7 +1445,6 @@ public class IRBuilder implements ASTVisitor {
                 currentBB.addInstAtTail(new Phi(currentBB, result, possiblePredecessorSet));
                 currentFunction.addBasicBlock(currentBB);
                 currentFunction.CheckAndSetName(result.getName(), result);
-                currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
 
                 return new ExprResultPair(result, null);
 

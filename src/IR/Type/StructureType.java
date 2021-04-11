@@ -56,6 +56,9 @@ public class StructureType extends IRType {
 
     @Override
     public int getByte() {
+        if (typeList.isEmpty()) {
+            return 0;
+        }
         int ans = 0;
         int max = 0;
         for (IRType type: typeList) {
@@ -68,6 +71,9 @@ public class StructureType extends IRType {
                 ans = ans + (typeByte - ans % typeByte) + typeByte;
             }
             max = Math.max(max, typeByte);
+        }
+        if (max == 0) {
+            assert false;
         }
         if (ans % max == 0) {
 //            ans += max;
