@@ -1452,6 +1452,10 @@ public class IRBuilder implements ASTVisitor {
                         return new ExprResultPair(new BoolConstant(false), null);
                     } else if (and_op1_is_const) {
                         return new ExprResultPair(new BoolConstant(true), null);
+                    } else if (!((BoolConstant) opd2ResultReg).getValue()) {
+                        opd1BB.getTailInst().deleteInst();
+                        currentBB = opd1BB;
+                        return new ExprResultPair(new BoolConstant(false), null);
                     }
                     and_op2_is_const = true;
                 } else {
@@ -1562,6 +1566,10 @@ public class IRBuilder implements ASTVisitor {
                         return new ExprResultPair(new BoolConstant(true), null);
                     } else if (or_op1_is_const) {
                         return new ExprResultPair(new BoolConstant(false), null);
+                    } else if (((BoolConstant) opd2ResultReg).getValue()) {
+                        opd1BB.getTailInst().deleteInst();
+                        currentBB = opd1BB;
+                        return new ExprResultPair(new BoolConstant(true), null);
                     }
                     or_op2_is_const = true;
                 } else {
