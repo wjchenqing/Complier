@@ -553,12 +553,15 @@ public class InstructionSelector implements IRVisitor {
 
     @Override
     public void visit(IRMove IRMove) {
+        IROper source = IRMove.getSource();
         Operand value = getOperand(IRMove.getSource());
         RegisterVirtual result = curFunction.getRV(IRMove.getResult().getName());
         if (value instanceof RegisterVirtual) {
             curBlock.addInst(new Move(curBlock, result, (RegisterVirtual) value));
         } else {
-            assert value instanceof ImmediateInt;
+            if (!(value instanceof ImmediateInt)) {
+                assert false;
+            }
             curBlock.addInst(new LoadImmediate(curBlock, result, (Immediate) value));
         }
     }

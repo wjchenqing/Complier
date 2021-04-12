@@ -87,6 +87,7 @@ public class Main {
 
         SSADestructor ssaDestructor = new SSADestructor(irBuilder.getModule());
         ssaDestructor.run();
+        cfgSimplifier.run();
 
 //        IRPrinter irPrinter3 = new IRPrinter("judger/test_to_codegen.ll");
 //        irBuilder.getModule().accept(irPrinter3);

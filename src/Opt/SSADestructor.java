@@ -84,7 +84,7 @@ public class SSADestructor {
                     }
                 }
                 if (sameAns) {
-                    phi.getResult().replaceUse(ans);
+                    phi.addInstPrev(new IRMove(phi.getCurrentBB(), phi.getResult(), ans));
                     phi.deleteInst();
                     continue;
                 }
