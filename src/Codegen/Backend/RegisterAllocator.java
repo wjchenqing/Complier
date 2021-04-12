@@ -530,11 +530,13 @@ public class RegisterAllocator {
                 inst.replaceDef(rv, n);
                 inst.addInstNext(new Store(inst.getBasicBlock(), Store.Name.sw, n, addr));
             }
-            for (Instruction inst: regUseIn.get(rv)) {
-                RegisterVirtual n = new RegisterVirtual(rv.getName());
-                function.CheckAndSetName(n.getName(), n);
-                inst.replaceUse(rv, n);
-                inst.addInstPrev(new LoadGlobal(inst.getBasicBlock(), LoadGlobal.Name.lw, n, addr));
+            if (regUseIn.get(rv) != null) {
+                for (Instruction inst : regUseIn.get(rv)) {
+                    RegisterVirtual n = new RegisterVirtual(rv.getName());
+                    function.CheckAndSetName(n.getName(), n);
+                    inst.replaceUse(rv, n);
+                    inst.addInstPrev(new LoadGlobal(inst.getBasicBlock(), LoadGlobal.Name.lw, n, addr));
+                }
             }
         }
         for (RegisterVirtual rv: spilledNodes) {
