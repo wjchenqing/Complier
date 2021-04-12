@@ -8,4 +8,4 @@ cd "$(dirname "$0")"
 # export CCHK="java -classpath ./lib/antlr-4.7.2-complete.jar:./bin Main"
 # cat > code.txt
 # $CCHK
-cat | java -ea -classpath ./lib/antlr-4.7.2-complete.jar:./bin Main codegen
+cat | java -Xss10m -ea -classpath ./lib/antlr-4.7.2-complete.jar:./bin Main codegen
