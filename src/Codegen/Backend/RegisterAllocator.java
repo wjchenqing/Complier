@@ -524,11 +524,13 @@ public class RegisterAllocator {
             Addr addr = new Addr(true, new RegisterVirtual(rv.getName() + "_addr"), null);
             function.getStack().putSpillLocation(rv, addr);
 //            spillAddrMap.put(rv, addr);
-            for (Instruction inst: regDefIn.get(rv)) {
-                RegisterVirtual n = new RegisterVirtual(rv.getName());
-                function.CheckAndSetName(n.getName(), n);
-                inst.replaceDef(rv, n);
-                inst.addInstNext(new Store(inst.getBasicBlock(), Store.Name.sw, n, addr));
+            if (regDefIn.get(rv) != null) {
+                for (Instruction inst : regDefIn.get(rv)) {
+                    RegisterVirtual n = new RegisterVirtual(rv.getName());
+                    function.CheckAndSetName(n.getName(), n);
+                    inst.replaceDef(rv, n);
+                    inst.addInstNext(new Store(inst.getBasicBlock(), Store.Name.sw, n, addr));
+                }
             }
             if (regUseIn.get(rv) != null) {
                 for (Instruction inst : regUseIn.get(rv)) {
