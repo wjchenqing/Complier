@@ -293,7 +293,9 @@ public class InstructionSelector implements IRVisitor {
             RegisterVirtual cond = getReg(br.getCond());
             Codegen.BasicBlock elseBB = curFunction.getBasicBlock(br.getElseBlock().getName());
             curBlock.addInst(new Branch(curBlock, Branch.Name.beq, cond, RegisterPhysical.getVR(0), elseBB));
-            curBlock.addInst(new Jump(curBlock, thenBB));
+            if (thenBB != curBlock.getNextBB()){
+                curBlock.addInst(new Jump(curBlock, thenBB));
+            }
         } else {
             curBlock.addInst(new Jump(curBlock, thenBB));
         }

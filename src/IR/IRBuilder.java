@@ -243,6 +243,14 @@ public class IRBuilder implements ASTVisitor {
         BasicBlock thenBB = new BasicBlock("if_then_block", currentFunction, depth);
         BasicBlock elseBB = new BasicBlock("if_else_block", currentFunction, depth);
         BasicBlock ifExitBB = new BasicBlock("if_exit_block", currentFunction, depth);
+        currentFunction.CheckAndSetName(thenBB.getName(), thenBB);
+        currentFunction.addBasicBlock(thenBB);
+        if (node.getElseBody() != null) {
+            currentFunction.CheckAndSetName(elseBB.getName(), elseBB);
+            currentFunction.addBasicBlock(elseBB);
+        }
+        currentFunction.CheckAndSetName(ifExitBB.getName(), ifExitBB);
+        currentFunction.addBasicBlock(ifExitBB);
 
         Object condResult = node.getCondition().accept(this);
         assert condResult instanceof ExprResultPair;
@@ -259,21 +267,15 @@ public class IRBuilder implements ASTVisitor {
             node.getThenBody().accept(this);
         }
         currentBB.addInstAtTail(new Br(currentBB, null, ifExitBB, null));
-        currentFunction.CheckAndSetName(thenBB.getName(), thenBB);
-        currentFunction.addBasicBlock(thenBB);
 
         if (node.getElseBody() != null) {
             currentBB = elseBB;
             node.getElseBody().accept(this);
             currentBB.addInstAtTail(new Br(currentBB, null, ifExitBB, null));
-            currentFunction.CheckAndSetName(elseBB.getName(), elseBB);
-            currentFunction.addBasicBlock(elseBB);
         }
 
         currentBB = ifExitBB;
 
-        currentFunction.CheckAndSetName(ifExitBB.getName(), ifExitBB);
-        currentFunction.addBasicBlock(ifExitBB);
 
         return null;
     }
@@ -284,6 +286,12 @@ public class IRBuilder implements ASTVisitor {
         depth++;
         BasicBlock conditionBlock = new BasicBlock("condition_block", currentFunction, depth);
         BasicBlock loopBody = new BasicBlock("loop_body", currentFunction, depth);
+        currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
+        currentFunction.addBasicBlock(conditionBlock);
+        currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+        currentFunction.addBasicBlock(loopBody);
+        currentFunction.CheckAndSetName(exitBlock.getName(), exitBlock);
+        currentFunction.addBasicBlock(exitBlock);
 
         loopContinueBlocks.push(conditionBlock);
         loopExitBlocks.push(exitBlock);
@@ -294,24 +302,18 @@ public class IRBuilder implements ASTVisitor {
         Object condResult = node.getExpr().accept(this);
         assert condResult instanceof ExprResultPair;
         currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) condResult).result, loopBody, exitBlock));
-        currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
-        currentFunction.addBasicBlock(conditionBlock);
 
         currentBB = loopBody;
         if (node.getBody() != null) {
             node.getBody().accept(this);
         }
         currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
-        currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
-        currentFunction.addBasicBlock(loopBody);
 
         loopContinueBlocks.pop();
         loopExitBlocks.pop();
 
         depth = exitBlock.depth;
         currentBB = exitBlock;
-        currentFunction.CheckAndSetName(currentBB.getName(), currentBB);
-        currentFunction.addBasicBlock(exitBlock);
         return null;
     }
 
@@ -356,13 +358,17 @@ public class IRBuilder implements ASTVisitor {
         }
 
         if ((node.getCond() != null) && (node.getStep() != null)) {
+            currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
+            currentFunction.addBasicBlock(conditionBlock);
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
+            currentFunction.CheckAndSetName(stepBlock.getName(), stepBlock);
+            currentFunction.addBasicBlock(stepBlock);
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
             currentBB = conditionBlock;
             Object conditionResult = node.getCond().accept(this);
             assert conditionResult instanceof ExprResultPair;
             currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
-            currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
-            currentFunction.addBasicBlock(conditionBlock);
 
             loopContinueBlocks.push(stepBlock);
             loopExitBlocks.push(exitBlock);
@@ -372,8 +378,6 @@ public class IRBuilder implements ASTVisitor {
                 node.getStatement().accept(this);
             }
             currentBB.addInstAtTail(new Br(currentBB, null, stepBlock, null));
-            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
-            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
@@ -381,17 +385,17 @@ public class IRBuilder implements ASTVisitor {
             currentBB = stepBlock;
             node.getStep().accept(this);
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
-            currentFunction.CheckAndSetName(stepBlock.getName(), stepBlock);
-            currentFunction.addBasicBlock(stepBlock);
         } else if (node.getCond() != null) {
+            currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
+            currentFunction.addBasicBlock(conditionBlock);
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
 
             currentBB = conditionBlock;
             Object conditionResult = node.getCond().accept(this);
             assert conditionResult instanceof ExprResultPair;
             currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
-            currentFunction.CheckAndSetName(conditionBlock.getName(), conditionBlock);
-            currentFunction.addBasicBlock(conditionBlock);
 
             loopContinueBlocks.push(conditionBlock);
             loopExitBlocks.push(exitBlock);
@@ -401,13 +405,15 @@ public class IRBuilder implements ASTVisitor {
                 node.getStatement().accept(this);
             }
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
-            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
-            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
 
         } else if (node.getStep() != null) {
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
+            currentFunction.CheckAndSetName(stepBlock.getName(), stepBlock);
+            currentFunction.addBasicBlock(stepBlock);
             currentBB.addInstAtTail(new Br(currentBB, null, loopBody, null));
 
             loopContinueBlocks.push(stepBlock);
@@ -418,8 +424,6 @@ public class IRBuilder implements ASTVisitor {
                 node.getStatement().accept(this);
             }
             currentBB.addInstAtTail(new Br(currentBB, null, stepBlock, null));
-            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
-            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
@@ -427,9 +431,9 @@ public class IRBuilder implements ASTVisitor {
             currentBB = stepBlock;
             node.getStep().accept(this);
             currentBB.addInstAtTail(new Br(currentBB, null, loopBody, null));
-            currentFunction.CheckAndSetName(stepBlock.getName(), stepBlock);
-            currentFunction.addBasicBlock(stepBlock);
         } else {
+            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
+            currentFunction.addBasicBlock(loopBody);
             currentBB.addInstAtTail(new Br(currentBB, null, loopBody, null));
 
             loopContinueBlocks.push(loopBody);
@@ -440,8 +444,6 @@ public class IRBuilder implements ASTVisitor {
                 node.getStatement().accept(this);
             }
             currentBB.addInstAtTail(new Br(currentBB, null, loopBody, null));
-            currentFunction.CheckAndSetName(loopBody.getName(), loopBody);
-            currentFunction.addBasicBlock(loopBody);
 
             loopExitBlocks.pop();
             loopContinueBlocks.pop();
