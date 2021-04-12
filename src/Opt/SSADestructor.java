@@ -66,14 +66,34 @@ public class SSADestructor {
             }
 
             for (IRInst phi: phiList) {
+                Set<Pair<BasicBlock, IROper>> possibleValSet = new LinkedHashSet<>();
+                boolean sameAns = true;
+                IROper ans = null;
                 for (Pair<BasicBlock, IROper> pair: ((Phi) phi).getPossiblePredecessorSet()) {
+                    IRInst location = insertLocations.get(pair.getFirst());
+                    if (location == null) {
+                        continue;
+                    }
+                    possibleValSet.add(pair);
+                    if (sameAns) {
+                        if (ans == null) {
+                            ans = pair.getSecond();
+                        } else if (ans != pair.getSecond()) {
+                            sameAns = false;
+                        }
+                    }
+                }
+                if (sameAns) {
+                    phi.getResult().replaceUse(ans);
+                    phi.deleteInst();
+                    continue;
+                }
+                for (Pair<BasicBlock, IROper> pair: possibleValSet) {
                     if (phi.getResult() == pair.getSecond()) {
                         continue;
                     }
                     IRInst location = insertLocations.get(pair.getFirst());
-                    if (location == null) {
-                        assert false;
-                    }
+                    assert location != null;
                     if (!Moves.containsKey(location)) {
                         Set<IRMove> tmp = new LinkedHashSet<>();
                         tmp.add(new IRMove(location.getCurrentBB(), phi.getResult(), pair.getSecond()));

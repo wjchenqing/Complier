@@ -188,7 +188,11 @@ public class IRBuilder implements ASTVisitor {
 
         if (identifier.equals("main")) {
             IR.Function function = module.getFunction("_MxProgramInitial");
-            currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), null, function, new ArrayList<>()));
+            if (!(function.getHeadBB().getHeadInst() instanceof Br)) {
+                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), null, function, new ArrayList<>()));
+            } else {
+                module.getFunctionMap().remove("_MxProgramInitial");
+            }
         }
 
         currentFunction = null;

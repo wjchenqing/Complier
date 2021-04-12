@@ -239,9 +239,8 @@ public class Function {
 
     public ArrayList<BasicBlock> getPostDfsList() {
         visited = new HashSet<>();
-        if (postDfsList.size() == 0) {
-            post(headBB);
-        }
+        postDfsList.clear();
+        post(headBB);
         return postDfsList;
     }
 

@@ -2,7 +2,9 @@ package IR.Instruction;
 
 import IR.BasicBlock;
 import IR.IRVisitor;
+import IR.Operand.BoolConstant;
 import IR.Operand.IROper;
+import IR.Operand.IntegerConstant;
 import IR.Operand.Register;
 import IR.Type.IRType;
 
@@ -49,6 +51,63 @@ public class BinaryOperation extends IRInst {
             uses.add(n);
             op2 = n;
             n.addUse(this);
+        }
+        if ((op1 instanceof IntegerConstant && op2 instanceof IntegerConstant)) {
+            boolean flag = true;
+            switch (op) {
+                case add :
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() + ((IntegerConstant) op2).getValue()));
+                    break;
+                case sub :
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() - ((IntegerConstant) op2).getValue()));
+                    break;
+                case mul :
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() * ((IntegerConstant) op2).getValue()));
+                    break;
+                case sdiv:
+                    if (((IntegerConstant) op2).getValue() == 0) {
+                        flag = false;
+                        break;
+                    }
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() / ((IntegerConstant) op2).getValue()));
+                    break;
+                case srem:
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() % ((IntegerConstant) op2).getValue()));
+                    break;
+                case shl :
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() << ((IntegerConstant) op2).getValue()));
+                    break;
+                case ashr:
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() >> ((IntegerConstant) op2).getValue()));
+                    break;
+                case and :
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() & ((IntegerConstant) op2).getValue()));
+                    break;
+                case or  :
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() | ((IntegerConstant) op2).getValue()));
+                    break;
+                case xor :
+                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() ^ ((IntegerConstant) op2).getValue()));
+            }
+            if (flag) {
+                this.deleteInst();
+            }
+        } else if (op1 instanceof BoolConstant && op2 instanceof BoolConstant) {
+            switch (op) {
+                case and:
+                    result.replaceUse(new BoolConstant(((BoolConstant) op1).getValue() & ((BoolConstant) op2).getValue()));
+                    break;
+                case or :
+                    result.replaceUse(new BoolConstant(((BoolConstant) op1).getValue() | ((BoolConstant) op2).getValue()));
+                    break;
+                case xor:
+                    result.replaceUse(new BoolConstant(((BoolConstant) op1).getValue() ^ ((BoolConstant) op2).getValue()));
+                    break;
+                default : {
+                    assert false;
+                }
+            }
+            this.deleteInst();
         }
     }
 

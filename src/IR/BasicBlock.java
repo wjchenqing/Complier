@@ -161,12 +161,15 @@ public class BasicBlock {
                 currentFunction.setTailBB(currentFunction.getReturnBB());
                 currentFunction.setReturnBB(null);
             }
-        } if (currentFunction.getTailBB() == this) {
+        } else if (currentFunction.getTailBB() == this) {
             currentFunction.setTailBB(this.prevBB);
             prevBB.setNextBB(null);
         } else if ((nextBB == null)) {
             currentFunction.setReturnBB(null);
-        }else {
+        } else {
+            if (prevBB == null) {
+                assert false;
+            }
             prevBB.setNextBB(nextBB);
             nextBB.setPrevBB(prevBB);
         }
@@ -196,6 +199,9 @@ public class BasicBlock {
             basicBlock.prevBB.setNextBB(null);
         } else if (basicBlock.getNextBB() == null) {
             currentFunction.setReturnBB(null);
+        } else if (currentFunction.getHeadBB() == basicBlock) {
+            currentFunction.setHeadBB(basicBlock.nextBB);
+            basicBlock.nextBB.setPrevBB(null);
         } else {
             basicBlock.prevBB.setNextBB(basicBlock.nextBB);
             basicBlock.nextBB.setPrevBB(basicBlock.prevBB);

@@ -55,6 +55,41 @@ public class Icmp extends IRInst {
             op2 = n;
             n.addUse(this);
         }
+        if (op1 instanceof IntegerConstant && op2 instanceof IntegerConstant) {
+            switch (cond) {
+                case eq :
+                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() == ((IntegerConstant) op2).getValue()));
+                    break;
+                case ne :
+                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() != ((IntegerConstant) op2).getValue()));
+                    break;
+                case sgt:
+                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() > ((IntegerConstant) op2).getValue()));
+                    break;
+                case sge:
+                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() >= ((IntegerConstant) op2).getValue()));
+                    break;
+                case slt:
+                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() < ((IntegerConstant) op2).getValue()));
+                    break;
+                case sle:
+                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() <= ((IntegerConstant) op2).getValue()));
+            }
+            this.deleteInst();
+        } else if (op1 instanceof BoolConstant && op2 instanceof BoolConstant) {
+            switch (cond) {
+                case eq :
+                    result.replaceUse(new BoolConstant(((BoolConstant) op1).getValue() == ((BoolConstant) op2).getValue()));
+                    break;
+                case ne :
+                    result.replaceUse(new BoolConstant(((BoolConstant) op1).getValue() != ((BoolConstant) op2).getValue()));
+                    break;
+                default : {
+                    assert false;
+                }
+            }
+            this.deleteInst();
+        }
     }
 
     public void setForRISCV () {

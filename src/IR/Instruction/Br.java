@@ -2,6 +2,7 @@ package IR.Instruction;
 
 import IR.BasicBlock;
 import IR.IRVisitor;
+import IR.Operand.BoolConstant;
 import IR.Operand.IROper;
 import IR.Operand.Register;
 import IR.Type.IntegerType;
@@ -20,8 +21,20 @@ public class Br extends IRInst {
         this.thenBlock = thenBlock;
         this.elseBlock = elseBlock;
         if (cond != null) {
-            uses.add(cond);
-            cond.addUse(this);
+            if (cond instanceof BoolConstant) {
+                if (((BoolConstant) cond).getValue()) {
+                    this.cond = null;
+                    this.thenBlock = thenBlock;
+                    this.elseBlock = null;
+                } else {
+                    this.cond = null;
+                    this.thenBlock = elseBlock;
+                    this.elseBlock = null;
+                }
+            } else {
+                uses.add(cond);
+                cond.addUse(this);
+            }
         }
     }
 
@@ -32,6 +45,30 @@ public class Br extends IRInst {
             uses.add(n);
             cond = n;
             n.addUse(this);
+        }
+        if (cond instanceof BoolConstant) {
+            if (((BoolConstant) cond).getValue()) {
+                currentBB.getSuccessor().remove(elseBlock);
+                elseBlock.getPredecessor().remove(currentBB);
+                if (elseBlock.getPredecessor().isEmpty()) {
+                    elseBlock.delete();
+                }
+                uses.remove(cond);
+                cond.getUses().remove(this);
+                cond = null;
+                elseBlock = null;
+            } else {
+                currentBB.getSuccessor().remove(thenBlock);
+                thenBlock.getPredecessor().remove(currentBB);
+                if (thenBlock.getPredecessor().isEmpty()) {
+                    thenBlock.delete();
+                }
+                uses.remove(cond);
+                cond.getUses().remove(this);
+                cond = null;
+                thenBlock = elseBlock;
+                elseBlock = null;
+            }
         }
     }
 
