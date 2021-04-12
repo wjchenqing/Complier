@@ -77,17 +77,17 @@ public class RegisterAllocator {
         freezeWorkList = new LinkedHashSet<>();
         spillWorkList = new LinkedHashSet<>();
         spilledNodes = new LinkedHashSet<>();
-        coalescedNodes = new HashSet<>();
-        coloredNodes = new HashSet<>();
+        coalescedNodes = new LinkedHashSet<>();
+        coloredNodes = new LinkedHashSet<>();
         selectStack = new Stack<>();
 //        coalescedMoves = new HashSet<>();
 //        constrainedMoves = new HashSet<>();
 //        frozenMoves = new HashSet<>();
         workListMoves = new LinkedHashSet<>();
         activeMoves = new LinkedHashSet<>();
-        adjSet = new HashSet<>();
-        regDefIn = new HashMap<>();
-        regUseIn = new HashMap<>();
+        adjSet = new LinkedHashSet<>();
+        regDefIn = new LinkedHashMap<>();
+        regUseIn = new LinkedHashMap<>();
 
         initial.addAll(function.getOperandMap().values());
         precolored.addAll(RegisterPhysical.virtualMap.values());
@@ -190,6 +190,8 @@ public class RegisterAllocator {
     }
 
     public void build() {
+        regDefIn.clear();
+        regUseIn.clear();
         for (BasicBlock basicBlock: function.getDfsList()) {
             Set<RegisterVirtual> liveOut = basicBlock.getLiveOut();
             Instruction inst = basicBlock.getTailInst();
