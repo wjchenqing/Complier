@@ -26,8 +26,8 @@ public class BasicBlock {
     public BasicBlock dom = null;
     public int dfsNum;
     public int postDfsNum = 0;
-    public Set<BasicBlock> DominanceFrontier = new HashSet<>();
-    public Set<BasicBlock> DomChildren = new HashSet<>();
+    public Set<BasicBlock> DominanceFrontier = new LinkedHashSet<>();
+    public Set<BasicBlock> DomChildren = new LinkedHashSet<>();
 
     public int depth;
 

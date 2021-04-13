@@ -22,7 +22,7 @@ public class Function {
     private final Map<String, Object> OperandMap = new HashMap<>();
     public final Map<String, Register> registerMap = new HashMap<>();
 
-    public Set<Register> allocaResults = new HashSet<>();
+    public Set<Register> allocaResults = new LinkedHashSet<>();
 
     private boolean notExternal;
 
