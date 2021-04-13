@@ -25,8 +25,15 @@ public class CFGSimplifier {
     }
 
     public void deleteBBWithoutPredecessor(Function function) {
-        for (BasicBlock cur = function.getHeadBB(); cur != null; cur = cur.getNextBB()) {
-            if (cur.getPredecessor().isEmpty() && (cur != function.getHeadBB())) {
+        if (function.getBlockSet().isEmpty()) {
+            return;
+        }
+        Set<BasicBlock> list = new LinkedHashSet<>(function.getBlockSet());
+        for (BasicBlock cur: list) {
+            if (!function.getBlockSet().contains(cur)) {
+                continue;
+            }
+            if (cur.getPredecessor().isEmpty() && (cur != function.getEntranceBB())) {
                 cur.delete();
             } else if (cur.getHeadInst() instanceof Br) {
 //                 deleteBBHasOnlyOneInst----Br

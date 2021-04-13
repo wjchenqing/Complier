@@ -3,7 +3,6 @@ package IR;
 import IR.Instruction.Br;
 import IR.Instruction.IRInst;
 import IR.Instruction.Ret;
-import IR.Operand.IROper;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,8 +14,8 @@ public class BasicBlock {
 
     private Function currentFunction = null;
 
-    private BasicBlock prevBB = null;
-    private BasicBlock nextBB = null;
+//    private BasicBlock prevBB = null;
+//    private BasicBlock nextBB = null;
 
     private final Set<BasicBlock> predecessor = new LinkedHashSet<>();
     private final Set<BasicBlock> successor = new LinkedHashSet<>();
@@ -102,13 +101,13 @@ public class BasicBlock {
         this.currentFunction = currentFunction;
     }
 
-    public void setPrevBB(BasicBlock prevBB) {
-        this.prevBB = prevBB;
-    }
-
-    public void setNextBB(BasicBlock nextBB) {
-        this.nextBB = nextBB;
-    }
+//    public void setPrevBB(BasicBlock prevBB) {
+//        this.prevBB = prevBB;
+//    }
+//
+//    public void setNextBB(BasicBlock nextBB) {
+//        this.nextBB = nextBB;
+//    }
 
     public void setHeadInst(IRInst headInst) {
         this.headInst = headInst;
@@ -126,13 +125,13 @@ public class BasicBlock {
         return currentFunction;
     }
 
-    public BasicBlock getPrevBB() {
-        return prevBB;
-    }
+//    public BasicBlock getPrevBB() {
+//        return prevBB;
+//    }
 
-    public BasicBlock getNextBB() {
-        return nextBB;
-    }
+//    public BasicBlock getNextBB() {
+//        return nextBB;
+//    }
 
     public IRInst getHeadInst() {
         return headInst;
@@ -152,26 +151,16 @@ public class BasicBlock {
     }
 
     public void delete() {
-        if (currentFunction.getHeadBB() == this) {
-            if (nextBB != null) {
-                currentFunction.setHeadBB(this.nextBB);
-                nextBB.setPrevBB(null);
-            } else {
-                currentFunction.setHeadBB(currentFunction.getReturnBB());
-                currentFunction.setTailBB(currentFunction.getReturnBB());
-                currentFunction.setReturnBB(null);
-            }
-        } else if (currentFunction.getTailBB() == this) {
-            currentFunction.setTailBB(this.prevBB);
-            prevBB.setNextBB(null);
-        } else if ((nextBB == null)) {
-            currentFunction.setReturnBB(null);
+        if (currentFunction.getEntranceBB() == this) {
+            assert successor.size() == 1;
+            currentFunction.setEntranceBB(successor.iterator().next());
+            currentFunction.getBlockSet().remove(this);
+        } else if (currentFunction.getReturnBB() == this) {
+            assert predecessor.size() == 1;
+            currentFunction.setReturnBB(predecessor.iterator().next());
+            currentFunction.getBlockSet().remove(this);
         } else {
-            if (prevBB == null) {
-                assert false;
-            }
-            prevBB.setNextBB(nextBB);
-            nextBB.setPrevBB(prevBB);
+            currentFunction.getBlockSet().remove(this);
         }
         for (BasicBlock basicBlock: predecessor) {
             basicBlock.getSuccessor().remove(this);
@@ -194,19 +183,17 @@ public class BasicBlock {
             irInst.setCurrentBB(this);
         }
 
-        if (currentFunction.getTailBB() == basicBlock) {
-            currentFunction.setTailBB(basicBlock.prevBB);
-            basicBlock.prevBB.setNextBB(null);
-        } else if (basicBlock.getNextBB() == null) {
-            currentFunction.setReturnBB(null);
-        } else if (currentFunction.getHeadBB() == basicBlock) {
-            currentFunction.setHeadBB(basicBlock.nextBB);
-            basicBlock.nextBB.setPrevBB(null);
-        } else {
-            basicBlock.prevBB.setNextBB(basicBlock.nextBB);
-            basicBlock.nextBB.setPrevBB(basicBlock.prevBB);
+        if (currentFunction.getReturnBB() == basicBlock) {
+            if (basicBlock.predecessor.size() != 0) {
+                assert false;
+            }
+            currentFunction.setReturnBB(this);
         }
+        currentFunction.getBlockSet().remove(basicBlock);
         successor.remove(basicBlock);
+        if (basicBlock.successor.isEmpty()) {
+            return;
+        }
         for (BasicBlock bb: basicBlock.successor) {
             bb.getPredecessor().remove(basicBlock);
             bb.getPredecessor().add(this);

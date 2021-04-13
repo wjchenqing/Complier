@@ -79,12 +79,9 @@ public class IRPrinter implements IRVisitor {
     @Override
     public void visit(Function function) {
         println("define " + function.printer() + "{");
-        for (BasicBlock basicBlock: function.getBlockList()) {
+        for (BasicBlock basicBlock: function.getDfsList()) {
             basicBlock.accept(this);
             println("");
-        }
-        if (function.getReturnBB() != null) {
-            function.getReturnBB().accept(this);
         }
         println("}");
     }

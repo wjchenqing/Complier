@@ -2,7 +2,6 @@ package IR;
 
 import IR.Instruction.*;
 import IR.Operand.IROper;
-import IR.Operand.IntegerConstant;
 import IR.Operand.Parameter;
 import IR.Operand.Register;
 import IR.Type.*;
@@ -16,8 +15,8 @@ public class Function {
     private IRType returnType;
     private FunctionType functionType;
     private ArrayList<Parameter> parameters;
-    private BasicBlock headBB = null;
-    private BasicBlock tailBB = null;
+    private BasicBlock entranceBB = null;
+    private Set<BasicBlock> blockSet = new LinkedHashSet<>();
     private BasicBlock returnBB = null;
     private Register returnValue = null;
     private final Map<String, Object> OperandMap = new HashMap<>();
@@ -42,9 +41,10 @@ public class Function {
         if (notExternalThusShouldInitial) {
             BasicBlock basicBlock = new BasicBlock(name + ".headBB", this, 0);
             addBasicBlock(basicBlock);
-            OperandMap.put(headBB.getName(), basicBlock);
+            OperandMap.put(entranceBB.getName(), basicBlock);
 
             returnBB = new BasicBlock(name + ".returnBB", this, 0);
+            blockSet.add(returnBB);
             OperandMap.put(returnBB.getName(), returnBB);
             if ((returnType == null) || (returnType instanceof VoidType)) {
                 returnBB.addInstAtTail(new Ret(returnBB, new VoidType(), null));
@@ -67,8 +67,8 @@ public class Function {
 //                headBB.addInstAtHead(new Store(headBB, returnType.defaultOperand(), returnValue));
 //                headBB.addInstAtHead(new BitCastTo(headBB, returnValue, mallocAddr, new PointerType(returnType)));
 //                headBB.addInstAtHead(new Call(headBB, mallocAddr, mallocFunc, paramForMalloc));
-                headBB.addInstAtTail(new Alloca(headBB, returnValue, returnType));
-                headBB.addInstAtTail(new Store(headBB, returnType.defaultOperand(), returnValue));
+                entranceBB.addInstAtTail(new Alloca(entranceBB, returnValue, returnType));
+                entranceBB.addInstAtTail(new Store(entranceBB, returnType.defaultOperand(), returnValue));
                 OperandMap.put(returnValue.getName(), returnValue);
                 Register returnValueRegister = new Register(returnType, name + "returnValueRegister");
                 returnBB.addInstAtTail(new Load(returnBB, returnValueRegister, returnType, returnValue));
@@ -76,6 +76,10 @@ public class Function {
                 OperandMap.put(returnValueRegister.getName(), returnValueRegister);
             }
         }
+    }
+
+    public Set<BasicBlock> getBlockSet() {
+        return blockSet;
     }
 
     public boolean isNotExternal() {
@@ -99,13 +103,10 @@ public class Function {
     }
 
     public void addBasicBlock(BasicBlock basicBlock) {
-        if (headBB == null) {
-            headBB = basicBlock;
-        } else {
-            tailBB.setNextBB(basicBlock);
-            basicBlock.setPrevBB(tailBB);
+        if (entranceBB == null) {
+            entranceBB = basicBlock;
         }
-        tailBB = basicBlock;
+        blockSet.add(basicBlock);
     }
 
     public Object getOperand(String name) {
@@ -149,13 +150,13 @@ public class Function {
         return parameters;
     }
 
-    public BasicBlock getHeadBB() {
-        return headBB;
+    public BasicBlock getEntranceBB() {
+        return entranceBB;
     }
 
-    public BasicBlock getTailBB() {
-        return tailBB;
-    }
+//    public BasicBlock getTailBB() {
+//        return tailBB;
+//    }
 
     public BasicBlock getReturnBB() {
         return returnBB;
@@ -165,13 +166,13 @@ public class Function {
         return returnValue;
     }
 
-    public void setHeadBB(BasicBlock headBB) {
-        this.headBB = headBB;
+    public void setEntranceBB(BasicBlock entranceBB) {
+        this.entranceBB = entranceBB;
     }
 
-    public void setTailBB(BasicBlock tailBB) {
-        this.tailBB = tailBB;
-    }
+//    public void setTailBB(BasicBlock tailBB) {
+//        this.tailBB = tailBB;
+//    }
 
     public void setReturnBB(BasicBlock returnBB) {
         this.returnBB = returnBB;
@@ -181,13 +182,13 @@ public class Function {
         this.returnValue = returnValue;
     }
 
-    public ArrayList<BasicBlock> getBlockList() {
-        ArrayList<BasicBlock> basicBlocks = new ArrayList<>();
-        for (BasicBlock cur = headBB; cur != null; cur = cur.getNextBB()) {
-            basicBlocks.add(cur);
-        }
-        return basicBlocks;
-    }
+//    public ArrayList<BasicBlock> getBlockList() {
+//        ArrayList<BasicBlock> basicBlocks = new ArrayList<>();
+//        for (BasicBlock cur = entranceBB; cur != null; cur = cur.getNextBB()) {
+//            basicBlocks.add(cur);
+//        }
+//        return basicBlocks;
+//    }
 
     @Override
     public String toString() {
@@ -217,9 +218,8 @@ public class Function {
 
     public ArrayList<BasicBlock> getDfsList() {
         visited = new HashSet<>();
-        if (dfsList.size() == 0) {
-            dfs(headBB, 1);
-        }
+        dfsList.clear();
+        dfs(entranceBB, 1);
         return dfsList;
     }
 
@@ -239,8 +239,9 @@ public class Function {
 
     public ArrayList<BasicBlock> getPostDfsList() {
         visited = new HashSet<>();
-        postDfsList.clear();
-        post(headBB);
+        if (postDfsList.size() == 0) {
+            post(entranceBB);
+        }
         return postDfsList;
     }
 

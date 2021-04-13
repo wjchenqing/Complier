@@ -3,11 +3,8 @@ package Opt;
 import IR.BasicBlock;
 import IR.Function;
 import IR.Module;
-import Util.Pair;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 public class DominatorTree {
     private Module module;
@@ -26,7 +23,7 @@ public class DominatorTree {
     }
 
     public void constructDominatorTree(Function function) {
-        function.getHeadBB().dom = function.getHeadBB();
+        function.getEntranceBB().dom = function.getEntranceBB();
         boolean changed = true;
         ArrayList<BasicBlock> postDfsList = function.getPostDfsList();
         while (changed) {

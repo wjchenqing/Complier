@@ -7,8 +7,6 @@ import Frontend.Type.ClassType2;
 import Frontend.Type.Type2;
 import Frontend.Type.TypeTable;
 import IR.Instruction.Alloca;
-import IR.Instruction.BitCastTo;
-import IR.Instruction.Call;
 import IR.Instruction.Store;
 import IR.Operand.*;
 import IR.Type.*;
@@ -332,7 +330,7 @@ public class Module {
             identifier = className + "." + identifier;
 
             newFunction = new Function(this, identifier, returnType, null, null, true);
-            currentBB = newFunction.getHeadBB();
+            currentBB = newFunction.getEntranceBB();
             IRType tmp = irTypeTable.get(functionScope.getClassType());
             if (tmp instanceof StructureType) {
                 tmp = new PointerType(tmp);
@@ -370,7 +368,7 @@ public class Module {
         } else {
 //            System.err.println(identifier);
             newFunction = new Function(this, identifier, returnType, null, null, true);
-            currentBB = newFunction.getHeadBB();
+            currentBB = newFunction.getEntranceBB();
         }
 
         ArrayList<VariableEntity> variableEntities = functionEntity.getParams();

@@ -30,20 +30,14 @@ public class Function {
         this.irFunction = irFunction;
 
         if (irFunction.isNotExternal()) {
-            for (IR.BasicBlock irBasicBlock : irFunction.getBlockList()) {
+            ArrayList<IR.BasicBlock> dfsList = irFunction.getDfsList();
+            for (IR.BasicBlock irBasicBlock : dfsList) {
                 BasicBlock basicBlock = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irBasicBlock);
                 addBasicBlock(basicBlock);
                 blockNum++;
             }
-            BasicBlock bb = null;
-            if (irFunction.getReturnBB() != null) {
-                bb = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irFunction.getReturnBB());
-                addBasicBlock(bb);
-                blockNum++;
-                returnBB = bb;
-            }
 
-            for (IR.BasicBlock irBasicBlock : irFunction.getBlockList()) {
+            for (IR.BasicBlock irBasicBlock : dfsList) {
                 BasicBlock basicBlock = getBasicBlock(irBasicBlock.getName());
                 for (IR.BasicBlock predecessor : irBasicBlock.getPredecessor()) {
                     basicBlock.addPredecessor(getBasicBlock(predecessor.getName()));
@@ -55,14 +49,6 @@ public class Function {
                     returnBB = basicBlock;
                 }
             }
-            if (irFunction.getReturnBB() != null) {
-                for (IR.BasicBlock predecessor : irFunction.getReturnBB().getPredecessor()) {
-                    bb.addPredecessor(getBasicBlock(predecessor.getName()));
-                }
-                for (IR.BasicBlock successor : irFunction.getReturnBB().getSuccessor()) {
-                    bb.addSuccessor(getBasicBlock(successor.getName()));
-                }
-            }
 
 
             for (Parameter param : irFunction.getParameters()) {
@@ -70,7 +56,7 @@ public class Function {
                 CheckAndSetName(registerVirtual.getName(), registerVirtual);
             }
 
-            for (IR.BasicBlock irBasicBlock : irFunction.getBlockList()) {
+            for (IR.BasicBlock irBasicBlock : dfsList) {
                 for (IRInst inst : irBasicBlock.getInstList()) {
                     if (inst.getResult() != null) {
                         RegisterVirtual registerVirtual = new RegisterVirtual(inst.getResult().getName());

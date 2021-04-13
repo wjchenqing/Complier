@@ -83,7 +83,7 @@ public class IRBuilder implements ASTVisitor {
 
         currentFunction = new IR.Function(module,"_MxProgramInitial", new VoidType(),
                 new FunctionType(new VoidType(), new ArrayList<>()), new ArrayList<>(), true);
-        currentBB = currentFunction.getHeadBB();
+        currentBB = currentFunction.getEntranceBB();
         module.addFunction(currentFunction);
         for (ProgramNode programNode: node.getProgramNodes()) {
             if (programNode instanceof Variable)
@@ -157,7 +157,7 @@ public class IRBuilder implements ASTVisitor {
 //            headBB.addInstAtHead(new Call(headBB, mallocAddr, mallocFunction, paramForMalloc));
 
             Register addr = new Register(new PointerType(type), identifier);
-            BasicBlock headBB = currentFunction.getHeadBB();
+            BasicBlock headBB = currentFunction.getEntranceBB();
             headBB.addInstAtHead(new Store(headBB, type2.defaultOperand(), addr));
             headBB.addInstAtHead(new Alloca(headBB, addr, type));
             currentFunction.CheckAndSetName(identifier, addr);
@@ -180,7 +180,7 @@ public class IRBuilder implements ASTVisitor {
 
         currentFunction = module.getFunction(identifier);
         assert currentFunction != null;
-        currentBB = currentFunction.getHeadBB();
+        currentBB = currentFunction.getEntranceBB();
 
         node.getStatement().accept(this);
 
@@ -188,8 +188,8 @@ public class IRBuilder implements ASTVisitor {
 
         if (identifier.equals("main")) {
             IR.Function function = module.getFunction("_MxProgramInitial");
-            if (!(function.getHeadBB().getHeadInst() instanceof Br)) {
-                currentFunction.getHeadBB().addInstAtHead(new Call(currentFunction.getHeadBB(), null, function, new ArrayList<>()));
+            if (!(function.getEntranceBB().getHeadInst() instanceof Br)) {
+                currentFunction.getEntranceBB().addInstAtHead(new Call(currentFunction.getEntranceBB(), null, function, new ArrayList<>()));
             } else {
                 module.getFunctionMap().remove("_MxProgramInitial");
             }
@@ -550,8 +550,8 @@ public class IRBuilder implements ASTVisitor {
 //        currentFunction.CheckAndSetName(iteratorAddr.getName(), iteratorAddr);
         Register Addr = new Register(new PointerType(new IntegerType(32)), "iterator_addr");
         currentFunction.CheckAndSetName(Addr.getName(), Addr);
-        currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new IntegerConstant(0), Addr));
-        currentFunction.getHeadBB().addInstAtHead(new Alloca(currentFunction.getHeadBB(), Addr, new IntegerType(32)));
+        currentFunction.getEntranceBB().addInstAtHead(new Store(currentFunction.getEntranceBB(), new IntegerConstant(0), Addr));
+        currentFunction.getEntranceBB().addInstAtHead(new Alloca(currentFunction.getEntranceBB(), Addr, new IntegerType(32)));
 //        currentFunction.getHeadBB().addInstAtHead(new Store(currentFunction.getHeadBB(), new IntegerConstant(0), Addr));
 //        currentFunction.getHeadBB().addInstAtHead(new BitCastTo(currentFunction.getHeadBB(), Addr,
 //                iteratorAddr, new PointerType(new IntegerType(32))));

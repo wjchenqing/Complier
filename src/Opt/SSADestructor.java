@@ -30,10 +30,9 @@ public class SSADestructor {
     }
 
     public void CriticalEdgeSplitting(Function function) {
-        BasicBlock newBB_head = null;
-        BasicBlock newBB_tail = null;
+        Set<BasicBlock> newBBList = new LinkedHashSet<>();
         Moves = new LinkedHashMap<>();
-        for (BasicBlock cur = function.getHeadBB().getNextBB(); cur != null; cur = (cur != function.getTailBB()) ? cur.getNextBB() : function.getReturnBB()) {
+        for (BasicBlock cur: function.getBlockSet()) {
             ArrayList<Phi> phiList = new ArrayList<>();
             for (IRInst phi = cur.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
                 phiList.add((Phi) phi);
@@ -47,14 +46,7 @@ public class SSADestructor {
                 if (predecessor.getSuccessor().size() > 1) {
                     BasicBlock newBB = new BasicBlock("between_" + predecessor.getName() + "_" + cur.getName(), function, predecessor.depth);
                     function.CheckAndSetName(newBB.getName(), newBB);
-                    if (newBB_head == null) {
-                        newBB_head = newBB;
-                        newBB_tail = newBB;
-                    } else {
-                        newBB_tail.setNextBB(newBB);
-                        newBB.setPrevBB(newBB_tail);
-                        newBB_tail = newBB;
-                    }
+                    newBBList.add(newBB);
 
                     predecessor.getTailInst().replaceBBUse(cur, newBB);
                     newBB.addInstAtTail(new Br(newBB, null, cur, null));
@@ -148,10 +140,6 @@ public class SSADestructor {
             }
         }
 
-        if (newBB_head != null){
-            function.getTailBB().setNextBB(newBB_head);
-            newBB_head.setPrevBB(function.getTailBB());
-            function.setTailBB(newBB_tail);
-        }
+        function.getBlockSet().addAll(newBBList);
     }
 }

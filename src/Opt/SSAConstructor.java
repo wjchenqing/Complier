@@ -69,7 +69,7 @@ public class SSAConstructor {
             }
         }
 
-        rename(function.getHeadBB(), null);
+        rename(function.getEntranceBB(), null);
 
         for (Register register: allocaResults) {
             for (IRInst irInst: register.getDefs()) {

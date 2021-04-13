@@ -121,11 +121,8 @@ public class InstructionSelector implements IRVisitor {
             curBlock.addInst(new LoadGlobal(curBlock, LoadGlobal.Name.lw, rv, addr));
         }
 
-        for (BasicBlock basicBlock: function.getBlockList()) {
+        for (BasicBlock basicBlock: function.getDfsList()) {
             basicBlock.accept(this);
-        }
-        if (function.getReturnBB() != null) {
-            function.getReturnBB().accept(this);
         }
     }
 
