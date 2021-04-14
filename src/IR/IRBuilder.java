@@ -830,15 +830,15 @@ public class IRBuilder implements ASTVisitor {
     public Object visit(PreFixExpr node) {
         Object exprResult = node.getExpr().accept(this);
         assert exprResult instanceof ExprResultPair;
-        Register exprResultReg;
+        IROper exprResultReg;
         IROper exprResultAddr = ((ExprResultPair) exprResult).addr;
 
-        Register result;
+        IROper result;
         switch (node.getOp()) {
             case preFixIncrease:
                 exprResultReg = (Register) ((ExprResultPair) exprResult).result;
                 result = new Register(new IntegerType(32), exprResultReg.getName() + "__pre_fix_increase__");
-                currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.add,
+                currentBB.addInstAtTail(new BinaryOperation(currentBB, (Register) result, BinaryOperation.BinaryOp.add,
                         new IntegerType(32), exprResultReg, new IntegerConstant(1)));
                 currentBB.addInstAtTail(new Store(currentBB, result, exprResultAddr));
                 currentFunction.CheckAndSetName(result.getName(), result);
@@ -846,7 +846,7 @@ public class IRBuilder implements ASTVisitor {
             case preFixDecrease:
                 exprResultReg = (Register) ((ExprResultPair) exprResult).result;
                 result = new Register(new IntegerType(32), exprResultReg.getName() + "__pre_fix_decrease__");
-                currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.sub,
+                currentBB.addInstAtTail(new BinaryOperation(currentBB, (Register) result, BinaryOperation.BinaryOp.sub,
                         new IntegerType(32), exprResultReg, new IntegerConstant(1)));
                 currentBB.addInstAtTail(new Store(currentBB, result, exprResultAddr));
                 currentFunction.CheckAndSetName(result.getName(), result);
@@ -860,23 +860,31 @@ public class IRBuilder implements ASTVisitor {
                     assert ((ExprResultPair) exprResult).result instanceof Register;
                     exprResultReg = (Register) ((ExprResultPair) exprResult).result;
                     result = new Register(new IntegerType(32), exprResultReg.getName() + "__pre_fix_sub__");
-                    currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.sub,
+                    currentBB.addInstAtTail(new BinaryOperation(currentBB, (Register) result, BinaryOperation.BinaryOp.sub,
                             new IntegerType(32), new IntegerConstant(0), exprResultReg));
                     currentFunction.CheckAndSetName(result.getName(),result);
                     return new ExprResultPair(result, exprResultAddr);
                 }
             case negation:
-                exprResultReg = (Register) ((ExprResultPair) exprResult).result;
-                result = new Register(new IntegerType(1), exprResultReg.getName() + "__negation__");
-                currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.xor,
-                        new IntegerType(1), exprResultReg, new BoolConstant(true)));
+                exprResultReg = ((ExprResultPair) exprResult).result;
+                if (exprResultReg instanceof BoolConstant) {
+                    result = new BoolConstant(!((BoolConstant) exprResultReg).getValue());
+                } else {
+                    result = new Register(new IntegerType(1), exprResultReg.getName() + "__negation__");
+                    currentBB.addInstAtTail(new BinaryOperation(currentBB, (Register) result, BinaryOperation.BinaryOp.xor,
+                            new IntegerType(1), exprResultReg, new BoolConstant(true)));
+                }
                 currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, exprResultAddr);
             case bitwiseComplement:
-                exprResultReg = (Register) ((ExprResultPair) exprResult).result;
-                result = new Register(new IntegerType(1), exprResultReg.getName() + "__bitwiseComplement__");
-                currentBB.addInstAtTail(new BinaryOperation(currentBB, result, BinaryOperation.BinaryOp.xor,
-                        new IntegerType(-1), exprResultReg, new BoolConstant(true)));
+                exprResultReg = ((ExprResultPair) exprResult).result;
+                if (exprResultReg instanceof IntegerConstant) {
+                    result = new IntegerConstant(~((IntegerConstant) exprResultReg).getValue());
+                } else {
+                    result = new Register(new IntegerType(32), exprResultReg.getName() + "__bitwiseComplement__");
+                    currentBB.addInstAtTail(new BinaryOperation(currentBB, (Register) result, BinaryOperation.BinaryOp.xor,
+                            new IntegerType(32), exprResultReg, new IntegerConstant(-1)));
+                }
                 currentFunction.CheckAndSetName(result.getName(), result);
                 return new ExprResultPair(result, exprResultAddr);
         }
