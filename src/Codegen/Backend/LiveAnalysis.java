@@ -48,7 +48,7 @@ public class LiveAnalysis {
         }
 
         BasicBlock returnBB = function.getReturnBB();
-        for (int cnt: RegisterPhysical.calleeSaveNum) {
+        for (int cnt = 18; cnt <= 25; ++cnt) {
             RegisterVirtual rv = RegisterPhysical.getVR(cnt);
             returnBB.getLiveOut().add(rv);
 //            returnBB.addUEVar(rv);
