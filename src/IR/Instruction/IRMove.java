@@ -16,6 +16,7 @@ public class IRMove extends IRInst {
         result.getDefs().add(this);
         source.addUse(this);
         defs.add(result);
+        currentBB.getCurrentFunction().defs.add(result);
         uses.add(source);
     }
 

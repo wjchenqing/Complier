@@ -52,23 +52,26 @@ public class Br extends IRInst {
                 elseBlock.getPredecessor().remove(currentBB);
                 if (elseBlock.getPredecessor().isEmpty()) {
                     elseBlock.delete();
+                    currentBB.getCurrentFunction().computeDFSListAgain = true;
+                    currentBB.getCurrentFunction().computePostDFSListAgain =true;
                 }
                 uses.remove(cond);
                 cond.getUses().remove(this);
                 cond = null;
-                elseBlock = null;
             } else {
                 currentBB.getSuccessor().remove(thenBlock);
                 thenBlock.getPredecessor().remove(currentBB);
                 if (thenBlock.getPredecessor().isEmpty()) {
                     thenBlock.delete();
+                    currentBB.getCurrentFunction().computeDFSListAgain = true;
+                    currentBB.getCurrentFunction().computePostDFSListAgain =true;
                 }
                 uses.remove(cond);
                 cond.getUses().remove(this);
                 cond = null;
                 thenBlock = elseBlock;
-                elseBlock = null;
             }
+            elseBlock = null;
         }
     }
 

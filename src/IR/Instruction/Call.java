@@ -42,6 +42,7 @@ public class Call extends IRInst {
         if (result != null) {
             defs.add(result);
             result.addDef(this);
+            currentBB.getCurrentFunction().defs.add(result);
         }
     }
 

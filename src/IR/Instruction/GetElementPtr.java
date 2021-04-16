@@ -32,6 +32,7 @@ public class GetElementPtr extends IRInst {
         this.idxes = idxes;
         defs.add(result);
         result.addDef(this);
+        currentBB.getCurrentFunction().defs.add(result);
         uses.add(pointer);
         pointer.addUse(this);
         for (IROper irOper: idxes) {

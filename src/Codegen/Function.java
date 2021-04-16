@@ -34,7 +34,6 @@ public class Function {
             for (IR.BasicBlock irBasicBlock : dfsList) {
                 BasicBlock basicBlock = new BasicBlock(this, ".LLB" + module.getFunctionMapSize() + "_" + blockNum, irBasicBlock);
                 addBasicBlock(basicBlock);
-                blockNum++;
             }
 
             for (IR.BasicBlock irBasicBlock : dfsList) {

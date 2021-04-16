@@ -47,6 +47,8 @@ public class SSADestructor {
                     BasicBlock newBB = new BasicBlock("between_" + predecessor.getName() + "_" + cur.getName(), function, predecessor.depth);
                     function.CheckAndSetName(newBB.getName(), newBB);
                     newBBList.add(newBB);
+                    function.computePostDFSListAgain = true;
+                    function.computeDFSListAgain = true;
 
                     predecessor.getTailInst().replaceBBUse(cur, newBB);
                     newBB.addInstAtTail(new Br(newBB, null, cur, null));
@@ -58,15 +60,15 @@ public class SSADestructor {
             }
 
             for (IRInst phi: phiList) {
-                Set<Pair<BasicBlock, IROper>> possibleValSet = new LinkedHashSet<>();
+                Set<Pair<BasicBlock, IROper>> possibleValSet = new LinkedHashSet<>(((Phi) phi).getPossiblePredecessorSet());
                 boolean sameAns = true;
                 IROper ans = null;
-                for (Pair<BasicBlock, IROper> pair: ((Phi) phi).getPossiblePredecessorSet()) {
-                    IRInst location = insertLocations.get(pair.getFirst());
-                    if (location == null) {
-                        continue;
-                    }
-                    possibleValSet.add(pair);
+                for (Pair<BasicBlock, IROper> pair: possibleValSet) {
+//                    IRInst location = insertLocations.get(pair.getFirst());
+//                    if (location == null) {
+//                        continue;
+//                    }
+//                    possibleValSet.add(pair);
                     if (sameAns) {
                         if (ans == null) {
                             ans = pair.getSecond();

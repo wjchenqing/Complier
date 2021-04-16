@@ -22,6 +22,7 @@ public class BitCastTo extends IRInst {
         this.targetType = targetType;
         defs.add(result);
         uses.add(value);
+        currentBB.getCurrentFunction().defs.add(result);
         result.addDef(this);
         value.addUse(this);
     }

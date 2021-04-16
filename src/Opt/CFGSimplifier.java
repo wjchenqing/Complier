@@ -35,6 +35,8 @@ public class CFGSimplifier {
             }
             if (cur.getPredecessor().isEmpty() && (cur != function.getEntranceBB())) {
                 cur.delete();
+                function.computeDFSListAgain = true;
+                function.computePostDFSListAgain = true;
             } else if (cur.getHeadInst() instanceof Br) {
 //                 deleteBBHasOnlyOneInst----Br
                 if (((Br) cur.getHeadInst()).getCond() == null) {
@@ -45,11 +47,15 @@ public class CFGSimplifier {
                             pre.getTailInst().replaceBBUse(cur, target);
                         }
                         cur.delete();
+                        function.computeDFSListAgain = true;
+                        function.computePostDFSListAgain = true;
                     }
                 }
             } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() == 1)) {
                 BasicBlock tmp = cur.getSuccessor().iterator().next();
                 cur.mergeWithSuccessor(tmp);
+                function.computeDFSListAgain = true;
+                function.computePostDFSListAgain = true;
             }
         }
     }

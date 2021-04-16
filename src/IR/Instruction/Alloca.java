@@ -20,6 +20,7 @@ public class Alloca extends IRInst {
         this.type = type;
         defs.add(result);
         result.addDef(this);
+        currentBB.getCurrentFunction().defs.add(result);
         currentBB.getCurrentFunction().allocaResults.add(result);
     }
 

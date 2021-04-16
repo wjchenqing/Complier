@@ -76,6 +76,12 @@ public class SSAConstructor {
                 irInst.deleteInst();
             }
         }
+
+        for (BasicBlock basicBlock: function.getBlockSet()) {
+            for (IRInst phi = basicBlock.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
+                ((Phi) phi).Check();
+            }
+        }
     }
 
     private void addPhi(BasicBlock Y, Register allocaResult) {

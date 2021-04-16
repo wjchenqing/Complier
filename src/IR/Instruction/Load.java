@@ -35,6 +35,7 @@ public class Load extends IRInst {
         this.pointer = pointer;
         defs.add(result);
         result.addDef(this);
+        currentBB.getCurrentFunction().defs.add(result);
         uses.add(pointer);
         pointer.addUse(this);
     }

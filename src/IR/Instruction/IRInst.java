@@ -96,20 +96,19 @@ abstract public class IRInst {
             prevInst.setNextInst(nextInst);
             nextInst.setPrevInst(prevInst);
         }
-        for (IROper irOper: uses) {
-            irOper.getUses().remove(this);
-        }
-        for (IROper irOper: defs) {
-            irOper.getDefs().remove(this);
-        }
+        destroy();
     }
 
     public void destroy() {
         for (IROper irOper: uses) {
             irOper.getUses().remove(this);
         }
+        Set<Register> funcDefs = currentBB.getCurrentFunction().defs;
         for (IROper irOper: defs) {
             irOper.getDefs().remove(this);
+            if (irOper instanceof Register) {
+                funcDefs.remove(irOper);
+            }
         }
     }
 

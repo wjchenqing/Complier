@@ -21,6 +21,7 @@ public class Function {
     private Register returnValue = null;
     private final Map<String, Object> OperandMap = new HashMap<>();
     public final Map<String, Register> registerMap = new HashMap<>();
+    public final Set<Register> defs = new LinkedHashSet<>();
 
     public Set<Register> allocaResults = new LinkedHashSet<>();
 
@@ -28,7 +29,7 @@ public class Function {
 
     private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
     private final ArrayList<BasicBlock> postDfsList = new ArrayList<>();
-    private Set<BasicBlock> visited;
+    private Set<BasicBlock> visited = new HashSet<>();
 
 
     public Function(Module module, String name,IRType returnType, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial) {
@@ -216,10 +217,15 @@ public class Function {
         visitor.visit(this);
     }
 
+    public boolean computeDFSListAgain = true;
+
     public ArrayList<BasicBlock> getDfsList() {
-        visited = new HashSet<>();
-        dfsList.clear();
-        dfs(entranceBB, 1);
+        visited.clear();
+        if (computeDFSListAgain) {
+            dfsList.clear();
+            dfs(entranceBB, 1);
+            computeDFSListAgain = false;
+        }
         return dfsList;
     }
 
@@ -237,10 +243,14 @@ public class Function {
         }
     }
 
+    public boolean computePostDFSListAgain = true;
+
     public ArrayList<BasicBlock> getPostDfsList() {
         visited = new HashSet<>();
-        if (postDfsList.size() == 0) {
+        if (computePostDFSListAgain) {
+            postDfsList.clear();
             post(entranceBB);
+            computePostDFSListAgain = false;
         }
         return postDfsList;
     }

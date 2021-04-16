@@ -7,6 +7,7 @@ import IR.Operand.Register;
 import Util.Pair;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,10 +20,20 @@ public class Phi extends IRInst {
         this.result = result;
         this.possiblePredecessorSet = possiblePredecessorSet;
         defs.add(result);
+        currentBB.getCurrentFunction().defs.add(result);
         result.addDef(this);
         for (Pair<BasicBlock, IROper> pair: possiblePredecessorSet) {
             uses.add(pair.getSecond());
             pair.getSecond().addUse(this);
+        }
+    }
+
+    public void Check() {
+        Set<Pair<BasicBlock, IROper>> possibleValSet = new LinkedHashSet<>(possiblePredecessorSet);
+        for (Pair<BasicBlock, IROper> val: possibleValSet) {
+            if (!currentBB.getPredecessor().contains(val.getFirst())) {
+                possiblePredecessorSet.remove(val);
+            }
         }
     }
 

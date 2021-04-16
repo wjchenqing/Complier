@@ -37,6 +37,7 @@ public class Icmp extends IRInst {
         uses.add(op1);
         uses.add(op2);
         result.addDef(this);
+        currentBB.getCurrentFunction().defs.add(result);
         op1.addUse(this);
         op2.addUse(this);
     }
