@@ -25,19 +25,24 @@ public class Function {
 
     public Set<Register> allocaResults = new LinkedHashSet<>();
 
-    private boolean notExternal;
+    public Set<Call> calls = new LinkedHashSet<>();
+
+    public boolean hasSideEffect;
+
+    private final boolean notExternal;
 
     private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
     private final ArrayList<BasicBlock> postDfsList = new ArrayList<>();
     private Set<BasicBlock> visited = new HashSet<>();
 
 
-    public Function(Module module, String name,IRType returnType, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial) {
+    public Function(Module module, String name,IRType returnType, FunctionType functionType, ArrayList<Parameter> parameters, boolean notExternalThusShouldInitial, boolean hasSideEffect) {
         this.name = name;
         this.returnType = returnType;
         this.functionType = functionType;
         this.parameters = parameters;
         this.notExternal = notExternalThusShouldInitial;
+        this.hasSideEffect = hasSideEffect;
 
         if (notExternalThusShouldInitial) {
             BasicBlock basicBlock = new BasicBlock(name + ".headBB", this, 0);

@@ -33,6 +33,8 @@ public class Phi extends IRInst {
         for (Pair<BasicBlock, IROper> val: possibleValSet) {
             if (!currentBB.getPredecessor().contains(val.getFirst())) {
                 possiblePredecessorSet.remove(val);
+                uses.remove(val.getSecond());
+                val.getSecond().getUses().remove(this);
             }
         }
     }

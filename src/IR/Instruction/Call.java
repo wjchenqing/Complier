@@ -44,6 +44,7 @@ public class Call extends IRInst {
             result.addDef(this);
             currentBB.getCurrentFunction().defs.add(result);
         }
+        function.calls.add(this);
     }
 
     @Override
@@ -58,6 +59,12 @@ public class Call extends IRInst {
             }
             ++i;
         }
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        function.calls.remove(this);
     }
 
     @Override

@@ -82,7 +82,7 @@ public class IRBuilder implements ASTVisitor {
         }
 
         currentFunction = new IR.Function(module,"_MxProgramInitial", new VoidType(),
-                new FunctionType(new VoidType(), new ArrayList<>()), new ArrayList<>(), true);
+                new FunctionType(new VoidType(), new ArrayList<>()), new ArrayList<>(), true, true);
         currentBB = currentFunction.getEntranceBB();
         module.addFunction(currentFunction);
         for (ProgramNode programNode: node.getProgramNodes()) {
