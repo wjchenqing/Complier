@@ -49,6 +49,7 @@ public class SSADestructor {
                     newBBList.add(newBB);
                     function.computePostDFSListAgain = true;
                     function.computeDFSListAgain = true;
+                    function.computePostReverseDFSListAgain = true;
 
                     predecessor.getTailInst().replaceBBUse(cur, newBB);
                     newBB.addInstAtTail(new Br(newBB, null, cur, null));

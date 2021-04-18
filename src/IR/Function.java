@@ -33,6 +33,7 @@ public class Function {
 
     private final ArrayList<BasicBlock> dfsList = new ArrayList<>();
     private final ArrayList<BasicBlock> postDfsList = new ArrayList<>();
+    private final ArrayList<BasicBlock> postReverseDFSList = new ArrayList<>();
     private Set<BasicBlock> visited = new HashSet<>();
 
 
@@ -269,5 +270,28 @@ public class Function {
         }
         postDfsList.add(basicBlock);
         basicBlock.postDfsNum = postDfsList.size();
+    }
+
+    public boolean computePostReverseDFSListAgain = true;
+
+    public ArrayList<BasicBlock> getPostReverseDFSList() {
+        visited = new HashSet<>();
+        if (computePostReverseDFSListAgain) {
+            postReverseDFSList.clear();
+            postReverse(returnBB);
+            computePostReverseDFSListAgain = false;
+        }
+        return postReverseDFSList;
+    }
+
+    private void postReverse(BasicBlock basicBlock) {
+        visited.add(basicBlock);
+        for (BasicBlock bb: basicBlock.getPredecessor()) {
+            if (!visited.contains(bb)) {
+                postReverse(bb);
+            }
+        }
+        postReverseDFSList.add(basicBlock);
+        basicBlock.postReverseDFSNum = postReverseDFSList.size();
     }
 }

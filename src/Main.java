@@ -6,10 +6,7 @@ import Frontend.ASTBuilder;
 import Frontend.SemanticChecker;
 import IR.IRBuilder;
 import IR.IRPrinter;
-import Opt.CFGSimplifier;
-import Opt.DominatorTree;
-import Opt.SSAConstructor;
-import Opt.SSADestructor;
+import Opt.*;
 import Parser.ErrorListener;
 import Parser.MxLexer;
 import Parser.MxParser;
@@ -79,6 +76,15 @@ public class Main {
 
         SSAConstructor ssaConstructor = new SSAConstructor(irBuilder.getModule());
         ssaConstructor.run();
+
+//        IRPrinter irPrinter4 = new IRPrinter("judger/test_ssa.ll");
+//        irBuilder.getModule().accept(irPrinter4);
+//        irPrinter4.getPrintWriter().close();
+//        irPrinter4.getOutputStream().close();
+
+        SideEffectChecker sideEffectChecker = new SideEffectChecker(irBuilder.getModule());
+        DeadCodeEliminator deadCodeEliminator = new DeadCodeEliminator(irBuilder.getModule(), sideEffectChecker);
+        deadCodeEliminator.run();
 
 //        IRPrinter irPrinter = new IRPrinter("judger/test.ll");
 //        irBuilder.getModule().accept(irPrinter);

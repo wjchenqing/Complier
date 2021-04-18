@@ -206,6 +206,7 @@ public class SideEffectChecker {
                     functionsWithSideEffect.add(function);
                     queue.offer(function);
                 }
+                continue;
             }
             boolean hasSideEffect = false;
             for (BasicBlock basicBlock: function.getBlockSet()) {

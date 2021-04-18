@@ -5,14 +5,13 @@ import IR.Instruction.IRInst;
 import IR.Instruction.Ret;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class BasicBlock {
-    private String name = null;
+    private String name;
 
-    private Function currentFunction = null;
+    private Function currentFunction;
 
 //    private BasicBlock prevBB = null;
 //    private BasicBlock nextBB = null;
@@ -27,7 +26,10 @@ public class BasicBlock {
     public int dfsNum;
     public int postDfsNum = 0;
     public Set<BasicBlock> DominanceFrontier = new LinkedHashSet<>();
-    public Set<BasicBlock> DomChildren = new LinkedHashSet<>();
+
+    public BasicBlock reverseDom = null;
+    public int postReverseDFSNum = 0;
+    public Set<BasicBlock> reverseDominanceFrontier = new LinkedHashSet<>();
 
     public int depth;
 
@@ -184,9 +186,7 @@ public class BasicBlock {
         }
 
         if (currentFunction.getReturnBB() == basicBlock) {
-            if (basicBlock.predecessor.size() != 0) {
-                assert false;
-            }
+            assert basicBlock.predecessor.size() == 0;
             currentFunction.setReturnBB(this);
         }
         currentFunction.getBlockSet().remove(basicBlock);

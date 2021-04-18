@@ -54,6 +54,7 @@ public class Br extends IRInst {
                     elseBlock.delete();
                     currentBB.getCurrentFunction().computeDFSListAgain = true;
                     currentBB.getCurrentFunction().computePostDFSListAgain =true;
+                    currentBB.getCurrentFunction().computePostReverseDFSListAgain =true;
                 }
                 uses.remove(cond);
                 cond.getUses().remove(this);
@@ -65,6 +66,7 @@ public class Br extends IRInst {
                     thenBlock.delete();
                     currentBB.getCurrentFunction().computeDFSListAgain = true;
                     currentBB.getCurrentFunction().computePostDFSListAgain =true;
+                    currentBB.getCurrentFunction().computePostReverseDFSListAgain =true;
                 }
                 uses.remove(cond);
                 cond.getUses().remove(this);

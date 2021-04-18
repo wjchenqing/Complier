@@ -37,6 +37,7 @@ public class CFGSimplifier {
                 cur.delete();
                 function.computeDFSListAgain = true;
                 function.computePostDFSListAgain = true;
+                function.computePostReverseDFSListAgain = true;
             } else if (cur.getHeadInst() instanceof Br) {
 //                 deleteBBHasOnlyOneInst----Br
                 if (((Br) cur.getHeadInst()).getCond() == null) {
@@ -49,6 +50,7 @@ public class CFGSimplifier {
                         cur.delete();
                         function.computeDFSListAgain = true;
                         function.computePostDFSListAgain = true;
+                        function.computePostReverseDFSListAgain = true;
                     }
                 }
             } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() == 1)) {
@@ -56,6 +58,7 @@ public class CFGSimplifier {
                 cur.mergeWithSuccessor(tmp);
                 function.computeDFSListAgain = true;
                 function.computePostDFSListAgain = true;
+                function.computePostReverseDFSListAgain = true;
             }
         }
     }

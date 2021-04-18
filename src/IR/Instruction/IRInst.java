@@ -86,7 +86,35 @@ abstract public class IRInst {
     }
 
     public void deleteInst() {
-        if (prevInst == null) {
+        if ((prevInst == null) && (nextInst == null)) {
+            assert this instanceof Br;
+            Set<BasicBlock> predecessor = new HashSet<>(currentBB.getPredecessor());
+            Set<BasicBlock> successor = new HashSet<>(currentBB.getSuccessor());
+            predecessor.removeAll(currentBB.getSuccessor());
+            successor.removeAll(currentBB.getPredecessor());
+            currentBB.getSuccessor().clear();
+            currentBB.getSuccessor().addAll(successor);
+            for (BasicBlock s: currentBB.getSuccessor()) {
+                if (s.DominanceFrontier.contains(currentBB)) {
+                    successor.remove(s);
+                }
+            }
+            if (successor.size() == 1) {
+                BasicBlock s = successor.iterator().next();
+                for (BasicBlock p: predecessor) {
+                    assert p.getTailInst() instanceof Br;
+                    p.getTailInst().replaceBBUse(currentBB, s);
+                }
+            } else if (successor.size() == 0) {
+
+            } else {
+                assert predecessor.size() == 0;
+            }
+            currentBB.delete();
+            currentBB.getCurrentFunction().computeDFSListAgain = true;
+            currentBB.getCurrentFunction().computePostDFSListAgain = true;
+            currentBB.getCurrentFunction().computePostReverseDFSListAgain = true;
+        } else if (prevInst == null) {
             currentBB.setHeadInst(nextInst);
             nextInst.setPrevInst(null);
         } else if (nextInst == null) {
