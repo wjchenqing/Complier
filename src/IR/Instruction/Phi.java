@@ -65,6 +65,11 @@ public class Phi extends IRInst {
     }
 
     public void addPair(BasicBlock basicBlock, IROper irOper) {
+        if (basicBlock == null) {
+            assert false;
+        } else if (!currentBB.getPredecessor().contains(basicBlock)) {
+            assert false;
+        }
         possiblePredecessorSet.add(new Pair<>(basicBlock, irOper));
         uses.add(irOper);
         irOper.addUse(this);
@@ -98,6 +103,10 @@ public class Phi extends IRInst {
         int bound = possiblePredecessorSet.size();
         AtomicInteger i = new AtomicInteger(1);
         for (Pair<BasicBlock, IROper> predecessor: possiblePredecessorSet) {
+            if (predecessor.getFirst() == null) {
+//                return result.toString() + "    NULL________________________________________________________";
+                assert false;
+            }
             stringBuilder.append("[ ").append(predecessor.getSecond().toString()).append(", ").append(predecessor.getFirst().toString()).append(" ]");
             if (i.get() != bound) {
                 stringBuilder.append(", ");

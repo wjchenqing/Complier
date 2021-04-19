@@ -106,9 +106,11 @@ public class Inline {
                 callerLocation.deleteInst();
                 totalInst += InstNumMap.get(source);
                 for (IROper irOper: oldAndNewOperands.values()) {
-                    Set<IRInst> use = new LinkedHashSet<>(irOper.getUses());
-                    for (IRInst irInst: use) {
-                        irInst.replaceUse(irOper, irOper);
+                    if (irOper.isConstant()) {
+                        Set<IRInst> use = new LinkedHashSet<>(irOper.getUses());
+                        for (IRInst irInst : use) {
+                            irInst.replaceUse(irOper, irOper);
+                        }
                     }
                 }
                 cfgSimplifier.deleteBBWithoutPredecessor(caller);

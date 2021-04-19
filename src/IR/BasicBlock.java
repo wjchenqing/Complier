@@ -182,6 +182,14 @@ public class BasicBlock {
                         ((Phi) phi).getPossiblePredecessorSet().remove(pair);
                     }
                 }
+                if (((Phi) phi).getPossiblePredecessorSet().size() == 1) {
+                    IROper n = ((Phi) phi).getPossiblePredecessorSet().iterator().next().getSecond();
+                    IROper o = phi.getResult();
+                    for (IRInst inst: o.getUses()) {
+                        inst.replaceUse(o, n);
+                    }
+                    phi.deleteInst();
+                }
             }
             s.getPredecessor().remove(this);
         }
@@ -204,18 +212,18 @@ public class BasicBlock {
             inst.setCurrentBB(newBB);
         }
         for (BasicBlock s: successor) {
+            s.predecessor.remove(this);
+            s.predecessor.add(newBB);
+            newBB.successor.add(s);
             for (IRInst phi = s.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
                 Set<Pair<BasicBlock, IROper>> list = new LinkedHashSet<>(((Phi) phi).getPossiblePredecessorSet());
                 for (Pair<BasicBlock, IROper> pair: list) {
                     if (pair.getFirst() == this) {
                         ((Phi) phi).getPossiblePredecessorSet().remove(pair);
-                        ((Phi) phi).getPossiblePredecessorSet().add(new Pair<>(newBB, pair.getSecond()));
+                        ((Phi) phi).addPair(newBB, pair.getSecond());
                     }
                 }
             }
-            s.predecessor.remove(this);
-            s.predecessor.add(newBB);
-            newBB.successor.add(s);
         }
         successor.clear();
         tailInst = irInst;
@@ -249,18 +257,18 @@ public class BasicBlock {
             return;
         }
         for (BasicBlock s: basicBlock.successor) {
+            s.getPredecessor().remove(basicBlock);
+            s.getPredecessor().add(this);
+            successor.add(s);
             for (IRInst phi = s.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
                 Set<Pair<BasicBlock, IROper>> list = new LinkedHashSet<>(((Phi) phi).getPossiblePredecessorSet());
                 for (Pair<BasicBlock, IROper> pair: list) {
                     if (pair.getFirst() == basicBlock) {
                         ((Phi) phi).getPossiblePredecessorSet().remove(pair);
-                        ((Phi) phi).getPossiblePredecessorSet().add(new Pair<>(this, pair.getSecond()));
+                        ((Phi) phi).addPair(this, pair.getSecond());
                     }
                 }
             }
-            s.getPredecessor().remove(basicBlock);
-            s.getPredecessor().add(this);
-            successor.add(s);
         }
     }
 }
