@@ -45,6 +45,15 @@ public class Call extends IRInst {
             currentBB.getCurrentFunction().defs.add(result);
         }
         function.calls.add(this);
+        if (function == currentBB.getCurrentFunction()) {
+            function.callItSelf = true;
+        }
+    }
+
+    @Override
+    public void deleteInst() {
+        super.deleteInst();
+        function.calls.remove(this);
     }
 
     @Override

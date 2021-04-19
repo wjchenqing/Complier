@@ -77,9 +77,17 @@ public class SSAConstructor {
             }
         }
 
-        for (BasicBlock basicBlock: function.getBlockSet()) {
-            for (IRInst phi = basicBlock.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
-                ((Phi) phi).Check();
+        Set<BasicBlock> blockSet = new LinkedHashSet<>(function.getBlockSet());
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (BasicBlock basicBlock : blockSet) {
+                if (!function.getBlockSet().contains(basicBlock)) {
+                    continue;
+                }
+                for (IRInst phi = basicBlock.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
+                    changed |= ((Phi) phi).Check();
+                }
             }
         }
     }

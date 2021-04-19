@@ -26,6 +26,7 @@ public class Function {
     public Set<Register> allocaResults = new LinkedHashSet<>();
 
     public Set<Call> calls = new LinkedHashSet<>();
+    public boolean callItSelf = false;
 
     public boolean hasSideEffect;
 

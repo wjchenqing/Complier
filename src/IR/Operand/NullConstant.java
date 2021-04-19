@@ -22,4 +22,9 @@ public class NullConstant extends IROper {
     public boolean isConstant() {
         return true;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof NullConstant;
+    }
 }

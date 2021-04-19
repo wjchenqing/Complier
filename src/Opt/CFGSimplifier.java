@@ -53,7 +53,7 @@ public class CFGSimplifier {
                         function.computePostReverseDFSListAgain = true;
                     }
                 }
-            } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() == 1)) {
+            } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() <= 1)) {
                 BasicBlock tmp = cur.getSuccessor().iterator().next();
                 cur.mergeWithSuccessor(tmp);
                 function.computeDFSListAgain = true;

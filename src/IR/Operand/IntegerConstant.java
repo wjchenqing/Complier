@@ -32,4 +32,9 @@ public class IntegerConstant extends IROper {
     public boolean isConstant() {
         return true;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof IntegerConstant) && (value == ((IntegerConstant) obj).value);
+    }
 }

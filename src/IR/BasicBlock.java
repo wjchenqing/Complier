@@ -2,7 +2,10 @@ package IR;
 
 import IR.Instruction.Br;
 import IR.Instruction.IRInst;
+import IR.Instruction.Phi;
 import IR.Instruction.Ret;
+import IR.Operand.IROper;
+import Util.Pair;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -154,11 +157,15 @@ public class BasicBlock {
 
     public void delete() {
         if (currentFunction.getEntranceBB() == this) {
-            assert successor.size() == 1;
+            if (!(successor.size() == 1)) {
+                assert false;
+            }
             currentFunction.setEntranceBB(successor.iterator().next());
             currentFunction.getBlockSet().remove(this);
         } else if (currentFunction.getReturnBB() == this) {
-            assert predecessor.size() == 1;
+            if (!(predecessor.size() == 1)) {
+                assert false;
+            }
             currentFunction.setReturnBB(predecessor.iterator().next());
             currentFunction.getBlockSet().remove(this);
         } else {
@@ -167,12 +174,59 @@ public class BasicBlock {
         for (BasicBlock basicBlock: predecessor) {
             basicBlock.getSuccessor().remove(this);
         }
-        for (BasicBlock basicBlock: successor) {
-            basicBlock.getPredecessor().remove(this);
+        for (BasicBlock s: successor) {
+            for (IRInst phi = s.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
+                Set<Pair<BasicBlock, IROper>> list = new LinkedHashSet<>(((Phi) phi).getPossiblePredecessorSet());
+                for (Pair<BasicBlock, IROper> pair: list) {
+                    if (pair.getFirst() == this) {
+                        ((Phi) phi).getPossiblePredecessorSet().remove(pair);
+                    }
+                }
+            }
+            s.getPredecessor().remove(this);
         }
         for (IRInst cur = headInst; cur != null; cur = cur.getNextInst()) {
             cur.destroy();
         }
+    }
+
+    public BasicBlock split(IRInst irInst) {
+        assert irInst.getNextInst() != null;
+        BasicBlock newBB = new BasicBlock(name + "_split", currentFunction, depth);
+        currentFunction.CheckAndSetName(newBB.name, newBB);
+        currentFunction.addBasicBlock(newBB);
+        currentFunction.computeDFSListAgain = true;
+        currentFunction.computePostDFSListAgain = true;
+        currentFunction.computePostReverseDFSListAgain = true;
+        newBB.setHeadInst(irInst.getNextInst());
+        newBB.setTailInst(tailInst);
+        for (IRInst inst = irInst.getNextInst(); inst != null; inst = inst.getNextInst()) {
+            inst.setCurrentBB(newBB);
+        }
+        for (BasicBlock s: successor) {
+            for (IRInst phi = s.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
+                Set<Pair<BasicBlock, IROper>> list = new LinkedHashSet<>(((Phi) phi).getPossiblePredecessorSet());
+                for (Pair<BasicBlock, IROper> pair: list) {
+                    if (pair.getFirst() == this) {
+                        ((Phi) phi).getPossiblePredecessorSet().remove(pair);
+                        ((Phi) phi).getPossiblePredecessorSet().add(new Pair<>(newBB, pair.getSecond()));
+                    }
+                }
+            }
+            s.predecessor.remove(this);
+            s.predecessor.add(newBB);
+            newBB.successor.add(s);
+        }
+        successor.clear();
+        tailInst = irInst;
+        assert irInst.getNextInst() != null;
+        irInst.getNextInst().setPrevInst(null);
+        irInst.setNextInst(null);
+        addInstAtTail(new Br(this, null, newBB, null));
+        if (currentFunction.getReturnBB() == this) {
+            currentFunction.setReturnBB(newBB);
+        }
+        return newBB;
     }
 
     public void mergeWithSuccessor(BasicBlock basicBlock) {
@@ -194,10 +248,19 @@ public class BasicBlock {
         if (basicBlock.successor.isEmpty()) {
             return;
         }
-        for (BasicBlock bb: basicBlock.successor) {
-            bb.getPredecessor().remove(basicBlock);
-            bb.getPredecessor().add(this);
-            successor.add(bb);
+        for (BasicBlock s: basicBlock.successor) {
+            for (IRInst phi = s.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
+                Set<Pair<BasicBlock, IROper>> list = new LinkedHashSet<>(((Phi) phi).getPossiblePredecessorSet());
+                for (Pair<BasicBlock, IROper> pair: list) {
+                    if (pair.getFirst() == basicBlock) {
+                        ((Phi) phi).getPossiblePredecessorSet().remove(pair);
+                        ((Phi) phi).getPossiblePredecessorSet().add(new Pair<>(this, pair.getSecond()));
+                    }
+                }
+            }
+            s.getPredecessor().remove(basicBlock);
+            s.getPredecessor().add(this);
+            successor.add(s);
         }
     }
 }

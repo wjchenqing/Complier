@@ -84,7 +84,16 @@ public class Main {
 
         SideEffectChecker sideEffectChecker = new SideEffectChecker(irBuilder.getModule());
         DeadCodeEliminator deadCodeEliminator = new DeadCodeEliminator(irBuilder.getModule(), sideEffectChecker);
-        deadCodeEliminator.run();
+        Inline inline = new Inline(irBuilder.getModule(), cfgSimplifier);
+
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            changed |= deadCodeEliminator.run();
+        }
+
+        inline.run();
+
 
 //        IRPrinter irPrinter = new IRPrinter("judger/test.ll");
 //        irBuilder.getModule().accept(irPrinter);

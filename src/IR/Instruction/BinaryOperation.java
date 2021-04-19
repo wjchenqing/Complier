@@ -109,6 +109,46 @@ public class BinaryOperation extends IRInst {
                 }
             }
             this.deleteInst();
+        } else if (op == BinaryOp.add) {
+            /*if (op1 instanceof IntegerConstant && op2 instanceof Register) {
+                IROper old = op2;
+                IRInst def = op2.getDefs().iterator().next();
+                if (def instanceof BinaryOperation && (((BinaryOperation) def).getOp() == BinaryOp.add)) {
+                    if (((BinaryOperation) def).op1 instanceof IntegerConstant) {
+                        op2 = ((BinaryOperation) def).op2;
+                        ((BinaryOperation) def).op2.addUse(this);
+                        old.getUses().remove(this);
+                        ((IntegerConstant) op1).setValue(((IntegerConstant) op1).getValue() + ((IntegerConstant) ((BinaryOperation) def).op1).getValue());
+                    } else if (((BinaryOperation) def).op2 instanceof IntegerConstant) {
+                        op2 = ((BinaryOperation) def).op1;
+                        ((BinaryOperation) def).op1.addUse(this);
+                        old.getUses().remove(this);
+                        ((IntegerConstant) op1).setValue(((IntegerConstant) op1).getValue() + ((IntegerConstant) ((BinaryOperation) def).op2).getValue());
+                    }
+                }
+                if (old.getUses().isEmpty()) {
+                    def.deleteInst();
+                }
+            } else */if (op2 instanceof IntegerConstant && op1 instanceof Register) {
+                IROper old = op1;
+                IRInst def = op1.getDefs().iterator().next();
+                if (def instanceof BinaryOperation && (((BinaryOperation) def).getOp() == BinaryOp.add)) {
+                    /*if (((BinaryOperation) def).op1 instanceof IntegerConstant) {
+                        op1 = ((BinaryOperation) def).op2;
+                        ((BinaryOperation) def).op2.addUse(this);
+                        old.getUses().remove(this);
+                        ((IntegerConstant) op2).setValue(((IntegerConstant) op2).getValue() + ((IntegerConstant) ((BinaryOperation) def).op1).getValue());
+                    } else */if (((BinaryOperation) def).op2 instanceof IntegerConstant) {
+                        op1 = ((BinaryOperation) def).op1;
+                        ((BinaryOperation) def).op1.addUse(this);
+                        old.getUses().remove(this);
+                        ((IntegerConstant) op2).setValue(((IntegerConstant) op2).getValue() + ((IntegerConstant) ((BinaryOperation) def).op2).getValue());
+                    }
+                }
+                if (old.getUses().isEmpty()) {
+                    def.deleteInst();
+                }
+            }
         }
     }
 

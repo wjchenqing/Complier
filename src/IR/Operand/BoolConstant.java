@@ -32,4 +32,9 @@ public class BoolConstant extends IROper {
     public boolean isConstant() {
         return true;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return (obj instanceof BoolConstant) && (value == ((BoolConstant) obj).value);
+    }
 }

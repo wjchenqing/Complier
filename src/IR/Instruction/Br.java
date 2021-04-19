@@ -49,8 +49,7 @@ public class Br extends IRInst {
         if (cond instanceof BoolConstant) {
             if (((BoolConstant) cond).getValue()) {
                 currentBB.getSuccessor().remove(elseBlock);
-                elseBlock.getPredecessor().remove(currentBB);
-                if (elseBlock.getPredecessor().isEmpty()) {
+                if (elseBlock.getPredecessor().size() == 1) {
                     elseBlock.delete();
                     currentBB.getCurrentFunction().computeDFSListAgain = true;
                     currentBB.getCurrentFunction().computePostDFSListAgain =true;

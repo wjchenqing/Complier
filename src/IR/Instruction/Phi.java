@@ -28,15 +28,36 @@ public class Phi extends IRInst {
         }
     }
 
-    public void Check() {
+    public boolean Check() {
         Set<Pair<BasicBlock, IROper>> possibleValSet = new LinkedHashSet<>(possiblePredecessorSet);
+        boolean sameAns = true;
+        IROper ans = null;
         for (Pair<BasicBlock, IROper> val: possibleValSet) {
             if (!currentBB.getPredecessor().contains(val.getFirst())) {
                 possiblePredecessorSet.remove(val);
                 uses.remove(val.getSecond());
                 val.getSecond().getUses().remove(this);
+                continue;
+            }
+            if (sameAns) {
+                if (ans == null) {
+                    ans = val.getSecond();
+                } else {
+                    if (!ans.equals(val.getSecond())) {
+                        sameAns = false;
+                    }
+                }
             }
         }
+        if (sameAns) {
+            Set<IRInst> use = new LinkedHashSet<>(result.getUses());
+            for (IRInst irInst: use) {
+                irInst.replaceUse(result, ans);
+            }
+            this.deleteInst();
+            return true;
+        }
+        return false;
     }
 
     public Set<Pair<BasicBlock, IROper>> getPossiblePredecessorSet() {
