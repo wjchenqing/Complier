@@ -35,6 +35,7 @@ public class DeadCodeEliminator {
     private void eliminator(Function function) {
         Queue<IRInst> queue = new LinkedList<>();
         Set<IRInst> liveInst = new LinkedHashSet<>();
+        Set<BasicBlock> liveBB = new LinkedHashSet<>();
 
         for (BasicBlock basicBlock: function.getBlockSet()) {
             IRInst tail = basicBlock.getTailInst();
@@ -43,9 +44,11 @@ public class DeadCodeEliminator {
                 if (irInst instanceof Call) {
                     if (((Call) irInst).getFunction().hasSideEffect) {
                         liveInst.add(irInst);
+                        liveBB.add(irInst.getCurrentBB());
                         queue.offer(irInst);
                         if (!containsTail) {
                             liveInst.add(tail);
+                            liveBB.add(tail.getCurrentBB());
                             queue.offer(tail);
                             containsTail = true;
                         }
@@ -53,15 +56,18 @@ public class DeadCodeEliminator {
 
                 } else if (irInst instanceof Store) {
                     liveInst.add(irInst);
+                    liveBB.add(irInst.getCurrentBB());
                     queue.offer(irInst);
                     if (!containsTail) {
                         liveInst.add(tail);
+                        liveBB.add(tail.getCurrentBB());
                         queue.offer(tail);
                         containsTail = true;
                     }
                 } else if (irInst instanceof Ret) {
                     if (!containsTail) {
                         liveInst.add(tail);
+                        liveBB.add(tail.getCurrentBB());
                         queue.offer(tail);
                         containsTail = true;
                     }
@@ -77,11 +83,13 @@ public class DeadCodeEliminator {
                     for (IRInst defInst: use.getDefs()) {
                         if (!liveInst.contains(defInst)) {
                             liveInst.add(defInst);
+                            liveBB.add(defInst.getCurrentBB());
                             queue.offer(defInst);
                         }
                         IRInst tail = defInst.getCurrentBB().getTailInst();
                         if (!(tail instanceof Ret) && !(liveInst.contains(tail))) {
                             liveInst.add(tail);
+                            liveBB.add(tail.getCurrentBB());
                             queue.offer(tail);
                         }
                     }
@@ -92,6 +100,7 @@ public class DeadCodeEliminator {
                     IRInst tail = pair.getFirst().getTailInst();
                     if (!(tail instanceof Ret) && !(liveInst.contains(tail))) {
                         liveInst.add(tail);
+                        liveBB.add(tail.getCurrentBB());
                         queue.offer(tail);
                     }
                 }
@@ -101,17 +110,28 @@ public class DeadCodeEliminator {
                 IRInst tail = basicBlock.getTailInst();
                 if (!(liveInst.contains(tail))) {
                     liveInst.add(tail);
+                    liveBB.add(tail.getCurrentBB());
                     queue.offer(tail);
                 }
             }
 
         }
 
+        Set<BasicBlock> nonAliveBB = new LinkedHashSet<>(function.getBlockSet());
+        nonAliveBB.removeAll(liveBB);
         Set<BasicBlock> blockSet = new LinkedHashSet<>(function.getPostDfsList());
+        for (BasicBlock basicBlock: liveBB) {
+            basicBlock.getPredecessor().removeAll(nonAliveBB);
+            if (basicBlock.getPredecessor().size() == 0) {
+                function.setEntranceBB(basicBlock);
+            }
+        }
         for (BasicBlock basicBlock: blockSet) {
             if (!function.getBlockSet().contains(basicBlock)) {
                 continue;
             }
+            basicBlock.getPredecessor().removeAll(nonAliveBB);
+            basicBlock.getSuccessor().removeAll(nonAliveBB);
             for (IRInst inst = basicBlock.getHeadInst(); inst != null; inst = inst.getNextInst()) {
                 if (!liveInst.contains(inst)) {
                     inst.deleteInst();

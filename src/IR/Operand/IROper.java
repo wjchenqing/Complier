@@ -4,13 +4,14 @@ import IR.Instruction.IRInst;
 import IR.Type.IRType;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 abstract public class IROper implements Cloneable {
     protected IRType type;
 
-    protected Set<IRInst> uses = new HashSet<>();
-    protected Set<IRInst> defs = new HashSet<>();
+    protected Set<IRInst> uses = new LinkedHashSet<>();
+    protected Set<IRInst> defs = new LinkedHashSet<>();
 
     public IROper(IRType type) {
         this.type = type;

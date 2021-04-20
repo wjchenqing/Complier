@@ -8,6 +8,7 @@ import IR.Operand.IROper;
 import Util.Pair;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -180,12 +181,19 @@ public class BasicBlock {
                 for (Pair<BasicBlock, IROper> pair: list) {
                     if (pair.getFirst() == this) {
                         ((Phi) phi).getPossiblePredecessorSet().remove(pair);
+                        phi.getUses().remove(pair.getSecond());
+                        pair.getSecond().getUses().remove(phi);
                     }
                 }
                 if (((Phi) phi).getPossiblePredecessorSet().size() == 1) {
                     IROper n = ((Phi) phi).getPossiblePredecessorSet().iterator().next().getSecond();
                     IROper o = phi.getResult();
+                    Set<IRInst> visited = new LinkedHashSet<>();
                     for (IRInst inst: o.getUses()) {
+                        if (visited.contains(inst)) {
+                            continue;
+                        }
+                        visited.add(inst);
                         inst.replaceUse(o, n);
                     }
                     phi.deleteInst();
@@ -220,6 +228,8 @@ public class BasicBlock {
                 for (Pair<BasicBlock, IROper> pair: list) {
                     if (pair.getFirst() == this) {
                         ((Phi) phi).getPossiblePredecessorSet().remove(pair);
+                        phi.getUses().remove(pair.getSecond());
+                        pair.getSecond().getUses().remove(phi);
                         ((Phi) phi).addPair(newBB, pair.getSecond());
                     }
                 }
@@ -265,6 +275,8 @@ public class BasicBlock {
                 for (Pair<BasicBlock, IROper> pair: list) {
                     if (pair.getFirst() == basicBlock) {
                         ((Phi) phi).getPossiblePredecessorSet().remove(pair);
+                        phi.getUses().remove(pair.getSecond());
+                        pair.getSecond().getUses().remove(phi);
                         ((Phi) phi).addPair(this, pair.getSecond());
                     }
                 }

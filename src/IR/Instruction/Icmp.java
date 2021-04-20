@@ -44,17 +44,23 @@ public class Icmp extends IRInst {
 
     @Override
     public void replaceUse(IROper o, IROper n) {
+        boolean changed = false;
         if (op1 == o) {
             uses.remove(op1);
             uses.add(n);
             op1 = n;
             n.addUse(this);
+            changed = true;
         }
         if (op2 == o) {
             uses.remove(op2);
             uses.add(n);
             op2 = n;
             n.addUse(this);
+            changed = true;
+        }
+        if (!changed) {
+            return;
         }
         if (op1 instanceof IntegerConstant && op2 instanceof IntegerConstant) {
             switch (cond) {
