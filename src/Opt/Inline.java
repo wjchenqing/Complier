@@ -193,6 +193,10 @@ public class Inline {
             copyBlock(targetFunc, basicBlock, call);
         }
         assert !oldAndNewBBs.isEmpty();
+        assert sourceFunc.getEntranceBB() != null;
+        assert sourceFunc.getBlockSet().contains(sourceFunc.getEntranceBB());
+        assert oldAndNewBBs.containsKey(sourceFunc.getEntranceBB());
+        assert oldAndNewBBs.containsKey(sourceFunc.getReturnBB());
         copiedEntrance = oldAndNewBBs.get(sourceFunc.getEntranceBB());
         copiedReturnBB = oldAndNewBBs.get(sourceFunc.getReturnBB());
     }
