@@ -100,11 +100,11 @@ public class Main {
 
 
 
-//        inline.run();
+        inline.run();
 
 
 
-        
+
 
 //        IRPrinter irPrinter = new IRPrinter("judger/test.ll");
 //        irBuilder.getModule().accept(irPrinter);
