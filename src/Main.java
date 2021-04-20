@@ -92,8 +92,19 @@ public class Main {
             changed |= deadCodeEliminator.run();
         }
 
-        inline.run();
+//        IRPrinter irPrinter4 = new IRPrinter("judger/test_ssa.ll");
+//        irBuilder.getModule().accept(irPrinter4);
+//        irPrinter4.getPrintWriter().close();
+//        irPrinter4.getOutputStream().close();
 
+
+
+
+//        inline.run();
+
+
+
+        
 
 //        IRPrinter irPrinter = new IRPrinter("judger/test.ll");
 //        irBuilder.getModule().accept(irPrinter);
