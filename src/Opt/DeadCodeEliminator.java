@@ -124,6 +124,7 @@ public class DeadCodeEliminator {
             basicBlock.getPredecessor().removeAll(nonAliveBB);
             if (basicBlock.getPredecessor().size() == 0) {
                 function.setEntranceBB(basicBlock);
+                break;
             }
         }
         for (BasicBlock basicBlock: blockSet) {

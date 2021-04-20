@@ -65,22 +65,22 @@ public class Icmp extends IRInst {
         if (op1 instanceof IntegerConstant && op2 instanceof IntegerConstant) {
             switch (cond) {
                 case eq :
-                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() == ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new BoolConstant((int)((IntegerConstant) op1).getValue() == (int)((IntegerConstant) op2).getValue()));
                     break;
                 case ne :
-                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() != ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new BoolConstant((int)((IntegerConstant) op1).getValue() != (int)((IntegerConstant) op2).getValue()));
                     break;
                 case sgt:
-                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() > ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new BoolConstant((int)((IntegerConstant) op1).getValue() > (int)((IntegerConstant) op2).getValue()));
                     break;
                 case sge:
-                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() >= ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new BoolConstant((int)((IntegerConstant) op1).getValue() >= (int)((IntegerConstant) op2).getValue()));
                     break;
                 case slt:
-                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() < ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new BoolConstant((int)((IntegerConstant) op1).getValue() < (int)((IntegerConstant) op2).getValue()));
                     break;
                 case sle:
-                    result.replaceUse(new BoolConstant(((IntegerConstant) op1).getValue() <= ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new BoolConstant((int)((IntegerConstant) op1).getValue() <= (int)((IntegerConstant) op2).getValue()));
             }
             this.deleteInst();
         } else if (op1 instanceof BoolConstant && op2 instanceof BoolConstant) {

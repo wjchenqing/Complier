@@ -57,38 +57,38 @@ public class BinaryOperation extends IRInst {
             boolean flag = true;
             switch (op) {
                 case add :
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() + ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() + (int)((IntegerConstant) op2).getValue()));
                     break;
                 case sub :
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() - ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() - (int)((IntegerConstant) op2).getValue()));
                     break;
                 case mul :
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() * ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() * (int)((IntegerConstant) op2).getValue()));
                     break;
                 case sdiv:
                     if (((IntegerConstant) op2).getValue() == 0) {
                         flag = false;
                         break;
                     }
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() / ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() / (int)((IntegerConstant) op2).getValue()));
                     break;
                 case srem:
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() % ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() % (int)((IntegerConstant) op2).getValue()));
                     break;
                 case shl :
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() << ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant(((int)((IntegerConstant) op1).getValue()) << (int)((IntegerConstant) op2).getValue()));
                     break;
                 case ashr:
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() >> ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() >> (int)((IntegerConstant) op2).getValue()));
                     break;
                 case and :
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() & ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() & (int)((IntegerConstant) op2).getValue()));
                     break;
                 case or  :
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() | ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() | (int)((IntegerConstant) op2).getValue()));
                     break;
                 case xor :
-                    result.replaceUse(new IntegerConstant(((IntegerConstant) op1).getValue() ^ ((IntegerConstant) op2).getValue()));
+                    result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() ^ (int)((IntegerConstant) op2).getValue()));
             }
             if (flag) {
                 this.deleteInst();

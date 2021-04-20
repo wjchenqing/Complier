@@ -42,14 +42,14 @@ public class Inline {
         callSetMap.clear();
         calleeSetMap.clear();
         for (Function function: module.getFunctionMap().values()) {
-            if (function.isNotExternal()) {
+            if (function.isNotExternal() && !function.getBlockSet().isEmpty()) {
                 callSetMap.put(function, new LinkedHashSet<>());
                 calleeSetMap.put(function, new LinkedHashSet<>());
             }
         }
 
         for (Function function: module.getFunctionMap().values()) {
-            if (function.isNotExternal()) {
+            if (function.isNotExternal() && !function.getBlockSet().isEmpty()) {
                 int num = countInstNum(function);
                 InstNumMap.put(function, num);
                 totalInst += num;
@@ -57,7 +57,7 @@ public class Inline {
         }
 
         for (Function function: module.getFunctionMap().values()) {
-            if (function.isNotExternal()) {
+            if (function.isNotExternal() && !function.getBlockSet().isEmpty()) {
                 visited.clear();
                 if (willCallFunction(function, function)) {
                     recursiveFunctions.add(function);
@@ -100,6 +100,7 @@ public class Inline {
                 BasicBlock splitResult = callerBlock.split(callerLocation);
                 copyFunction(caller, source, callerBlock.depth, callerLocation);
                 callerBlock.getTailInst().deleteInst();
+                assert copiedEntrance != null;
                 callerBlock.addInstAtTail(new Br(callerBlock, null, copiedEntrance, null));
                 copiedReturnBB.addInstAtTail(new Br(copiedReturnBB, null, splitResult, null));
                 callSetMap.get(caller).remove(callerLocation);
@@ -191,6 +192,7 @@ public class Inline {
         for (BasicBlock basicBlock: sourceFunc.getBlockSet()) {
             copyBlock(targetFunc, basicBlock, call);
         }
+        assert !oldAndNewBBs.isEmpty();
         copiedEntrance = oldAndNewBBs.get(sourceFunc.getEntranceBB());
         copiedReturnBB = oldAndNewBBs.get(sourceFunc.getReturnBB());
     }
@@ -293,6 +295,7 @@ public class Inline {
                 if (((Ret) sourceInst).getReturnVal() != null){
                     IROper o = call.getResult();
                     IROper n = getNewIROperand(targetFunc, ((Ret) sourceInst).getReturnVal());
+                    assert n != null;
                     n.getUses().addAll(o.getUses());
                     for (IRInst use : call.getResult().getUses()) {
                         use.replaceUse(o, n);

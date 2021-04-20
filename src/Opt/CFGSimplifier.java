@@ -24,10 +24,11 @@ public class CFGSimplifier {
         }
     }
 
-    public void deleteBBWithoutPredecessor(Function function) {
+    public boolean deleteBBWithoutPredecessor(Function function) {
         if (function.getBlockSet().isEmpty()) {
-            return;
+            return false;
         }
+        boolean changed = false;
         Set<BasicBlock> list = new LinkedHashSet<>(function.getBlockSet());
         for (BasicBlock cur: list) {
             if (!function.getBlockSet().contains(cur)) {
@@ -35,6 +36,7 @@ public class CFGSimplifier {
             }
             if (cur.getPredecessor().isEmpty() && (cur != function.getEntranceBB())) {
                 cur.delete();
+                changed = true;
                 function.computeDFSListAgain = true;
                 function.computePostDFSListAgain = true;
                 function.computePostReverseDFSListAgain = true;
@@ -48,6 +50,7 @@ public class CFGSimplifier {
                             pre.getTailInst().replaceBBUse(cur, target);
                         }
                         cur.delete();
+                        changed = true;
                         function.computeDFSListAgain = true;
                         function.computePostDFSListAgain = true;
                         function.computePostReverseDFSListAgain = true;
@@ -56,10 +59,12 @@ public class CFGSimplifier {
             } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() <= 1)) {
                 BasicBlock tmp = cur.getSuccessor().iterator().next();
                 cur.mergeWithSuccessor(tmp);
+                changed = true;
                 function.computeDFSListAgain = true;
                 function.computePostDFSListAgain = true;
                 function.computePostReverseDFSListAgain = true;
             }
         }
+        return changed;
     }
 }

@@ -51,26 +51,35 @@ public class Br extends IRInst {
                 currentBB.getSuccessor().remove(elseBlock);
                 if (elseBlock.getPredecessor().size() == 1) {
                     elseBlock.delete();
-                    currentBB.getCurrentFunction().computeDFSListAgain = true;
-                    currentBB.getCurrentFunction().computePostDFSListAgain =true;
-                    currentBB.getCurrentFunction().computePostReverseDFSListAgain =true;
+                } else {
+                    elseBlock.getPredecessor().remove(currentBB);
+                    for (IRInst irInst = elseBlock.getHeadInst(); irInst instanceof Phi; irInst = irInst.getNextInst()) {
+                        ((Phi) irInst).Check();
+                    }
                 }
                 uses.remove(cond);
                 cond.getUses().remove(this);
                 cond = null;
+                currentBB.getCurrentFunction().computeDFSListAgain = true;
+                currentBB.getCurrentFunction().computePostDFSListAgain =true;
+                currentBB.getCurrentFunction().computePostReverseDFSListAgain =true;
             } else {
                 currentBB.getSuccessor().remove(thenBlock);
                 thenBlock.getPredecessor().remove(currentBB);
                 if (thenBlock.getPredecessor().isEmpty()) {
                     thenBlock.delete();
-                    currentBB.getCurrentFunction().computeDFSListAgain = true;
-                    currentBB.getCurrentFunction().computePostDFSListAgain =true;
-                    currentBB.getCurrentFunction().computePostReverseDFSListAgain =true;
+                } else {
+                    for (IRInst irInst = thenBlock.getHeadInst(); irInst instanceof Phi; irInst = irInst.getNextInst()) {
+                        ((Phi) irInst).Check();
+                    }
                 }
                 uses.remove(cond);
                 cond.getUses().remove(this);
                 cond = null;
                 thenBlock = elseBlock;
+                currentBB.getCurrentFunction().computeDFSListAgain = true;
+                currentBB.getCurrentFunction().computePostDFSListAgain =true;
+                currentBB.getCurrentFunction().computePostReverseDFSListAgain =true;
             }
             elseBlock = null;
         }
