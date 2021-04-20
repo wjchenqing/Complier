@@ -49,7 +49,7 @@ public class Br extends IRInst {
         if (cond instanceof BoolConstant) {
             if (((BoolConstant) cond).getValue()) {
                 currentBB.getSuccessor().remove(elseBlock);
-                if (elseBlock.getPredecessor().size() == 1) {
+                if ((elseBlock.getPredecessor().size() == 1) && (elseBlock != currentBB.getCurrentFunction().getEntranceBB())) {
                     elseBlock.delete();
                 } else {
                     elseBlock.getPredecessor().remove(currentBB);
@@ -66,7 +66,7 @@ public class Br extends IRInst {
             } else {
                 currentBB.getSuccessor().remove(thenBlock);
                 thenBlock.getPredecessor().remove(currentBB);
-                if (thenBlock.getPredecessor().isEmpty()) {
+                if (thenBlock.getPredecessor().isEmpty() && thenBlock != currentBB.getCurrentFunction().getEntranceBB()) {
                     thenBlock.delete();
                 } else {
                     for (IRInst irInst = thenBlock.getHeadInst(); irInst instanceof Phi; irInst = irInst.getNextInst()) {
