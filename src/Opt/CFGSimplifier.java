@@ -56,7 +56,7 @@ public class CFGSimplifier {
                         function.computePostReverseDFSListAgain = true;
                     }
                 }
-            } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() <= 1)) {
+            } else if ((cur.getSuccessor().size() == 1) && (cur.getSuccessor().iterator().next().getPredecessor().size() <= 1) && (cur.getSuccessor().iterator().next() != function.getEntranceBB())) {
                 BasicBlock tmp = cur.getSuccessor().iterator().next();
                 cur.mergeWithSuccessor(tmp);
                 changed = true;
