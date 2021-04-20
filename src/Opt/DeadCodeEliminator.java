@@ -140,5 +140,7 @@ public class DeadCodeEliminator {
                 }
             }
         }
+        assert liveBB.containsAll(function.getBlockSet());
+        assert function.getBlockSet().containsAll(liveBB);
     }
 }

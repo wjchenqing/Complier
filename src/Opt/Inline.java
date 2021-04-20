@@ -114,7 +114,11 @@ public class Inline {
                         }
                     }
                 }
-                cfgSimplifier.deleteBBWithoutPredecessor(caller);
+                while (true) {
+                    if (!cfgSimplifier.deleteBBWithoutPredecessor(caller)) {
+                        break;
+                    }
+                }
                 Set<BasicBlock> blockSet = new LinkedHashSet<>(caller.getBlockSet());
                 boolean flag = true;
                 while (flag) {
