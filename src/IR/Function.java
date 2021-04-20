@@ -52,8 +52,8 @@ public class Function {
             OperandMap.put(entranceBB.getName(), basicBlock);
 
             returnBB = new BasicBlock(name + ".returnBB", this, 0);
-            blockSet.add(returnBB);
             OperandMap.put(returnBB.getName(), returnBB);
+            blockSet.add(returnBB);
             if ((returnType == null) || (returnType instanceof VoidType)) {
                 returnBB.addInstAtTail(new Ret(returnBB, new VoidType(), null));
             } else {
@@ -159,7 +159,18 @@ public class Function {
     }
 
     public BasicBlock getEntranceBB() {
-        return entranceBB;
+        if (blockSet.contains(entranceBB)) {
+            return entranceBB;
+        } else {
+            for (BasicBlock basicBlock: blockSet) {
+                if (basicBlock.getPredecessor().isEmpty()) {
+                    entranceBB = basicBlock;
+                    return basicBlock;
+                }
+            }
+            assert false;
+            return null;
+        }
     }
 
 //    public BasicBlock getTailBB() {
