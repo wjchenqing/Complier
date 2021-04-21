@@ -4,6 +4,7 @@ import IR.BasicBlock;
 import IR.Function;
 import IR.Instruction.*;
 import IR.Module;
+import IR.Operand.GlobalVariable;
 import IR.Operand.IROper;
 import IR.Operand.Register;
 import Util.Pair;
@@ -79,7 +80,7 @@ public class DeadCodeEliminator {
             IRInst irInst = queue.poll();
 
             for (IROper use: irInst.getUses()) {
-                if (use instanceof Register) {
+                if (use instanceof Register || use instanceof GlobalVariable) {
                     for (IRInst defInst: use.getDefs()) {
                         if (!liveInst.contains(defInst)) {
                             liveInst.add(defInst);
@@ -120,18 +121,18 @@ public class DeadCodeEliminator {
         Set<BasicBlock> nonAliveBB = new LinkedHashSet<>(function.getBlockSet());
         nonAliveBB.removeAll(liveBB);
         Set<BasicBlock> blockSet = new LinkedHashSet<>(function.getPostDfsList());
-        for (BasicBlock basicBlock: liveBB) {
-            basicBlock.getPredecessor().removeAll(nonAliveBB);
-            if (basicBlock.getPredecessor().size() == 0) {
-                function.setEntranceBB(basicBlock);
-                break;
-            }
-        }
+//        for (BasicBlock basicBlock: liveBB) {
+//            basicBlock.getPredecessor().removeAll(nonAliveBB);
+//            if (basicBlock.getPredecessor().size() == 0) {
+//                function.setEntranceBB(basicBlock);
+//                break;
+//            }
+//        }
         for (BasicBlock basicBlock: blockSet) {
             if (!function.getBlockSet().contains(basicBlock)) {
                 continue;
             }
-            basicBlock.getPredecessor().removeAll(nonAliveBB);
+//            basicBlock.getPredecessor().removeAll(nonAliveBB);
             basicBlock.getSuccessor().removeAll(nonAliveBB);
             for (IRInst inst = basicBlock.getHeadInst(); inst != null; inst = inst.getNextInst()) {
                 if (!liveInst.contains(inst)) {
