@@ -210,7 +210,7 @@ public class BasicBlock {
     }
 
     public BasicBlock split(IRInst irInst) {
-        System.out.println("Split Bolck: " + currentFunction + " " + this);
+//        System.out.println("Split Bolck: " + currentFunction + " " + this);
         assert irInst.getNextInst() != null;
         BasicBlock newBB = new BasicBlock(name + "_split", currentFunction, depth);
         currentFunction.CheckAndSetName(newBB.name, newBB);
@@ -252,13 +252,19 @@ public class BasicBlock {
     }
 
     public void mergeWithSuccessor(BasicBlock basicBlock) {
-        tailInst.deleteInst();
-        tailInst.setNextInst(basicBlock.headInst);
-        basicBlock.headInst.setPrevInst(tailInst);
-        tailInst = basicBlock.tailInst;
-
         for (IRInst irInst = basicBlock.headInst; irInst != null; irInst = irInst.getNextInst()) {
             irInst.setCurrentBB(this);
+        }
+        if (headInst != tailInst) {
+            tailInst.deleteInst();
+            tailInst.setNextInst(basicBlock.headInst);
+            basicBlock.headInst.setPrevInst(tailInst);
+            basicBlock.headInst.getPrevInst().setNextInst(basicBlock.headInst);
+            tailInst = basicBlock.tailInst;
+        } else {
+            headInst = basicBlock.headInst;
+            tailInst.destroy();
+            tailInst = basicBlock.tailInst;
         }
 
         if (currentFunction.getReturnBB() == basicBlock) {
@@ -286,5 +292,6 @@ public class BasicBlock {
                 }
             }
         }
+        basicBlock.successor.clear();
     }
 }

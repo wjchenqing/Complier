@@ -15,7 +15,7 @@ import IR.Type.*;
 import java.util.*;
 
 public class Module {
-    private final Map<String, Function> functionMap = new HashMap<>();
+    private final Map<String, Function> functionMap = new LinkedHashMap<>();
     private final Map<String, GlobalVariable> globalVariableMap = new HashMap<>();
     private final Map<String, StructureType> structureTypeMap = new HashMap<>();
     private final Map<String, GlobalVariable> StringConstMap = new HashMap<>();

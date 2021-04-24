@@ -182,6 +182,9 @@ public class RegisterAllocator {
                     def.spillCost += Math.pow(10, depth);
                 }
                 for (RegisterVirtual use: ptr.getUse()) {
+                    if (use == null) {
+                        assert false;
+                    }
                     use.spillCost += Math.pow(10, depth);
                 }
                 ptr = ptr.getNext();

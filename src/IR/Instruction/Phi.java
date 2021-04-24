@@ -52,7 +52,9 @@ public class Phi extends IRInst {
         if (sameAns) {
             Set<IRInst> use = new LinkedHashSet<>(result.getUses());
             for (IRInst irInst: use) {
-                irInst.replaceUse(result, ans);
+                if (!irInst.deleted) {
+                    irInst.replaceUse(result, ans);
+                }
             }
             this.deleteInst();
             return true;

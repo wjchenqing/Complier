@@ -98,6 +98,8 @@ public class BinaryOperation extends IRInst {
             }
             if (flag) {
                 this.deleteInst();
+                nextInst = null;
+                prevInst = null;
             }
         } else if (op1 instanceof BoolConstant && op2 instanceof BoolConstant) {
             switch (op) {
@@ -115,7 +117,10 @@ public class BinaryOperation extends IRInst {
                 }
             }
             this.deleteInst();
-        } else if (op == BinaryOp.add) {
+            nextInst = null;
+            prevInst = null;
+        }
+        if (op == BinaryOp.add) {
             /*if (op1 instanceof IntegerConstant && op2 instanceof Register) {
                 IROper old = op2;
                 IRInst def = op2.getDefs().iterator().next();
@@ -149,6 +154,8 @@ public class BinaryOperation extends IRInst {
                         ((IntegerConstant) op2).setValue(((IntegerConstant) op2).getValue() + ((IntegerConstant) ((BinaryOperation) def).op1).getValue());
                     } else */if (((BinaryOperation) def).op2 instanceof IntegerConstant) {
                         op1 = ((BinaryOperation) def).op1;
+                        uses.remove(old);
+                        uses.add(op1);
                         ((BinaryOperation) def).op1.addUse(this);
                         old.getUses().remove(this);
                         ((IntegerConstant) op2).setValue(((IntegerConstant) op2).getValue() + ((IntegerConstant) ((BinaryOperation) def).op2).getValue());
@@ -156,6 +163,9 @@ public class BinaryOperation extends IRInst {
                 }
                 if (old.getUses().isEmpty()) {
                     def.deleteInst();
+                    def.deleted = true;
+                    def.nextInst = null;
+                    def.prevInst = null;
                 }
             }
         }

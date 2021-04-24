@@ -14,6 +14,8 @@ abstract public class IRInst {
     protected IRInst prevInst = null;
     protected IRInst nextInst = null;
 
+    public boolean deleted = false;
+
     protected Set<IROper> uses = new HashSet<>();
     protected Set<IROper> defs = new HashSet<>();
 
@@ -88,7 +90,9 @@ abstract public class IRInst {
 
     public void deleteInst() {
         if ((prevInst == null) && (nextInst == null)) {
-            assert this instanceof Br;
+            if (!(this instanceof Br)) {
+                return;
+            }
             Set<BasicBlock> predecessor = new HashSet<>(currentBB.getPredecessor());
             Set<BasicBlock> successor = new HashSet<>(currentBB.getSuccessor());
             predecessor.removeAll(currentBB.getSuccessor());
@@ -126,6 +130,7 @@ abstract public class IRInst {
             nextInst.setPrevInst(prevInst);
         }
         destroy();
+        deleted = true;
     }
 
     public void completelyDelete() {
@@ -151,6 +156,8 @@ abstract public class IRInst {
                 funcDefs.remove(irOper);
             }
         }
+//        prevInst = null;
+//        nextInst = null;
     }
 
     public void replaceBBUse(BasicBlock o, BasicBlock n) {

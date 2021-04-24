@@ -42,8 +42,8 @@ public class IRMove extends IRInst {
     @Override
     public void replaceUse(IROper o, IROper n) {
         if (source == o) {
-            uses.add(n);
             uses.remove(o);
+            uses.add(n);
             o.getUses().remove(this);
             n.getUses().add(this);
         }

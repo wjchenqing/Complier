@@ -2,11 +2,14 @@ package Opt;
 
 import IR.BasicBlock;
 import IR.Function;
+import IR.IRPrinter;
 import IR.Instruction.*;
 import IR.Module;
 import IR.Operand.*;
 import Util.Pair;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 public class Inline {
@@ -25,9 +28,9 @@ public class Inline {
     private BasicBlock copiedEntrance = null;
     private BasicBlock copiedReturnBB = null;
     private final Map<BasicBlock, BasicBlock> oldAndNewBBs = new LinkedHashMap<>();
-    private final Map<IROper, IROper> oldAndNewOperands = new HashMap<>();
-    private final Set<Function> visited = new HashSet<>();
-    private final Set<IRInst> callResultUsedIn = new HashSet<>();
+    private final Map<IROper, IROper> oldAndNewOperands = new LinkedHashMap<>();
+    private final Set<Function> visited = new LinkedHashSet<>();
+    private final Set<IRInst> callResultUsedIn = new LinkedHashSet<>();
     private Ret ret;
 
     private boolean changed = false;
@@ -37,7 +40,7 @@ public class Inline {
         this.cfgSimplifier = cfgSimplifier;
     }
 
-    public boolean run() {
+    public boolean run() throws IOException {
         changed = false;
         recursiveFunctions.clear();
         InstNumMap.clear();
@@ -68,7 +71,9 @@ public class Inline {
         }
 
         changed = NonRecursiveFuncInline();
-        changed = RecursiveInline();
+        if (!changed) {
+            changed = RecursiveInline();
+        }
         return changed;
     }
 
@@ -113,7 +118,9 @@ public class Inline {
                     if (irOper instanceof BoolConstant || irOper instanceof IntegerConstant) {
                         Set<IRInst> use = new LinkedHashSet<>(irOper.getUses());
                         for (IRInst irInst : use) {
-                            irInst.replaceUse(irOper, irOper);
+                            if (!irInst.deleted) {
+                                irInst.replaceUse(irOper, irOper);
+                            }
                         }
                     }
                 }
@@ -147,11 +154,14 @@ public class Inline {
     }
 
     Set<Call> callsToInline = new LinkedHashSet<>();
-    Set<Call> inQueue = new HashSet<>();
+    Set<Call> inQueue = new LinkedHashSet<>();
     Queue<Call> callsContainsConstantParam = new LinkedList<>();
 
-    private boolean RecursiveInline() {
+    private boolean RecursiveInline() throws IOException {
         boolean changed = false;
+        if (totalInst > totalInstNumLimit) {
+            return false;
+        }
         callsToInline.clear();
         callsContainsConstantParam.clear();
         Set<Function> functions = new LinkedHashSet<>(module.getFunctionMap().values());
@@ -170,12 +180,12 @@ public class Inline {
                 }
             }
         }
-        int cnt = 0;
+//        int cnt = 0;
         while (!callsContainsConstantParam.isEmpty()) {
 //            if (cnt > 0) {
 //                break;
 //            }
-            ++cnt;
+//            ++cnt;
             Call callerLocation = callsContainsConstantParam.poll();
             callsToInline.remove(callerLocation);
             Function callee = callerLocation.getFunction();
@@ -199,7 +209,9 @@ public class Inline {
                 if (irOper instanceof BoolConstant || irOper instanceof IntegerConstant) {
                     Set<IRInst> use = new LinkedHashSet<>(irOper.getUses());
                     for (IRInst irInst : use) {
-                        irInst.replaceUse(irOper, irOper);
+                        if (!irInst.deleted) {
+                            irInst.replaceUse(irOper, irOper);
+                        }
                     }
                 }
             }

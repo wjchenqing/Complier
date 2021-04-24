@@ -85,6 +85,8 @@ public class Icmp extends IRInst {
                     result.replaceUse(new BoolConstant((int)((IntegerConstant) op1).getValue() <= (int)((IntegerConstant) op2).getValue()));
             }
             this.deleteInst();
+            nextInst = null;
+            prevInst = null;
         } else if (op1 instanceof BoolConstant && op2 instanceof BoolConstant) {
             switch (cond) {
                 case eq :
@@ -98,6 +100,8 @@ public class Icmp extends IRInst {
                 }
             }
             this.deleteInst();
+            nextInst = null;
+            prevInst = null;
         }
     }
 
