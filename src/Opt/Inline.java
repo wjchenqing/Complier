@@ -18,6 +18,7 @@ public class Inline {
 
     private int totalInst;
     private final int totalInstNumLimit = 6500;
+    private final int InstLimit = 5000;
 
     private final Set<Function> recursiveFunctions = new LinkedHashSet<>();
     private final Map<Function, Integer> InstNumMap = new LinkedHashMap<>();
@@ -97,14 +98,21 @@ public class Inline {
             if ((source == null) || source.calls.isEmpty()) {
                 break;
             }
-            changed = true;
             Set<Call> calls = new LinkedHashSet<>(source.calls);
             for (Call callerLocation: calls) {
                 if (!source.calls.contains(callerLocation)) {
                     continue;
                 }
+                if (totalInst + InstNumMap.get(source) > totalInstNumLimit) {
+                    break;
+                }
                 BasicBlock callerBlock = callerLocation.getCurrentBB();
                 Function caller = callerBlock.getCurrentFunction();
+                if (InstNumMap.get(caller) + InstNumMap.get(source) > InstLimit) {
+                    break;
+                }
+                changed = true;
+
                 copyFunction(caller, source, callerBlock.depth, callerLocation);
                 BasicBlock splitResult = callerBlock.split(callerLocation);
 //                callerBlock.getTailInst().deleteInst();
@@ -143,6 +151,9 @@ public class Inline {
                     }
                 }
                 callerLocation.deleteInst();
+            }
+            if (totalInst + InstNumMap.get(source) > totalInstNumLimit) {
+                break;
             }
             if (source.calls.isEmpty() && !calls.isEmpty()) {
                 module.getFunctionMap().remove(source.getName());
