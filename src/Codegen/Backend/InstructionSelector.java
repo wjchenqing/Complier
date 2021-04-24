@@ -286,12 +286,83 @@ public class InstructionSelector implements IRVisitor {
     @Override
     public void visit(Br br) {
         Codegen.BasicBlock thenBB = curFunction.getBasicBlock(br.getThenBlock().getName());
-        if (br.getCond() != null) {
+        if (br.condIsInst) {
+            Codegen.BasicBlock elseBB = curFunction.getBasicBlock(br.getElseBlock().getName());
+            Icmp cond = br.condInst;
+            RegisterVirtual opt1 = getReg(cond.getOp1());
+            RegisterVirtual opt2 = getReg(cond.getOp2());
+            switch (cond.getCond()) {
+                case eq :
+                    if (elseBB == curBlock.getNextBB()) {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.beq, opt1, opt2, thenBB));
+                    } else {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.bne, opt1, opt2, elseBB));
+                        if (thenBB != curBlock.getNextBB()) {
+                            curBlock.addInst(new Jump(curBlock, thenBB));
+                        }
+                    }
+                    break;
+                case ne:
+                    if (elseBB == curBlock.getNextBB()) {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.bne, opt1, opt2, thenBB));
+                    } else {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.beq, opt1, opt2, elseBB));
+                        if (thenBB != curBlock.getNextBB()) {
+                            curBlock.addInst(new Jump(curBlock, thenBB));
+                        }
+                    }
+                    break;
+                case sge:
+                    if (elseBB == curBlock.getNextBB()) {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.bge, opt1, opt2, thenBB));
+                    } else {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.blt, opt1, opt2, elseBB));
+                        if (thenBB != curBlock.getNextBB()) {
+                            curBlock.addInst(new Jump(curBlock, thenBB));
+                        }
+                    }
+                    break;
+                case sgt:
+                    if (elseBB == curBlock.getNextBB()) {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.bgt, opt1, opt2, thenBB));
+                    } else {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.ble, opt1, opt2, elseBB));
+                        if (thenBB != curBlock.getNextBB()) {
+                            curBlock.addInst(new Jump(curBlock, thenBB));
+                        }
+                    }
+                    break;
+                case sle:
+                    if (elseBB == curBlock.getNextBB()) {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.ble, opt1, opt2, thenBB));
+                    } else {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.bgt, opt1, opt2, elseBB));
+                        if (thenBB != curBlock.getNextBB()) {
+                            curBlock.addInst(new Jump(curBlock, thenBB));
+                        }
+                    }
+                    break;
+                case slt:
+                    if (elseBB == curBlock.getNextBB()) {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.blt, opt1, opt2, thenBB));
+                    } else {
+                        curBlock.addInst(new Branch(curBlock, Branch.Name.bge, opt1, opt2, elseBB));
+                        if (thenBB != curBlock.getNextBB()) {
+                            curBlock.addInst(new Jump(curBlock, thenBB));
+                        }
+                    }
+                    break;
+            }
+        } else if (br.getCond() != null) {
             RegisterVirtual cond = getReg(br.getCond());
             Codegen.BasicBlock elseBB = curFunction.getBasicBlock(br.getElseBlock().getName());
-            curBlock.addInst(new Branch(curBlock, Branch.Name.beq, cond, RegisterPhysical.getVR(0), elseBB));
-            if (thenBB != curBlock.getNextBB()){
-                curBlock.addInst(new Jump(curBlock, thenBB));
+            if (elseBB == curBlock.getNextBB()) {
+                curBlock.addInst(new Branch(curBlock, Branch.Name.bne, cond, RegisterPhysical.getVR(0), thenBB));
+            } else {
+                curBlock.addInst(new Branch(curBlock, Branch.Name.beq, cond, RegisterPhysical.getVR(0), elseBB));
+                if (thenBB != curBlock.getNextBB()) {
+                    curBlock.addInst(new Jump(curBlock, thenBB));
+                }
             }
         } else {
             if (thenBB != curBlock.getNextBB()){

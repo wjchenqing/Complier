@@ -17,7 +17,7 @@ public class Inline {
     private final CFGSimplifier cfgSimplifier;
 
     private int totalInst;
-    private final int totalInstNumLimit = 6500;
+    private final int totalInstNumLimit = 8000;
     private final int InstLimit = 5000;
 
     private final Set<Function> recursiveFunctions = new LinkedHashSet<>();
@@ -206,8 +206,6 @@ public class Inline {
             Function caller = callerLocation.getCurrentBB().getCurrentFunction();
             BasicBlock callerBlock = callerLocation.getCurrentBB();
             copyFunction(caller, callee, callerBlock.depth, callerLocation);
-            System.out.println("caller is: " + caller);
-            System.out.println("the inst is: " + callerLocation);
             BasicBlock splitResult = callerBlock.split(callerLocation);
 //            callerBlock.getTailInst().deleteInst();
             assert copiedEntrance != null;

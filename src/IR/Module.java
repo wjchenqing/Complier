@@ -6,9 +6,7 @@ import Frontend.Scope.Scope;
 import Frontend.Type.ClassType2;
 import Frontend.Type.Type2;
 import Frontend.Type.TypeTable;
-import IR.Instruction.Alloca;
-import IR.Instruction.Call;
-import IR.Instruction.Store;
+import IR.Instruction.*;
 import IR.Operand.*;
 import IR.Type.*;
 
@@ -440,5 +438,29 @@ public class Module {
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public void CheckBranch() {
+        for (Function function: functionMap.values()) {
+            if (function.isNotExternal()) {
+                for (BasicBlock basicBlock: function.getBlockSet()) {
+                    if (basicBlock.getTailInst() instanceof Br) {
+                        Br br = (Br) basicBlock.getTailInst();
+                        IROper cond = br.getCond();
+                        if (cond != null) {
+                            assert cond.getDefs().size() == 1;
+                            IRInst condDef = cond.getDefs().iterator().next();
+                            if (cond.getUses().size() == 1) {
+                                if (condDef instanceof Icmp) {
+                                    br.condIsInst = true;
+                                    br.condInst = (Icmp) condDef;
+                                    condDef.deleteInst();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

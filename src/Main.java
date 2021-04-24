@@ -127,6 +127,8 @@ public class Main {
 //        irPrinter.getPrintWriter().close();
 //        irPrinter.getOutputStream().close();
 
+        irBuilder.getModule().CheckBranch();
+
         SSADestructor ssaDestructor = new SSADestructor(irBuilder.getModule());
         ssaDestructor.run();
         cfgSimplifier.run();
