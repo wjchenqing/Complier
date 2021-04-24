@@ -33,6 +33,7 @@ public class BitCastTo extends IRInst {
             uses.remove(value);
             uses.add(n);
             value = n;
+            o.getUses().remove(this);
             n.addUse(this);
         }
     }

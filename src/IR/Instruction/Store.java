@@ -41,12 +41,14 @@ public class Store extends IRInst {
             value = n;
             uses.remove(o);
             uses.add(n);
+            o.getUses().remove(this);
             n.addUse(this);
         }
         if (pointer == o) {
             pointer = n;
             uses.remove(o);
             uses.add(n);
+            o.getUses().remove(this);
             n.addUse(this);
         }
     }

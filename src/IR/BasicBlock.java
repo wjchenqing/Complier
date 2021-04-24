@@ -189,12 +189,15 @@ public class BasicBlock {
                     IROper n = ((Phi) phi).getPossiblePredecessorSet().iterator().next().getSecond();
                     IROper o = phi.getResult();
                     Set<IRInst> visited = new LinkedHashSet<>();
-                    for (IRInst inst: o.getUses()) {
-                        if (visited.contains(inst)) {
-                            continue;
+                    while (!o.getUses().isEmpty()) {
+                        Set<IRInst> oUse = new HashSet<>(o.getUses());
+                        for (IRInst inst : oUse) {
+                            if (visited.contains(inst)) {
+                                continue;
+                            }
+                            visited.add(inst);
+                            inst.replaceUse(o, n);
                         }
-                        visited.add(inst);
-                        inst.replaceUse(o, n);
                     }
                     phi.deleteInst();
                 }
@@ -207,6 +210,7 @@ public class BasicBlock {
     }
 
     public BasicBlock split(IRInst irInst) {
+        System.out.println("Split Bolck: " + currentFunction + " " + this);
         assert irInst.getNextInst() != null;
         BasicBlock newBB = new BasicBlock(name + "_split", currentFunction, depth);
         currentFunction.CheckAndSetName(newBB.name, newBB);
@@ -240,7 +244,7 @@ public class BasicBlock {
         assert irInst.getNextInst() != null;
         irInst.getNextInst().setPrevInst(null);
         irInst.setNextInst(null);
-        addInstAtTail(new Br(this, null, newBB, null));
+//        addInstAtTail(new Br(this, null, newBB, null));
         if (currentFunction.getReturnBB() == this) {
             currentFunction.setReturnBB(newBB);
         }

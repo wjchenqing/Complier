@@ -6,6 +6,7 @@ import IR.Operand.IROper;
 import IR.Operand.Register;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 abstract public class IRInst {
@@ -125,6 +126,18 @@ abstract public class IRInst {
             nextInst.setPrevInst(prevInst);
         }
         destroy();
+    }
+
+    public void completelyDelete() {
+        deleteInst();
+        if (getResult() != null) {
+            while (!getResult().getUses().isEmpty()) {
+                Set<IRInst> uses = new LinkedHashSet<>(getResult().getUses());
+                for (IRInst use : uses) {
+                    use.completelyDelete();
+                }
+            }
+        }
     }
 
     public void destroy() {

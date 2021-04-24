@@ -47,6 +47,7 @@ public class GetElementPtr extends IRInst {
             pointer = n;
             uses.remove(o);
             uses.add(n);
+            o.getUses().remove(this);
             n.addUse(this);
         }
         int i = 0;
@@ -55,6 +56,7 @@ public class GetElementPtr extends IRInst {
                 idxes.set(i, n);
                 uses.remove(o);
                 uses.add(n);
+                o.getUses().remove(this);
                 n.addUse(this);
             }
             ++i;

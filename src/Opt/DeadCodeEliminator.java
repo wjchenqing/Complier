@@ -6,6 +6,7 @@ import IR.Instruction.*;
 import IR.Module;
 import IR.Operand.GlobalVariable;
 import IR.Operand.IROper;
+import IR.Operand.NullConstant;
 import IR.Operand.Register;
 import Util.Pair;
 
@@ -30,6 +31,7 @@ public class DeadCodeEliminator {
                 eliminator(function);
             }
         }
+        module.removeUselessFunc();
         return changed;
     }
 
@@ -37,7 +39,6 @@ public class DeadCodeEliminator {
         Queue<IRInst> queue = new LinkedList<>();
         Set<IRInst> liveInst = new LinkedHashSet<>();
         Set<BasicBlock> liveBB = new LinkedHashSet<>();
-
         for (BasicBlock basicBlock: function.getBlockSet()) {
             IRInst tail = basicBlock.getTailInst();
             boolean containsTail = liveInst.contains(tail);
@@ -71,6 +72,10 @@ public class DeadCodeEliminator {
                         liveBB.add(tail.getCurrentBB());
                         queue.offer(tail);
                         containsTail = true;
+                    }
+                } else if (irInst instanceof GetElementPtr) {
+                    if (((GetElementPtr) irInst).getPointer() instanceof NullConstant) {
+                        irInst.completelyDelete();
                     }
                 }
             }
@@ -141,7 +146,9 @@ public class DeadCodeEliminator {
                 }
             }
         }
-        assert liveBB.containsAll(function.getBlockSet());
+        if (!liveBB.containsAll(function.getBlockSet())) {
+            assert false;
+        }
         assert function.getBlockSet().containsAll(liveBB);
     }
 }

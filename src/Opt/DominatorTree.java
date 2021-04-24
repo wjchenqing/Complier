@@ -16,6 +16,12 @@ public class DominatorTree {
     public void run() {
         for (Function function: module.getFunctionMap().values()) {
             if (function.isNotExternal()) {
+                for (BasicBlock basicBlock: function.getBlockSet()) {
+                    basicBlock.dom = null;
+                    basicBlock.reverseDom = null;
+                    basicBlock.DominanceFrontier.clear();
+                    basicBlock.reverseDominanceFrontier.clear();
+                }
                 constructDominatorTree(function);
                 computeDominanceFrontier(function);
                 constructPostDominatorTree(function);

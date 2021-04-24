@@ -45,12 +45,14 @@ public class BinaryOperation extends IRInst {
             uses.remove(op1);
             uses.add(n);
             op1 = n;
+            o.getUses().remove(this);
             n.addUse(this);
         }
         if (op2 == o) {
             uses.remove(op2);
             uses.add(n);
             op2 = n;
+            o.getUses().remove(this);
             n.addUse(this);
         }
         if ((op1 instanceof IntegerConstant && op2 instanceof IntegerConstant)) {
@@ -73,6 +75,10 @@ public class BinaryOperation extends IRInst {
                     result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() / (int)((IntegerConstant) op2).getValue()));
                     break;
                 case srem:
+                    if (((IntegerConstant) op2).getValue() == 0) {
+                        flag = false;
+                        break;
+                    }
                     result.replaceUse(new IntegerConstant((int)((IntegerConstant) op1).getValue() % (int)((IntegerConstant) op2).getValue()));
                     break;
                 case shl :
@@ -131,6 +137,9 @@ public class BinaryOperation extends IRInst {
                 }
             } else */if (op2 instanceof IntegerConstant && op1 instanceof Register) {
                 IROper old = op1;
+                if (op1.getDefs().isEmpty()) {
+                    return;
+                }
                 IRInst def = op1.getDefs().iterator().next();
                 if (def instanceof BinaryOperation && (((BinaryOperation) def).getOp() == BinaryOp.add)) {
                     /*if (((BinaryOperation) def).op1 instanceof IntegerConstant) {

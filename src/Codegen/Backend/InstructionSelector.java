@@ -294,7 +294,9 @@ public class InstructionSelector implements IRVisitor {
                 curBlock.addInst(new Jump(curBlock, thenBB));
             }
         } else {
-            curBlock.addInst(new Jump(curBlock, thenBB));
+            if (thenBB != curBlock.getNextBB()){
+                curBlock.addInst(new Jump(curBlock, thenBB));
+            }
         }
     }
 

@@ -41,12 +41,10 @@ public class CodegenPrinter implements CodegenVisitor {
     @Override
     public void visit(Module module) {
         println(tab + ".text");
-        println("");
 
         for (Function function: module.getFunctionMap().values()) {
             function.accept(this);
         }
-        println("");
 
         println(tab + ".section\t.sdata,\"aw\",@progbits");
 
@@ -68,7 +66,6 @@ public class CodegenPrinter implements CodegenVisitor {
             basicBlock.accept(this);
         }
 
-        println("");
     }
 
     @Override

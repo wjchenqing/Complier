@@ -34,7 +34,7 @@ public class CFGSimplifier {
             if (!function.getBlockSet().contains(cur)) {
                 continue;
             }
-            if (cur.getPredecessor().isEmpty() && (cur != function.getEntranceBB())) {
+            if ((cur.getPredecessor().isEmpty() || (cur.getPredecessor().size() == 1 && cur.getPredecessor().iterator().next() == cur)) && (cur != function.getEntranceBB())) {
                 cur.delete();
                 changed = true;
                 function.computeDFSListAgain = true;

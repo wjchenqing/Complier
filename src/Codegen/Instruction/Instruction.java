@@ -27,7 +27,11 @@ abstract public class Instruction {
     public void deleteInst() {
         if (prev == null) {
             basicBlock.setHeadInst(next);
-            next.setPrev(null);
+            if (next != null){
+                next.setPrev(null);
+            } else {
+                basicBlock.setTailInst(null);
+            }
         } else if (next == null) {
             basicBlock.setTailInst(prev);
             prev.setNext(null);

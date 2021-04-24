@@ -44,6 +44,7 @@ public class Br extends IRInst {
             uses.remove(cond);
             uses.add(n);
             cond = n;
+            o.getUses().remove(this);
             n.addUse(this);
         }
         if (cond instanceof BoolConstant) {
@@ -65,10 +66,10 @@ public class Br extends IRInst {
                 currentBB.getCurrentFunction().computePostReverseDFSListAgain =true;
             } else {
                 currentBB.getSuccessor().remove(thenBlock);
-                thenBlock.getPredecessor().remove(currentBB);
-                if (thenBlock.getPredecessor().isEmpty() && thenBlock != currentBB.getCurrentFunction().getEntranceBB()) {
+                if (thenBlock.getPredecessor().size() == 1 && thenBlock != currentBB.getCurrentFunction().getEntranceBB()) {
                     thenBlock.delete();
                 } else {
+                    thenBlock.getPredecessor().remove(currentBB);
                     for (IRInst irInst = thenBlock.getHeadInst(); irInst instanceof Phi; irInst = irInst.getNextInst()) {
                         ((Phi) irInst).Check();
                     }
@@ -132,15 +133,15 @@ public class Br extends IRInst {
             thenBlock = n;
             currentBB.getSuccessor().remove(o);
             currentBB.getSuccessor().add(n);
-            n.getPredecessor().add(currentBB);
             o.getPredecessor().remove(currentBB);
+            n.getPredecessor().add(currentBB);
         }
         if (elseBlock == o) {
             elseBlock = n;
             currentBB.getSuccessor().remove(o);
             currentBB.getSuccessor().add(n);
-            n.getPredecessor().add(currentBB);
             o.getPredecessor().remove(currentBB);
+            n.getPredecessor().add(currentBB);
         }
     }
 

@@ -46,6 +46,7 @@ public class Load extends IRInst {
             uses.remove(o);
             uses.add(n);
             pointer = n;
+            o.getUses().remove(this);
             n.addUse(this);
         }
     }

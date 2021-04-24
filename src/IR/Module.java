@@ -7,13 +7,12 @@ import Frontend.Type.ClassType2;
 import Frontend.Type.Type2;
 import Frontend.Type.TypeTable;
 import IR.Instruction.Alloca;
+import IR.Instruction.Call;
 import IR.Instruction.Store;
 import IR.Operand.*;
 import IR.Type.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Module {
     private final Map<String, Function> functionMap = new HashMap<>();
@@ -266,6 +265,29 @@ public class Module {
         function = new Function(this, "malloc", returnType, functionType, parameterList, false, false);
         functionMap.put(function.getName(), function);
 
+    }
+
+    private final Set<Function> visited = new HashSet<>();
+    public void removeUselessFunc() {
+        visited.clear();
+        Function main = functionMap.get("main");
+        dfs(main);
+        Set<Function> useless = new HashSet<>(functionMap.values());
+        useless.removeAll(visited);
+        for (Function function: useless) {
+            functionMap.remove(function.getName());
+            for (Call call: function.callInstSet) {
+                call.getFunction().calls.remove(call);
+            }
+        }
+    }
+    private void dfs(Function function) {
+        visited.add(function);
+        for (Call call: function.callInstSet) {
+            if (!visited.contains(call.getFunction())) {
+                dfs(call.getFunction());
+            }
+        }
     }
 
     public int getStringConstMapSize() {

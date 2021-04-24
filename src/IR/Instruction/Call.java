@@ -48,12 +48,23 @@ public class Call extends IRInst {
         if (function == currentBB.getCurrentFunction()) {
             function.callItSelf = true;
         }
+        currentBB.getCurrentFunction().callInstSet.add(this);
+    }
+
+    public boolean containsConstParam() {
+        for (IROper irOper: params) {
+            if (!irOper.isConstant()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
     public void deleteInst() {
         super.deleteInst();
         function.calls.remove(this);
+        currentBB.getCurrentFunction().callInstSet.remove(this);
     }
 
     @Override
@@ -64,6 +75,7 @@ public class Call extends IRInst {
                 params.set(i, n);
                 uses.remove(o);
                 uses.add(n);
+                o.getUses().remove(this);
                 n.addUse(this);
             }
             ++i;
@@ -74,6 +86,7 @@ public class Call extends IRInst {
     public void destroy() {
         super.destroy();
         function.calls.remove(this);
+        currentBB.getCurrentFunction().callInstSet.remove(this);
     }
 
     @Override

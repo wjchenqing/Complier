@@ -83,6 +83,7 @@ public class Phi extends IRInst {
             if (pair.getSecond() == o) {
                 uses.remove(o);
                 uses.add(n);
+                o.getUses().remove(this);
                 n.addUse(this);
                 possiblePredecessorSet.remove(pair);
                 possiblePredecessorSet.add(new Pair<>(pair.getFirst(), n));

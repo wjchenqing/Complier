@@ -49,6 +49,7 @@ public class Icmp extends IRInst {
             uses.remove(op1);
             uses.add(n);
             op1 = n;
+            o.getUses().remove(this);
             n.addUse(this);
             changed = true;
         }
@@ -56,6 +57,7 @@ public class Icmp extends IRInst {
             uses.remove(op2);
             uses.add(n);
             op2 = n;
+            o.getUses().remove(this);
             n.addUse(this);
             changed = true;
         }

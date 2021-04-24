@@ -47,9 +47,11 @@ abstract public class IROper implements Cloneable {
     }
 
     public void replaceUse(IROper n) {
-        Set<IRInst> use = new LinkedHashSet<>(uses);
-        for (IRInst irInst: use) {
-            irInst.replaceUse(this, n);
+        while (!uses.isEmpty()) {
+            Set<IRInst> use = new LinkedHashSet<>(uses);
+            for (IRInst irInst : use) {
+                irInst.replaceUse(this, n);
+            }
         }
     }
 }

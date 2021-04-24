@@ -36,6 +36,7 @@ public class Ret extends IRInst {
             uses.remove(o);
             uses.add(n);
             returnVal = n;
+            o.getUses().remove(this);
             n.addUse(this);
         }
     }

@@ -14,7 +14,7 @@ public class Inline {
     private final CFGSimplifier cfgSimplifier;
 
     private int totalInst;
-    private final int totalInstNumLimit = 9000;
+    private final int totalInstNumLimit = 6500;
 
     private final Set<Function> recursiveFunctions = new LinkedHashSet<>();
     private final Map<Function, Integer> InstNumMap = new LinkedHashMap<>();
@@ -24,9 +24,11 @@ public class Inline {
 
     private BasicBlock copiedEntrance = null;
     private BasicBlock copiedReturnBB = null;
-    private final Map<BasicBlock, BasicBlock> oldAndNewBBs = new HashMap<>();
+    private final Map<BasicBlock, BasicBlock> oldAndNewBBs = new LinkedHashMap<>();
     private final Map<IROper, IROper> oldAndNewOperands = new HashMap<>();
     private final Set<Function> visited = new HashSet<>();
+    private final Set<IRInst> callResultUsedIn = new HashSet<>();
+    private Ret ret;
 
     private boolean changed = false;
 
@@ -66,6 +68,7 @@ public class Inline {
         }
 
         changed = NonRecursiveFuncInline();
+        changed = RecursiveInline();
         return changed;
     }
 
@@ -86,7 +89,7 @@ public class Inline {
                     }
                 }
             }
-            if (source == null) {
+            if ((source == null) || source.calls.isEmpty()) {
                 break;
             }
             changed = true;
@@ -97,17 +100,17 @@ public class Inline {
                 }
                 BasicBlock callerBlock = callerLocation.getCurrentBB();
                 Function caller = callerBlock.getCurrentFunction();
-                BasicBlock splitResult = callerBlock.split(callerLocation);
                 copyFunction(caller, source, callerBlock.depth, callerLocation);
-                callerBlock.getTailInst().deleteInst();
+                BasicBlock splitResult = callerBlock.split(callerLocation);
+//                callerBlock.getTailInst().deleteInst();
                 assert copiedEntrance != null;
                 callerBlock.addInstAtTail(new Br(callerBlock, null, copiedEntrance, null));
                 copiedReturnBB.addInstAtTail(new Br(copiedReturnBB, null, splitResult, null));
                 callSetMap.get(caller).remove(callerLocation);
-                callerLocation.deleteInst();
                 totalInst += InstNumMap.get(source);
+                InstNumMap.replace(caller, InstNumMap.get(caller) + InstNumMap.get(source));
                 for (IROper irOper: oldAndNewOperands.values()) {
-                    if (irOper.isConstant()) {
+                    if (irOper instanceof BoolConstant || irOper instanceof IntegerConstant) {
                         Set<IRInst> use = new LinkedHashSet<>(irOper.getUses());
                         for (IRInst irInst : use) {
                             irInst.replaceUse(irOper, irOper);
@@ -132,12 +135,100 @@ public class Inline {
                         }
                     }
                 }
+                callerLocation.deleteInst();
             }
             if (source.calls.isEmpty() && !calls.isEmpty()) {
                 module.getFunctionMap().remove(source.getName());
                 totalInst -= InstNumMap.get(source);
             }
             calleeSetMap.remove(source);
+        }
+        return changed;
+    }
+
+    Set<Call> callsToInline = new LinkedHashSet<>();
+    Set<Call> inQueue = new HashSet<>();
+    Queue<Call> callsContainsConstantParam = new LinkedList<>();
+
+    private boolean RecursiveInline() {
+        boolean changed = false;
+        callsToInline.clear();
+        callsContainsConstantParam.clear();
+        Set<Function> functions = new LinkedHashSet<>(module.getFunctionMap().values());
+        Function main = module.getFunction("main");
+        for (Function function: functions) {
+            if (function.isNotExternal() && function != main) {
+                if (callSetMap.get(function).size() > 10) {
+                    continue;
+                }
+                for (Call call : function.calls) {
+                    if (functions.contains(call.getCurrentBB().getCurrentFunction())){
+                        callsToInline.add(call);
+                        callsContainsConstantParam.offer(call);
+                        inQueue.add(call);
+                    }
+                }
+            }
+        }
+        int cnt = 0;
+        while (!callsContainsConstantParam.isEmpty()) {
+//            if (cnt > 0) {
+//                break;
+//            }
+            ++cnt;
+            Call callerLocation = callsContainsConstantParam.poll();
+            callsToInline.remove(callerLocation);
+            Function callee = callerLocation.getFunction();
+            if (totalInst + InstNumMap.get(callee) > totalInstNumLimit) {
+                return changed;
+            }
+            Function caller = callerLocation.getCurrentBB().getCurrentFunction();
+            BasicBlock callerBlock = callerLocation.getCurrentBB();
+            copyFunction(caller, callee, callerBlock.depth, callerLocation);
+            System.out.println("caller is: " + caller);
+            System.out.println("the inst is: " + callerLocation);
+            BasicBlock splitResult = callerBlock.split(callerLocation);
+//            callerBlock.getTailInst().deleteInst();
+            assert copiedEntrance != null;
+            callerBlock.addInstAtTail(new Br(callerBlock, null, copiedEntrance, null));
+            copiedReturnBB.addInstAtTail(new Br(copiedReturnBB, null, splitResult, null));
+            callSetMap.get(caller).remove(callerLocation);
+            totalInst += InstNumMap.get(callee);
+            InstNumMap.replace(caller, InstNumMap.get(caller) + InstNumMap.get(callee));
+            for (IROper irOper: oldAndNewOperands.values()) {
+                if (irOper instanceof BoolConstant || irOper instanceof IntegerConstant) {
+                    Set<IRInst> use = new LinkedHashSet<>(irOper.getUses());
+                    for (IRInst irInst : use) {
+                        irInst.replaceUse(irOper, irOper);
+                    }
+                }
+            }
+            while (true) {
+                if (!cfgSimplifier.deleteBBWithoutPredecessor(caller)) {
+                    break;
+                }
+            }
+            Set<BasicBlock> blockSet = new LinkedHashSet<>(caller.getBlockSet());
+            boolean flag = true;
+            while (flag) {
+                flag = false;
+                for (BasicBlock basicBlock : blockSet) {
+                    if (!caller.getBlockSet().contains(basicBlock)) {
+                        continue;
+                    }
+                    for (IRInst phi = basicBlock.getHeadInst(); phi instanceof Phi; phi = phi.getNextInst()) {
+                        flag |= ((Phi) phi).Check();
+                    }
+                }
+            }
+            callerLocation.deleteInst();
+            changed = true;
+//            Set<Function> callers = callee.getCallers();
+//            callers.remove(callee);
+//            if (callers.isEmpty()) {
+//                module.getFunctionMap().remove(callee.getName());
+//                break;
+//            }
         }
         return changed;
     }
@@ -181,20 +272,36 @@ public class Inline {
         copiedReturnBB = null;
         oldAndNewBBs.clear();
         oldAndNewOperands.clear();
+        callResultUsedIn.clear();
+        ret = null;
+        if (call.getResult() != null) {
+            callResultUsedIn.addAll(call.getResult().getUses());
+        }
         for (int i = 0; i < sourceFunc.getParameters().size(); ++i) {
             oldAndNewOperands.put(sourceFunc.getParameters().get(i), call.getParams().get(i));
         }
-        for (BasicBlock basicBlock: sourceFunc.getBlockSet()) {
+        assert !sourceFunc.getBlockSet().isEmpty();
+        for (BasicBlock basicBlock: sourceFunc.getDfsList()) {
             BasicBlock newBB = new BasicBlock(basicBlock.getName() + "_copy", targetFunc, depth + basicBlock.depth);
             targetFunc.CheckAndSetName(newBB.getName(), newBB);
-            targetFunc.addBasicBlock(newBB);
-            targetFunc.computePostReverseDFSListAgain = true;
-            targetFunc.computePostDFSListAgain = true;
-            targetFunc.computeDFSListAgain = true;
             oldAndNewBBs.put(basicBlock, newBB);
         }
-        for (BasicBlock basicBlock: sourceFunc.getBlockSet()) {
+        targetFunc.computePostReverseDFSListAgain = true;
+        targetFunc.computePostDFSListAgain = true;
+        targetFunc.computeDFSListAgain = true;
+        for (BasicBlock basicBlock: oldAndNewBBs.keySet()) {
             copyBlock(targetFunc, basicBlock, call);
+        }
+        for (BasicBlock basicBlock: oldAndNewBBs.values()) {
+            targetFunc.addBasicBlock(basicBlock);
+        }
+        if (ret.getReturnVal() != null){
+            IROper o = call.getResult();
+            IROper n = getNewIROperand(targetFunc, ret.getReturnVal());
+            assert n != null;
+            for (IRInst use : callResultUsedIn) {
+                use.replaceUse(o, n);
+            }
         }
         assert !oldAndNewBBs.isEmpty();
         assert sourceFunc.getEntranceBB() != null;
@@ -238,6 +345,7 @@ public class Inline {
 
     private void copyBlock(Function targetFunc, BasicBlock sourceBlock, Call call) {
         BasicBlock targetBlock = oldAndNewBBs.get(sourceBlock);
+        assert targetBlock.getCurrentFunction() == targetFunc;
         for (IRInst sourceInst = sourceBlock.getHeadInst(); sourceInst != null; sourceInst = sourceInst.getNextInst()) {
             if (sourceInst instanceof BinaryOperation) {
                 Register newResult = (Register) getNewIROperand(targetFunc, sourceInst.getResult());
@@ -259,6 +367,9 @@ public class Inline {
                     targetBlock.addInstAtTail(new Br(targetBlock, newCond, newThenBlock, newElseBlock));
                 } else {
                     BasicBlock newThenBlock = oldAndNewBBs.get(((Br) sourceInst).getThenBlock());
+                    if (newThenBlock == null) {
+                        assert false;
+                    }
                     targetBlock.addInstAtTail(new Br(targetBlock, null, newThenBlock, null));
                 }
             } else if (sourceInst instanceof Call) {
@@ -267,7 +378,8 @@ public class Inline {
                 for (IROper param: ((Call) sourceInst).getParams()) {
                     newParams.add(getNewIROperand(targetFunc, param));
                 }
-                targetBlock.addInstAtTail(new Call(targetBlock, newResult, ((Call) sourceInst).getFunction(), newParams));
+                Call inst = new Call(targetBlock, newResult, ((Call) sourceInst).getFunction(), newParams);
+                targetBlock.addInstAtTail(inst);
             } else if (sourceInst instanceof GetElementPtr) {
                 Register newResult = (Register) getNewIROperand(targetFunc, sourceInst.getResult());
                 IROper newPointer = getNewIROperand(targetFunc, ((GetElementPtr) sourceInst).getPointer());
@@ -300,15 +412,20 @@ public class Inline {
                 }
                 targetBlock.addInstAtTail(new Phi(targetBlock, newResult, newSet));
             } else if (sourceInst instanceof Ret) {
-                if (((Ret) sourceInst).getReturnVal() != null){
-                    IROper o = call.getResult();
-                    IROper n = getNewIROperand(targetFunc, ((Ret) sourceInst).getReturnVal());
-                    assert n != null;
-                    n.getUses().addAll(o.getUses());
-                    for (IRInst use : call.getResult().getUses()) {
-                        use.replaceUse(o, n);
-                    }
-                }
+                ret = (Ret) sourceInst;
+//                if (((Ret) sourceInst).getReturnVal() != null){
+//                    IROper o = call.getResult();
+//                    IROper n = getNewIROperand(targetFunc, ((Ret) sourceInst).getReturnVal());
+//                    assert n != null;
+////                    n.getUses().addAll(o.getUses());
+////                    if (targetFunc == sourceBlock.getCurrentFunction()) {
+//                        for (IRInst use : callResultUsedIn) {
+//                            use.replaceUse(o, n);
+//                        }
+////                    } else {
+////                        oldAndNewOperands.put(o, n);
+////                    }
+//                }
             } else if (sourceInst instanceof Store) {
                 IROper newValue = getNewIROperand(targetFunc, ((Store) sourceInst).getValue());
                 IROper newPointer = getNewIROperand(targetFunc, ((Store) sourceInst).getPointer());

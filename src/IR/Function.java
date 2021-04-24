@@ -26,7 +26,15 @@ public class Function {
     public Set<Register> allocaResults = new LinkedHashSet<>();
 
     public Set<Call> calls = new LinkedHashSet<>();
+    public Set<Call> callInstSet = new LinkedHashSet<>();
     public boolean callItSelf = false;
+    public Set<Function> getCallers() {
+        Set<Function> ans = new HashSet<>();
+        for (Call call: calls) {
+            ans.add(call.getFunction());
+        }
+        return ans;
+    }
 
     public boolean hasSideEffect;
 
