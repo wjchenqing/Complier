@@ -17,8 +17,8 @@ public class Inline {
     private final CFGSimplifier cfgSimplifier;
 
     private int totalInst;
-    private final int totalInstNumLimit = 8000;
-    private final int InstLimit = 5000;
+    private final int totalInstNumLimit = 8500;
+    private final int InstLimit = 4800;
 
     private final Set<Function> recursiveFunctions = new LinkedHashSet<>();
     private final Map<Function, Integer> InstNumMap = new LinkedHashMap<>();
@@ -179,16 +179,38 @@ public class Inline {
         Function main = module.getFunction("main");
         for (Function function: functions) {
             if (function.isNotExternal() && function != main) {
-                if (callSetMap.get(function).size() > 10) {
-                    continue;
-                }
-                for (Call call : function.calls) {
-                    if (functions.contains(call.getCurrentBB().getCurrentFunction())){
-                        callsToInline.add(call);
-                        callsContainsConstantParam.offer(call);
-                        inQueue.add(call);
+//                if (callSetMap.get(function).size() > 10) {
+//                    continue;
+//                }
+                Set<BasicBlock> bfsVisited = new HashSet<>();
+                Queue<BasicBlock> bfsQueue = new LinkedList<>();
+                bfsQueue.offer(function.getReturnBB());
+                bfsVisited.add(function.getReturnBB());
+                while (!bfsQueue.isEmpty()) {
+                    BasicBlock basicBlock = bfsQueue.poll();
+                    for (BasicBlock s: basicBlock.getPredecessor()) {
+                        if (!bfsVisited.contains(s)) {
+                            bfsQueue.offer(s);
+                            bfsVisited.add(s);
+                        }
+                    }
+                    for (IRInst irInst = basicBlock.getHeadInst(); irInst != null; irInst = irInst.getNextInst()) {
+                        if (irInst instanceof Call) {
+                            if (((Call) irInst).getFunction().isNotExternal() && functions.contains(irInst.getCurrentBB().getCurrentFunction())){
+                                callsToInline.add((Call) irInst);
+                                callsContainsConstantParam.offer((Call) irInst);
+                                inQueue.add((Call) irInst);
+                            }
+                        }
                     }
                 }
+//                for (Call call : function.calls) {
+//                    if (functions.contains(call.getCurrentBB().getCurrentFunction())){
+//                        callsToInline.add(call);
+//                        callsContainsConstantParam.offer(call);
+//                        inQueue.add(call);
+//                    }
+//                }
             }
         }
 //        int cnt = 0;
@@ -200,10 +222,25 @@ public class Inline {
             Call callerLocation = callsContainsConstantParam.poll();
             callsToInline.remove(callerLocation);
             Function callee = callerLocation.getFunction();
+            Function caller = callerLocation.getCurrentBB().getCurrentFunction();
+            if (InstNumMap.get(caller) + InstNumMap.get(callee) > InstLimit) {
+                if (caller != main) {
+                    inQueue.clear();
+                    callsContainsConstantParam.clear();
+                    callsToInline.clear();
+                    for (Call call : main.callInstSet) {
+                        if (call.getFunction().isNotExternal() && functions.contains(call.getCurrentBB().getCurrentFunction())) {
+                            callsToInline.add(call);
+                            callsContainsConstantParam.offer(call);
+                            inQueue.add(call);
+                        }
+                    }
+                    continue;
+                }
+            }
             if (totalInst + InstNumMap.get(callee) > totalInstNumLimit) {
                 return changed;
             }
-            Function caller = callerLocation.getCurrentBB().getCurrentFunction();
             BasicBlock callerBlock = callerLocation.getCurrentBB();
             copyFunction(caller, callee, callerBlock.depth, callerLocation);
             BasicBlock splitResult = callerBlock.split(callerLocation);
