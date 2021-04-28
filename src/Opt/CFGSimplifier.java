@@ -16,12 +16,14 @@ public class CFGSimplifier {
         this.module = module;
     }
 
-    public void run() {
+    public boolean run() {
+        boolean change = false;
         for (Function function: module.getFunctionMap().values()) {
             if (function.isNotExternal()) {
-                deleteBBWithoutPredecessor(function);
+                change |= deleteBBWithoutPredecessor(function);
             }
         }
+        return change;
     }
 
     public boolean deleteBBWithoutPredecessor(Function function) {

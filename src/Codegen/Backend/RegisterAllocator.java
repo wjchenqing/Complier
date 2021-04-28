@@ -111,20 +111,20 @@ public class RegisterAllocator {
 
 
     public void run() {
-//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         int cnt = 1;
         while (true) {
-//            System.out.println("run round: " + cnt);
+            System.out.println("run round: " + cnt);
             ++cnt;
             init();
             computeSpillCost();
             LiveAnalysis.analysis(function);
-//            System.out.println("Start building: " + dtf.format(LocalDateTime.now()));
+            System.out.println("Start building: " + dtf.format(LocalDateTime.now()));
             build();
-//            System.out.println("Finish building: " + dtf.format(LocalDateTime.now()));
+            System.out.println("Finish building: " + dtf.format(LocalDateTime.now()));
 
             makeWorkList();
-//            System.out.println("Finish making worklist: " + dtf.format(LocalDateTime.now()));
+            System.out.println("Finish making worklist: " + dtf.format(LocalDateTime.now()));
             while (!(simplifyWorkList.isEmpty() && workListMoves.isEmpty() && freezeWorkList.isEmpty() && spillWorkList.isEmpty())) {
                 if (!simplifyWorkList.isEmpty()) {
                     simplify();
@@ -136,14 +136,14 @@ public class RegisterAllocator {
                     selectSpill();
                 }
             }
-//            System.out.println("Finish while loop: " + dtf.format(LocalDateTime.now()));
+            System.out.println("Finish while loop: " + dtf.format(LocalDateTime.now()));
             assignColors();
-//            System.out.println("Finish assigning colors: " + dtf.format(LocalDateTime.now()));
+            System.out.println("Finish assigning colors: " + dtf.format(LocalDateTime.now()));
             if (spilledNodes.isEmpty()) {
                 break;
             }
             rewriteProgram();
-//            System.out.println("Finish rewriting: " + dtf.format(LocalDateTime.now()));
+            System.out.println("Finish rewriting: " + dtf.format(LocalDateTime.now()));
 
 //            try {
 //                CodegenPrinter codegenPrinter_before = new CodegenPrinter("judger/before_1.s");

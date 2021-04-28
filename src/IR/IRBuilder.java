@@ -256,16 +256,46 @@ public class IRBuilder implements ASTVisitor {
         currentFunction.CheckAndSetName(ifExitBB.getName(), ifExitBB);
         currentFunction.addBasicBlock(ifExitBB);
 
-        Object condResult = node.getCondition().accept(this);
-        assert condResult instanceof ExprResultPair;
-        IROper cond = ((ExprResultPair) condResult).result;
+        node.getCondition().IfThenBlock = thenBB;
+        if (node.getElseBody() != null) {
+            node.getCondition().IfElseBlock = elseBB;
+        } else {
+            node.getCondition().IfElseBlock = ifExitBB;
+        }
 
-        if (!(cond instanceof BoolConstant)) {
-            if (node.getElseBody() != null) {
-                currentBB.addInstAtTail(new Br(currentBB, cond, thenBB, elseBB));
+        Object condResult = node.getCondition().accept(this);
+        if (condResult instanceof ExprResultPair) {
+            IROper cond = ((ExprResultPair) condResult).result;
+
+            if (!(cond instanceof BoolConstant)) {
+                if (node.getElseBody() != null) {
+                    currentBB.addInstAtTail(new Br(currentBB, cond, thenBB, elseBB));
+                } else {
+                    currentBB.addInstAtTail(new Br(currentBB, cond, thenBB, ifExitBB));
+                }
+                currentBB = thenBB;
+                if (node.getThenBody() != null) {
+                    node.getThenBody().accept(this);
+                }
+                currentBB.addInstAtTail(new Br(currentBB, null, ifExitBB, null));
+
+                if (node.getElseBody() != null) {
+                    currentBB = elseBB;
+                    node.getElseBody().accept(this);
+                    currentBB.addInstAtTail(new Br(currentBB, null, ifExitBB, null));
+                }
+
+                currentBB = ifExitBB;
+            } else if (((BoolConstant) cond).getValue()) {
+                if (node.getThenBody() != null) {
+                    node.getThenBody().accept(this);
+                }
             } else {
-                currentBB.addInstAtTail(new Br(currentBB, cond, thenBB, ifExitBB));
+                if (node.getElseBody() != null) {
+                    node.getElseBody().accept(this);
+                }
             }
+        } else {
             currentBB = thenBB;
             if (node.getThenBody() != null) {
                 node.getThenBody().accept(this);
@@ -277,16 +307,7 @@ public class IRBuilder implements ASTVisitor {
                 node.getElseBody().accept(this);
                 currentBB.addInstAtTail(new Br(currentBB, null, ifExitBB, null));
             }
-
             currentBB = ifExitBB;
-        } else if (((BoolConstant) cond).getValue()) {
-            if (node.getThenBody() != null) {
-                node.getThenBody().accept(this);
-            }
-        } else {
-            if (node.getElseBody() != null) {
-                node.getElseBody().accept(this);
-            }
         }
         return null;
     }
@@ -377,9 +398,12 @@ public class IRBuilder implements ASTVisitor {
             currentFunction.addBasicBlock(stepBlock);
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
             currentBB = conditionBlock;
+            node.getCond().IfThenBlock = loopBody;
+            node.getCond().IfElseBlock = exitBlock;
             Object conditionResult = node.getCond().accept(this);
-            assert conditionResult instanceof ExprResultPair;
-            currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
+            if (conditionResult instanceof ExprResultPair) {
+                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
+            }
 
             loopContinueBlocks.push(stepBlock);
             loopExitBlocks.push(exitBlock);
@@ -404,9 +428,12 @@ public class IRBuilder implements ASTVisitor {
             currentBB.addInstAtTail(new Br(currentBB, null, conditionBlock, null));
 
             currentBB = conditionBlock;
+            node.getCond().IfThenBlock = loopBody;
+            node.getCond().IfElseBlock = exitBlock;
             Object conditionResult = node.getCond().accept(this);
-            assert conditionResult instanceof ExprResultPair;
-            currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
+            if (conditionResult instanceof ExprResultPair) {
+                currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) conditionResult).result, loopBody, exitBlock));
+            }
 
             loopContinueBlocks.push(conditionBlock);
             loopExitBlocks.push(exitBlock);
@@ -946,7 +973,7 @@ public class IRBuilder implements ASTVisitor {
                 assert opd2Result instanceof ExprResultPair;
                 opd2ResultReg = ((ExprResultPair) opd2Result).result;
 
-                if (opd1ResultReg instanceof IntegerConstant && opd2ResultReg instanceof IntegerConstant) {
+                if (opd1ResultReg instanceof IntegerConstant && opd2ResultReg instanceof IntegerConstant && ((IntegerConstant) opd2ResultReg).getValue() != 0) {
                     result = new IntegerConstant(((IntegerConstant) opd1ResultReg).getValue() / ((IntegerConstant) opd2ResultReg).getValue());
                 } else {
                     result = new Register(new IntegerType(32), "division");
@@ -1433,63 +1460,103 @@ public class IRBuilder implements ASTVisitor {
 
 
 //----------------------------------------Phi Solution---------------------------------------------------
-                opd2BB = new BasicBlock("opd2BB", currentFunction, depth);
-                exitBB = new BasicBlock("exitBB", currentFunction, depth);
-                currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
-                currentFunction.CheckAndSetName(exitBB.getName(), exitBB);
+                if (node.IfThenBlock == null) {
+                    opd2BB = new BasicBlock("opd2BB", currentFunction, depth);
+                    exitBB = new BasicBlock("exitBB", currentFunction, depth);
+                    currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
+                    currentFunction.CheckAndSetName(exitBB.getName(), exitBB);
 
-                opd1Result = node.getOpd1().accept(this);
-                opd1BB = currentBB;
-                assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = ((ExprResultPair) opd1Result).result;
-                boolean and_op1_is_const;
-                if (opd1ResultReg instanceof BoolConstant) {
-                    if (!((BoolConstant) opd1ResultReg).getValue()) {
-                        return new ExprResultPair(new BoolConstant(false), null);
+                    opd1Result = node.getOpd1().accept(this);
+                    opd1BB = currentBB;
+                    assert opd1Result instanceof ExprResultPair;
+                    opd1ResultReg = ((ExprResultPair) opd1Result).result;
+                    boolean and_op1_is_const;
+                    if (opd1ResultReg instanceof BoolConstant) {
+                        if (!((BoolConstant) opd1ResultReg).getValue()) {
+                            return new ExprResultPair(new BoolConstant(false), null);
+                        }
+                        and_op1_is_const = true;
+                    } else {
+                        currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, opd2BB, exitBB));
+                        currentBB = opd2BB;
+                        currentFunction.addBasicBlock(opd2BB);
+                        and_op1_is_const = false;
                     }
-                    and_op1_is_const = true;
+
+                    opd2Result = node.getOpd2().accept(this);
+                    assert opd2Result instanceof ExprResultPair;
+                    opd2ResultReg = ((ExprResultPair) opd2Result).result;
+                    boolean and_op2_is_const;
+                    if (opd2ResultReg instanceof BoolConstant) {
+                        if (and_op1_is_const && !((BoolConstant) opd2ResultReg).getValue()) {
+                            return new ExprResultPair(new BoolConstant(false), null);
+                        } else if (and_op1_is_const) {
+                            return new ExprResultPair(new BoolConstant(true), null);
+                        } else if (!((BoolConstant) opd2ResultReg).getValue()) {
+                            opd1BB.getTailInst().deleteInst();
+                            currentBB = opd1BB;
+                            return new ExprResultPair(new BoolConstant(false), null);
+                        }
+                        and_op2_is_const = true;
+                    } else {
+                        and_op2_is_const = false;
+                        if (and_op1_is_const) {
+                            return new ExprResultPair(opd2ResultReg, null);
+                        }
+                    }
+
+                    currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
+                    opd2BB = currentBB;
+
+                    currentBB = exitBB;
+                    result = new Register(new IntegerType(1), "and");
+                    possiblePredecessorSet = new LinkedHashSet<>();
+                    possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd1BB, new BoolConstant(false)));
+                    possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd2BB, ((ExprResultPair) opd2Result).result));
+                    currentBB.addInstAtTail(new Phi(currentBB, (Register) result, possiblePredecessorSet));
+                    currentFunction.addBasicBlock(exitBB);
+                    currentFunction.CheckAndSetName(result.getName(), result);
+
+                    return new ExprResultPair(result, null);
                 } else {
-                    currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, opd2BB, exitBB));
+                    opd2BB = new BasicBlock("opd2BB", currentFunction, depth);
+                    currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
+                    node.getOpd1().IfThenBlock = opd2BB;
+                    node.getOpd1().IfElseBlock = node.IfElseBlock;
+                    node.getOpd2().IfThenBlock = node.IfThenBlock;
+                    node.getOpd2().IfElseBlock = node.IfElseBlock;
+
+                    opd1Result = node.getOpd1().accept(this);
+                    if (opd1Result instanceof ExprResultPair) {
+                        opd1BB = currentBB;
+                        opd1ResultReg = ((ExprResultPair) opd1Result).result;
+                        if (opd1ResultReg instanceof BoolConstant) {
+                            if (((BoolConstant) opd1ResultReg).getValue()) {
+                                currentBB.addInstAtTail(new Br(currentBB, null, opd2BB, null));
+                            } else {
+                                currentBB.addInstAtTail(new Br(currentBB, null, node.IfElseBlock, null));
+                            }
+                        } else {
+                            currentBB.addInstAtTail(new Br(currentBB, opd1ResultReg, opd2BB, node.IfElseBlock));
+                        }
+                    }
                     currentBB = opd2BB;
                     currentFunction.addBasicBlock(opd2BB);
-                    and_op1_is_const = false;
-                }
-
-                opd2Result = node.getOpd2().accept(this);
-                assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = ((ExprResultPair) opd2Result).result;
-                boolean and_op2_is_const;
-                if (opd2ResultReg instanceof BoolConstant) {
-                    if (and_op1_is_const && !((BoolConstant) opd2ResultReg).getValue()) {
-                        return new ExprResultPair(new BoolConstant(false), null);
-                    } else if (and_op1_is_const) {
-                        return new ExprResultPair(new BoolConstant(true), null);
-                    } else if (!((BoolConstant) opd2ResultReg).getValue()) {
-                        opd1BB.getTailInst().deleteInst();
-                        currentBB = opd1BB;
-                        return new ExprResultPair(new BoolConstant(false), null);
+                    opd2Result = node.getOpd2().accept(this);
+                    if (opd2Result instanceof ExprResultPair) {
+                        opd2ResultReg = ((ExprResultPair) opd2Result).result;
+                        if (opd2ResultReg instanceof BoolConstant) {
+                            if (((BoolConstant) opd2ResultReg).getValue()) {
+                                currentBB.addInstAtTail(new Br(currentBB, null, node.IfThenBlock, null));
+                            } else {
+                                currentBB.addInstAtTail(new Br(currentBB, null, node.IfElseBlock, null));
+                            }
+                        } else {
+                            currentBB.addInstAtTail(new Br(currentBB, opd2ResultReg, node.IfThenBlock, node.IfElseBlock));
+                        }
                     }
-                    and_op2_is_const = true;
-                } else {
-                    and_op2_is_const = false;
-                    if (and_op1_is_const) {
-                        return new ExprResultPair(opd2ResultReg, null);
-                    }
+                    return null;
                 }
-
-                currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
-                opd2BB = currentBB;
-
-                currentBB = exitBB;
-                result = new Register(new IntegerType(1), "and");
-                possiblePredecessorSet = new LinkedHashSet<>();
-                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd1BB, new BoolConstant(false)));
-                possiblePredecessorSet.add(new Pair<BasicBlock, IROper>(opd2BB, ((ExprResultPair) opd2Result).result));
-                currentBB.addInstAtTail(new Phi(currentBB, (Register) result, possiblePredecessorSet));
-                currentFunction.addBasicBlock(exitBB);
-                currentFunction.CheckAndSetName(result.getName(), result);
-
-                return new ExprResultPair(result, null);
 
 
 
@@ -1547,63 +1614,103 @@ public class IRBuilder implements ASTVisitor {
 
 
 //-----------------------------------Phi Solution---------------------------------------------
-                opd2BB = new BasicBlock("opd2BB", currentFunction, depth);
-                exitBB = new BasicBlock("exitBB", currentFunction, depth);
-                currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
-                currentFunction.CheckAndSetName(exitBB.getName(), exitBB);
+                if (node.IfThenBlock == null) {
+                    opd2BB = new BasicBlock("opd2BB", currentFunction, depth);
+                    exitBB = new BasicBlock("exitBB", currentFunction, depth);
+                    currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
+                    currentFunction.CheckAndSetName(exitBB.getName(), exitBB);
 
-                opd1Result = node.getOpd1().accept(this);
-                opd1BB = currentBB;
-                assert opd1Result instanceof ExprResultPair;
-                opd1ResultReg = ((ExprResultPair) opd1Result).result;
-                boolean or_op1_is_const;
-                if (opd1ResultReg instanceof BoolConstant) {
-                    if (((BoolConstant) opd1ResultReg).getValue()) {
-                        return new ExprResultPair(new BoolConstant(true), null);
+                    opd1Result = node.getOpd1().accept(this);
+                    opd1BB = currentBB;
+                    assert opd1Result instanceof ExprResultPair;
+                    opd1ResultReg = ((ExprResultPair) opd1Result).result;
+                    boolean or_op1_is_const;
+                    if (opd1ResultReg instanceof BoolConstant) {
+                        if (((BoolConstant) opd1ResultReg).getValue()) {
+                            return new ExprResultPair(new BoolConstant(true), null);
+                        }
+                        or_op1_is_const = true;
+                    } else {
+                        currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, exitBB, opd2BB));
+                        currentBB = opd2BB;
+                        currentFunction.addBasicBlock(opd2BB);
+                        or_op1_is_const = false;
                     }
-                    or_op1_is_const = true;
+
+                    opd2Result = node.getOpd2().accept(this);
+                    assert opd2Result instanceof ExprResultPair;
+                    opd2ResultReg = ((ExprResultPair) opd2Result).result;
+                    boolean or_op2_is_const;
+                    if (opd2ResultReg instanceof BoolConstant) {
+                        if (or_op1_is_const && ((BoolConstant) opd2ResultReg).getValue()) {
+                            return new ExprResultPair(new BoolConstant(true), null);
+                        } else if (or_op1_is_const) {
+                            return new ExprResultPair(new BoolConstant(false), null);
+                        } else if (((BoolConstant) opd2ResultReg).getValue()) {
+                            opd1BB.getTailInst().deleteInst();
+                            currentBB = opd1BB;
+                            return new ExprResultPair(new BoolConstant(true), null);
+                        }
+                        or_op2_is_const = true;
+                    } else {
+                        or_op2_is_const = false;
+                        if (or_op1_is_const) {
+                            return new ExprResultPair(opd2ResultReg, null);
+                        }
+                    }
+
+                    currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
+                    opd2BB = currentBB;
+
+                    currentBB = exitBB;
+                    result = new Register(new IntegerType(1), "or");
+                    possiblePredecessorSet = new LinkedHashSet<>();
+                    possiblePredecessorSet.add(new Pair<>(opd1BB, new BoolConstant(true)));
+                    possiblePredecessorSet.add(new Pair<>(opd2BB, ((ExprResultPair) opd2Result).result));
+                    currentBB.addInstAtTail(new Phi(currentBB, (Register) result, possiblePredecessorSet));
+                    currentFunction.addBasicBlock(exitBB);
+                    currentFunction.CheckAndSetName(result.getName(), result);
+
+                    return new ExprResultPair(result, null);
                 } else {
-                    currentBB.addInstAtTail(new Br(currentBB, ((ExprResultPair) opd1Result).result, exitBB, opd2BB));
+                    opd2BB = new BasicBlock("opd2BB", currentFunction, depth);
+                    currentFunction.CheckAndSetName(opd2BB.getName(), opd2BB);
+                    node.getOpd1().IfThenBlock = node.IfThenBlock;
+                    node.getOpd1().IfElseBlock = opd2BB;
+                    node.getOpd2().IfThenBlock = node.IfThenBlock;
+                    node.getOpd2().IfElseBlock = node.IfElseBlock;
+
+                    opd1Result = node.getOpd1().accept(this);
+                    if (opd1Result instanceof ExprResultPair) {
+                        opd1BB = currentBB;
+                        opd1ResultReg = ((ExprResultPair) opd1Result).result;
+                        if (opd1ResultReg instanceof BoolConstant) {
+                            if (((BoolConstant) opd1ResultReg).getValue()) {
+                                currentBB.addInstAtTail(new Br(currentBB, null, node.IfThenBlock, null));
+                            } else {
+                                currentBB.addInstAtTail(new Br(currentBB, null, opd2BB, null));
+                            }
+                        } else {
+                            currentBB.addInstAtTail(new Br(currentBB, opd1ResultReg, node.IfThenBlock, opd2BB));
+                        }
+                    }
                     currentBB = opd2BB;
                     currentFunction.addBasicBlock(opd2BB);
-                    or_op1_is_const = false;
-                }
-
-                opd2Result = node.getOpd2().accept(this);
-                assert opd2Result instanceof ExprResultPair;
-                opd2ResultReg = ((ExprResultPair) opd2Result).result;
-                boolean or_op2_is_const;
-                if (opd2ResultReg instanceof BoolConstant) {
-                    if (or_op1_is_const && ((BoolConstant) opd2ResultReg).getValue()) {
-                        return new ExprResultPair(new BoolConstant(true), null);
-                    } else if (or_op1_is_const) {
-                        return new ExprResultPair(new BoolConstant(false), null);
-                    } else if (((BoolConstant) opd2ResultReg).getValue()) {
-                        opd1BB.getTailInst().deleteInst();
-                        currentBB = opd1BB;
-                        return new ExprResultPair(new BoolConstant(true), null);
+                    opd2Result = node.getOpd2().accept(this);
+                    if (opd2Result instanceof ExprResultPair) {
+                        opd2ResultReg = ((ExprResultPair) opd2Result).result;
+                        if (opd2ResultReg instanceof BoolConstant) {
+                            if (((BoolConstant) opd2ResultReg).getValue()) {
+                                currentBB.addInstAtTail(new Br(currentBB, null, node.IfThenBlock, null));
+                            } else {
+                                currentBB.addInstAtTail(new Br(currentBB, null, node.IfElseBlock, null));
+                            }
+                        } else {
+                            currentBB.addInstAtTail(new Br(currentBB, opd2ResultReg, node.IfThenBlock, node.IfElseBlock));
+                        }
                     }
-                    or_op2_is_const = true;
-                } else {
-                    or_op2_is_const = false;
-                    if (or_op1_is_const) {
-                        return new ExprResultPair(opd2ResultReg, null);
-                    }
+                    return null;
                 }
-
-                currentBB.addInstAtTail(new Br(currentBB, null, exitBB, null));
-                opd2BB = currentBB;
-
-                currentBB = exitBB;
-                result = new Register(new IntegerType(1), "or");
-                possiblePredecessorSet = new LinkedHashSet<>();
-                possiblePredecessorSet.add(new Pair<>(opd1BB, new BoolConstant(true)));
-                possiblePredecessorSet.add(new Pair<>(opd2BB, ((ExprResultPair) opd2Result).result));
-                currentBB.addInstAtTail(new Phi(currentBB, (Register) result, possiblePredecessorSet));
-                currentFunction.addBasicBlock(exitBB);
-                currentFunction.CheckAndSetName(result.getName(), result);
-
-                return new ExprResultPair(result, null);
 
 
 

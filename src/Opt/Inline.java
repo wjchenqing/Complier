@@ -184,11 +184,11 @@ public class Inline {
 //                }
                 Set<BasicBlock> bfsVisited = new HashSet<>();
                 Queue<BasicBlock> bfsQueue = new LinkedList<>();
-                bfsQueue.offer(function.getReturnBB());
-                bfsVisited.add(function.getReturnBB());
+                bfsQueue.offer(function.getEntranceBB());
+                bfsVisited.add(function.getEntranceBB());
                 while (!bfsQueue.isEmpty()) {
                     BasicBlock basicBlock = bfsQueue.poll();
-                    for (BasicBlock s: basicBlock.getPredecessor()) {
+                    for (BasicBlock s: basicBlock.getSuccessor()) {
                         if (!bfsVisited.contains(s)) {
                             bfsQueue.offer(s);
                             bfsVisited.add(s);

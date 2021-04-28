@@ -19,9 +19,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+
         InputStream inputStream;
         CharStream input = null;
         MxLexer lexer;
@@ -55,6 +59,7 @@ public class Main {
             return;
         }
 
+        System.out.println("Start BuildIR: " + dtf.format(LocalDateTime.now()));
         IRBuilder irBuilder = new IRBuilder(semanticChecker.getProgramScope(), semanticChecker.getTypeTable());
         programRoot.accept(irBuilder);
 
@@ -62,7 +67,7 @@ public class Main {
 //        irBuilder.getModule().accept(irPrinter1);
 //        irPrinter1.getPrintWriter().close();
 //        irPrinter1.getOutputStream().close();
-
+        System.out.println("Start cfgSimplifier: " + dtf.format(LocalDateTime.now()));
         CFGSimplifier cfgSimplifier = new CFGSimplifier(irBuilder.getModule());
         cfgSimplifier.run();
 
@@ -74,8 +79,10 @@ public class Main {
         DominatorTree dominatorTree = new DominatorTree(irBuilder.getModule());
         dominatorTree.run();
 
+        System.out.println("Start ssaConstructor: " + dtf.format(LocalDateTime.now()));
         SSAConstructor ssaConstructor = new SSAConstructor(irBuilder.getModule());
         ssaConstructor.run();
+        cfgSimplifier.run();
 
 //        IRPrinter irPrinter4 = new IRPrinter("judger/test_ssa.ll");
 //        irBuilder.getModule().accept(irPrinter4);
@@ -89,6 +96,7 @@ public class Main {
         boolean changed = true;
         while (changed) {
             changed = false;
+            System.out.println("Start ADCE: " + dtf.format(LocalDateTime.now()));
             changed |= deadCodeEliminator.run();
         }
 
@@ -101,6 +109,7 @@ public class Main {
 
         changed = true;
 //        int cnt = 0;
+        System.out.println("Start OPT: " + dtf.format(LocalDateTime.now()));
         while (changed) {
 //            if (cnt > 0) {
 //                break;
@@ -108,8 +117,11 @@ public class Main {
 //            ++cnt;
 //            System.out.println(cnt);
             changed = false;
+            System.out.println("Start DT: " + dtf.format(LocalDateTime.now()));
             dominatorTree.run();
+            System.out.println("Start ADCE: " + dtf.format(LocalDateTime.now()));
             changed |= deadCodeEliminator.run();
+            System.out.println("Start inline: " + dtf.format(LocalDateTime.now()));
             changed |= inline.run();
         }
 
@@ -129,6 +141,7 @@ public class Main {
 
         irBuilder.getModule().CheckBranch();
 
+        System.out.println("Start SSADestructor: " + dtf.format(LocalDateTime.now()));
         SSADestructor ssaDestructor = new SSADestructor(irBuilder.getModule());
         ssaDestructor.run();
         cfgSimplifier.run();
@@ -138,6 +151,7 @@ public class Main {
 //        irPrinter3.getPrintWriter().close();
 //        irPrinter3.getOutputStream().close();
 
+        System.out.println("Start instructionSelector: " + dtf.format(LocalDateTime.now()));
         InstructionSelector instructionSelector = new InstructionSelector();
         irBuilder.getModule().accept(instructionSelector);
 
@@ -146,6 +160,7 @@ public class Main {
 //        codegenPrinter_before.getPrintWriter().close();
 //        codegenPrinter_before.getOutputStream().close();
 
+        System.out.println("Start RegisterAllocator: " + dtf.format(LocalDateTime.now()));
         RegisterAllocator registerAllocator = new RegisterAllocator(instructionSelector.getModule());
         registerAllocator.runAll();
 
@@ -154,5 +169,6 @@ public class Main {
         instructionSelector.getModule().accept(codegenPrinter);
         codegenPrinter.getPrintWriter().close();
         codegenPrinter.getOutputStream().close();
+        System.out.println("Finish: " + dtf.format(LocalDateTime.now()));
     }
 }
