@@ -82,7 +82,7 @@ public class Main {
         System.out.println("Start ssaConstructor: " + dtf.format(LocalDateTime.now()));
         SSAConstructor ssaConstructor = new SSAConstructor(irBuilder.getModule());
         ssaConstructor.run();
-        cfgSimplifier.run();
+//        cfgSimplifier.run();
 
 //        IRPrinter irPrinter4 = new IRPrinter("judger/test_ssa.ll");
 //        irBuilder.getModule().accept(irPrinter4);
