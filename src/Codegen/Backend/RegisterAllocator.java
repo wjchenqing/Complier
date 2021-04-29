@@ -151,7 +151,7 @@ public class RegisterAllocator {
 //                codegenPrinter_before.getPrintWriter().close();
 //                codegenPrinter_before.getOutputStream().close();
 //            } catch (IOException e) {
-//                 do nothing
+////                 do nothing
 //            }
 
         }
@@ -335,11 +335,21 @@ public class RegisterAllocator {
         return ((t.getDegree() < K) || precolored.contains(t) || adjSet.contains(new Edge(t, r)));
     }
 
-    public boolean conservative(Set<RegisterVirtual> nodes) {
+    public boolean conservative(RegisterVirtual u, RegisterVirtual v) {
         int k = 0;
-        for (RegisterVirtual n: nodes) {
+        Set<RegisterVirtual> visited = new HashSet<>();
+        for (RegisterVirtual n: adjacent(u)) {
+            visited.add(n);
             if (n.getDegree() >= K) {
                 k++;
+            }
+        }
+        for (RegisterVirtual n: adjacent(v)) {
+            if (!visited.contains(n)) {
+                visited.add(n);
+                if (n.getDegree() >= K) {
+                    k++;
+                }
             }
         }
         return k < K;
@@ -367,7 +377,7 @@ public class RegisterAllocator {
             addWorkList(u);
             addWorkList(v);
         } else if (((precolored.contains(u)) && (testOK(adjacent(v), u)))
-                || ((!precolored.contains(u)) && (conservative(unionAdjacentResult(u, v))))) {
+                || ((!precolored.contains(u)) && (conservative(u, v)))) {
 //            coalescedMoves.add(m);
             combine(u, v);
             addWorkList(u);
@@ -383,12 +393,6 @@ public class RegisterAllocator {
             }
         }
         return true;
-    }
-
-    private Set<RegisterVirtual> unionAdjacentResult(RegisterVirtual u, RegisterVirtual v) {
-        Set<RegisterVirtual> ans = new HashSet<>(adjacent(u));
-        ans.addAll(adjacent(v));
-        return ans;
     }
 
     public void combine(RegisterVirtual u, RegisterVirtual v) {
@@ -450,7 +454,7 @@ public class RegisterAllocator {
     public void selectSpill() {
 //        RegisterVirtual m = spillWorkList.iterator().next();
         RegisterVirtual m = select();
-//        System.out.println("spill " + m.toString() + ", cost = " + computeCost(m));
+//        System.out.println("spill " + m.toString() + ", cost = " + computeCost(m) + ", spillCost = " + m.spillCost + ", adjSize = " + m.getAdjList().size());
         spillWorkList.remove(m);
         simplifyWorkList.add(m);
         freezeMoves(m);
@@ -484,21 +488,29 @@ public class RegisterAllocator {
     private RegisterVirtual select() {
         double min = Double.POSITIVE_INFINITY;
         RegisterVirtual selected = null;
+        int minAdjSize = 10000000;
         for (RegisterVirtual rv: spillWorkList) {
             double cur = computeCost(rv);
             if (cur <= min) {
                 min = cur;
                 selected = rv;
             }
+            if (rv.getAdjList().size() < minAdjSize) {
+                minAdjSize = rv.getAdjList().size();
+            }
         }
-        return selected;
+        if (minAdjSize < 60) {
+            return selected;
+        } else {
+            return spillWorkList.iterator().next();
+        }
     }
 
     public void assignColors() {
 //        System.out.println("selectStack.size() = " + selectStack.size());
         while (!selectStack.isEmpty()) {
             RegisterVirtual n = selectStack.pop();
-            Set<RegisterPhysical> okColors = new LinkedHashSet<>(RegisterPhysical.colorSet);
+            Set<RegisterPhysical> okColors = new HashSet<>(RegisterPhysical.colorSet);
             for (RegisterVirtual w: n.getAdjList()) {
                 RegisterVirtual alias = getAlias(w);
                 if (coloredNodes.contains(alias) || precolored.contains(alias)) {

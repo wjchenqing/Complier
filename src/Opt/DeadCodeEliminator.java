@@ -114,7 +114,7 @@ public class DeadCodeEliminator {
 
             for (BasicBlock basicBlock: irInst.getCurrentBB().reverseDominanceFrontier) {
                 IRInst tail = basicBlock.getTailInst();
-                if (!(liveInst.contains(tail))) {
+                if ((!(liveInst.contains(tail))) && function.getBlockSet().contains(basicBlock)) {
                     liveInst.add(tail);
                     liveBB.add(tail.getCurrentBB());
                     queue.offer(tail);

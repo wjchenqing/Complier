@@ -130,9 +130,9 @@ public class Main {
 //        irPrinter4.getPrintWriter().close();
 //        irPrinter4.getOutputStream().close();
 //
-//        changed |= deadCodeEliminator.run();
+        changed |= deadCodeEliminator.run();
 
-//        irBuilder.getModule().removeUselessFunc();
+        irBuilder.getModule().removeUselessFunc();
 
 //        IRPrinter irPrinter = new IRPrinter("judger/test.ll");
 //        irBuilder.getModule().accept(irPrinter);
