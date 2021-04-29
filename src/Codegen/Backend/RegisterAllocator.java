@@ -510,7 +510,7 @@ public class RegisterAllocator {
 //        System.out.println("selectStack.size() = " + selectStack.size());
         while (!selectStack.isEmpty()) {
             RegisterVirtual n = selectStack.pop();
-            Set<RegisterPhysical> okColors = new HashSet<>(RegisterPhysical.colorSet);
+            Set<RegisterPhysical> okColors = new LinkedHashSet<>(RegisterPhysical.colorSet);
             for (RegisterVirtual w: n.getAdjList()) {
                 RegisterVirtual alias = getAlias(w);
                 if (coloredNodes.contains(alias) || precolored.contains(alias)) {

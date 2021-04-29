@@ -152,9 +152,9 @@ public class Inline {
                 }
                 callerLocation.deleteInst();
             }
-            if (totalInst + InstNumMap.get(source) > totalInstNumLimit) {
-                break;
-            }
+//            if (totalInst + InstNumMap.get(source) > totalInstNumLimit) {
+//                break;
+//            }
             if (source.calls.isEmpty() && !calls.isEmpty()) {
                 module.getFunctionMap().remove(source.getName());
                 totalInst -= InstNumMap.get(source);
@@ -170,9 +170,9 @@ public class Inline {
 
     private boolean RecursiveInline() throws IOException {
         boolean changed = false;
-        if (totalInst > totalInstNumLimit) {
-            return false;
-        }
+//        if (totalInst > totalInstNumLimit) {
+//            return false;
+//        }
         callsToInline.clear();
         callsContainsConstantParam.clear();
         Set<Function> functions = new LinkedHashSet<>(module.getFunctionMap().values());
@@ -238,7 +238,7 @@ public class Inline {
                     continue;
                 }
             }
-            if (totalInst + InstNumMap.get(callee) > totalInstNumLimit) {
+            if (InstNumMap.get(callee) > 100 && totalInst + InstNumMap.get(callee) > totalInstNumLimit) {
                 return changed;
             }
             BasicBlock callerBlock = callerLocation.getCurrentBB();
